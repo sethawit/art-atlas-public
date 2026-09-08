@@ -1,7 +1,7 @@
 import type { AicArtwork } from "@/lib/aic/client";
 import { aicArtworkPageUrl, aicImageUrl } from "@/lib/aic/client";
 import type { NormalizedArtwork, NormalizedAssertion } from "@/lib/ingest/normalize-met";
-import { slugify } from "@/lib/ingest/normalize-met";
+import { safeYearDate, slugify } from "@/lib/ingest/normalize-met";
 
 /**
  * Normalize a raw AIC API artwork into the core data model's shape — same contract as
@@ -37,8 +37,8 @@ export function normalizeAicArtwork(obj: AicArtwork): NormalizedArtwork {
     assertions.push({
       field: "creationDate",
       value: obj.date_display,
-      valueEarliest: obj.date_start ? new Date(Date.UTC(obj.date_start, 0, 1)) : undefined,
-      valueLatest: obj.date_end ? new Date(Date.UTC(obj.date_end, 11, 31)) : undefined,
+      valueEarliest: safeYearDate(obj.date_start, 0, 1),
+      valueLatest: safeYearDate(obj.date_end, 11, 31),
       precision,
     });
   }

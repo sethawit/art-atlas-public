@@ -81,6 +81,17 @@ describe("normalizeMetObject", () => {
     );
   });
 
+  it("drops the sortable earliest/latest pair for a BC-dated object but keeps the display text", () => {
+    // Real object: Met objectID 329077, "Head of a ruler ca. 2300–2000 BCE" — this exact
+    // shape crashed a live bulk-ingest run before the fix (see safeYearDate's docstring).
+    const ancient: MetObject = { ...metObject, objectDate: "ca. 2300–2000 BCE", objectBeginDate: -2300, objectEndDate: -2000 };
+    const result = normalizeMetObject(ancient);
+    const dateAssertion = result.assertions.find((a) => a.field === "creationDate");
+    expect(dateAssertion?.value).toBe("ca. 2300–2000 BCE");
+    expect(dateAssertion?.valueEarliest).toBeUndefined();
+    expect(dateAssertion?.valueLatest).toBeUndefined();
+  });
+
   it("has no artist when artistDisplayName is blank", () => {
     const anonymous: MetObject = { ...metObject, artistDisplayName: "" };
     const result = normalizeMetObject(anonymous);

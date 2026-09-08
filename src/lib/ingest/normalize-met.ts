@@ -32,6 +32,21 @@ export function slugify(input: string): string {
     .replace(/(^-+|-+$)/g, "");
 }
 
+/**
+ * A Date for a given AD year, or undefined for a year the DB can't safely round-trip.
+ * Postgres/node-postgres serializes a JS Date with a negative (BC) year as a signed
+ * extended ISO year ("-002300-01-01…") that the wire protocol rejects outright — found
+ * live via Met objectID 329077 ("Head of a ruler ca. 2300–2000 BCE"). Rather than fail
+ * ingestion for antiquities, keep the original display text (still preserved in
+ * `value`) and drop only the sortable earliest/latest pair for BC-dated works; a future
+ * ticket can add proper BC support (e.g. a separate signed-year column) if the catalogue
+ * grows to need it.
+ */
+export function safeYearDate(year: number | null | undefined, month: number, day: number): Date | undefined {
+  if (!year || year < 1) return undefined;
+  return new Date(Date.UTC(year, month, day));
+}
+
 const MET_OPEN_ACCESS_POLICY_URL =
   "https://www.metmuseum.org/about-the-met/policies-and-documents/open-access";
 
@@ -71,8 +86,8 @@ export function normalizeMetObject(obj: MetObject): NormalizedArtwork {
     assertions.push({
       field: "creationDate",
       value: obj.objectDate,
-      valueEarliest: obj.objectBeginDate ? new Date(Date.UTC(obj.objectBeginDate, 0, 1)) : undefined,
-      valueLatest: obj.objectEndDate ? new Date(Date.UTC(obj.objectEndDate, 11, 31)) : undefined,
+      valueEarliest: safeYearDate(obj.objectBeginDate, 0, 1),
+      valueLatest: safeYearDate(obj.objectEndDate, 11, 31),
       precision,
     });
   }

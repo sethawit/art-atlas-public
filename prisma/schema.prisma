@@ -27,22 +27,29 @@ model Artwork {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  artist          Artist?           @relation(fields: [artistId], references: [id])
-  physicalObjects PhysicalObject[]
-  movements       ArtworkMovement[]
+  artist            Artist?           @relation(fields: [artistId], references: [id])
+  physicalObjects   PhysicalObject[]
+  movements         ArtworkMovement[]
+  duplicateFlagsAsA DuplicateFlag[]   @relation("DuplicateFlagArtworkA")
+  duplicateFlagsAsB DuplicateFlag[]   @relation("DuplicateFlagArtworkB")
 
   @@index([artistId])
 }
 
 model PhysicalObject {
-  id              String   @id @default(cuid())
-  artworkId       String
-  institutionId   String?
-  accessionNumber String?
-  medium          String?
-  dimensions      String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                String   @id @default(cuid())
+  artworkId         String
+  institutionId     String?
+  accessionNumber   String?
+  medium            String?
+  dimensions        String?
+  // The source's own canonical record URL for this exact physical object — the real
+  // identity key bulk ingestion upserts against (ticket 05). Two different source
+  // records can normalize to the same Artwork.slug (e.g. two different "Self-Portrait"
+  // paintings); slug alone must never decide whether they're the same physical object.
+  externalRecordUrl String?  @unique
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   artwork     Artwork      @relation(fields: [artworkId], references: [id])
   institution Institution? @relation(fields: [institutionId], references: [id])
@@ -97,13 +104,16 @@ model Institution {
 }
 
 model ImageAsset {
-  id               String  @id @default(cuid())
+  id               String    @id @default(cuid())
   physicalObjectId String
   sourceUrl        String
   credit           String?
   rightsUrl        String?
-  eligibleUses      String?
+  eligibleUses     String?
   altText          String?
+  // Soft-delete: an admin can remove an ineligible image (ticket 05) without deleting the
+  // PhysicalObject/Artwork it belongs to. Null = active; set = removed, kept for audit.
+  removedAt        DateTime?
 
   physicalObject PhysicalObject @relation(fields: [physicalObjectId], references: [id])
 
@@ -147,4 +157,43 @@ model Assertion {
   source Source @relation(fields: [sourceId], references: [id])
 
   @@index([subjectType, subjectId, field])
+}
+
+// Raised when bulk ingestion (ticket 05) sees a new source record whose title slugifies
+// to an existing Artwork's slug, but whose externalRecordUrl doesn't match any of that
+// Artwork's existing PhysicalObjects — i.e. same title, not proven to be the same work.
+// The ingest writer always creates a separate, disambiguated Artwork in this case and
+// raises a flag rather than guessing; a human resolves it (or ticket 09's related-piece
+// research supersedes it with a verified Relationship).
+model DuplicateFlag {
+  id         String    @id @default(cuid())
+  artworkAId String
+  artworkBId String
+  reason     String
+  // "pending" | "confirmed_distinct" | "confirmed_duplicate" — plain string, same
+  // rationale as MovementStyle.kind and Assertion.precision.
+  status     String    @default("pending")
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
+
+  artworkA Artwork @relation("DuplicateFlagArtworkA", fields: [artworkAId], references: [id])
+  artworkB Artwork @relation("DuplicateFlagArtworkB", fields: [artworkBId], references: [id])
+
+  @@index([status])
+}
+
+// One row per source record bulk ingestion (ticket 05) attempted, success or failure —
+// "logging sync failures, last success, missing rights, and stale records" (§9).
+model IngestLog {
+  id         String   @id @default(cuid())
+  sourceName String
+  externalId String
+  // "success" | "failure" | "flagged_duplicate"
+  status     String
+  message    String?
+  artworkId  String?
+  createdAt  DateTime @default(now())
+
+  @@index([sourceName, externalId])
+  @@index([status])
 }

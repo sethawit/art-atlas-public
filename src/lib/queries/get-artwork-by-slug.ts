@@ -2,16 +2,16 @@ import type { PrismaClient } from "@prisma/client";
 
 /**
  * Load everything the artwork detail page's Overview/Understand/Sources tabs need.
- * Assertions are append-only (a re-ingest adds a fresh row rather than overwriting), so
- * for a given field we take the most recently retrieved one — later tickets (admin
- * review, §9) will let an editor pick a different preferred value explicitly.
+ * Assertions are append-only (a re-ingest adds a fresh row rather than overwriting). For
+ * a given field: an explicitly admin-approved value (isPreferred, set via /admin — ticket
+ * 05) wins; otherwise fall back to the most recently retrieved one.
  */
 export async function getArtworkBySlug(prisma: PrismaClient, slug: string) {
   const artwork = await prisma.artwork.findUnique({
     where: { slug },
     include: {
       artist: true,
-      physicalObjects: { include: { institution: true, images: true } },
+      physicalObjects: { include: { institution: true, images: { where: { removedAt: null } } } },
     },
   });
   if (!artwork) return null;
@@ -23,6 +23,9 @@ export async function getArtworkBySlug(prisma: PrismaClient, slug: string) {
   });
 
   const latestByField = new Map<string, (typeof assertions)[number]>();
+  for (const assertion of assertions) {
+    if (assertion.isPreferred && !latestByField.has(assertion.field)) latestByField.set(assertion.field, assertion);
+  }
   for (const assertion of assertions) {
     if (!latestByField.has(assertion.field)) latestByField.set(assertion.field, assertion);
   }

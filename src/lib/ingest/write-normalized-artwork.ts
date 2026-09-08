@@ -3,15 +3,17 @@ import type { NormalizedArtwork } from "@/lib/ingest/normalize-met";
 
 /**
  * Write a NormalizedArtwork (from any source's normalizer) into the core data model.
- * Idempotent by Artwork.slug — re-running for the same source object updates the
- * existing row rather than duplicating it. Assertions are the exception: they're
- * append-only history, so a re-ingest records a fresh retrieval rather than silently
- * overwriting what a prior run observed.
  *
- * Shared by every source's ingest function (ingest-met-artwork.ts, ingest-aic-artwork.ts,
- * …) so the write path — and its idempotency behaviour — is proven once and identical
- * across sources, per ticket 04's point: the artwork page and this write path must
- * generalize across a second source without forking.
+ * Identity is keyed on PhysicalObject.externalRecordUrl (the source's own canonical
+ * record URL, e.g. the Met/AIC object page) — NOT on Artwork.slug. Two different physical
+ * objects can legitimately slugify to the same title (two different "Self-Portrait"
+ * paintings, say); when that happens this function never silently merges them into one
+ * Artwork or overwrites one's PhysicalObject with the other's data. Instead it creates a
+ * second, disambiguated Artwork and raises a DuplicateFlag for review — "matching titles
+ * … are insufficient to merge physical objects" (master prompt §9/ticket 05).
+ *
+ * Assertions are append-only history: a re-ingest records a fresh retrieval rather than
+ * silently overwriting what a prior run observed.
  */
 export async function writeNormalizedArtwork(
   prisma: PrismaClient,
@@ -20,9 +22,6 @@ export async function writeNormalizedArtwork(
 ) {
   const retrievedAt = new Date();
 
-  // Source has no natural unique key yet (a future ticket may add one once dedup across
-  // many sources matters more) — resolve-or-create explicitly rather than forcing a
-  // schema change onto this ticket.
   const sourceRow =
     (await prisma.source.findFirst({ where: { name: source.name } })) ??
     (await prisma.source.create({ data: source }));
@@ -41,26 +40,17 @@ export async function writeNormalizedArtwork(
       })
     : null;
 
-  const artwork = await prisma.artwork.upsert({
-    where: { slug: normalized.slug },
-    update: { title: normalized.title, artistId: artist?.id },
-    create: { slug: normalized.slug, title: normalized.title, artistId: artist?.id },
-  });
-
-  const existingPhysicalObject = await prisma.physicalObject.findFirst({
-    where: { artworkId: artwork.id },
-  });
-  const physicalObject = existingPhysicalObject
-    ? await prisma.physicalObject.update({
-        where: { id: existingPhysicalObject.id },
-        data: { institutionId: institution.id, ...normalized.physicalObject },
-      })
-    : await prisma.physicalObject.create({
-        data: { artworkId: artwork.id, institutionId: institution.id, ...normalized.physicalObject },
-      });
+  const { artwork, physicalObject, duplicateFlagged } = await resolveArtworkAndPhysicalObject(
+    prisma,
+    normalized,
+    institution.id,
+    artist?.id
+  );
 
   if (normalized.image) {
-    const existingImage = await prisma.imageAsset.findFirst({ where: { physicalObjectId: physicalObject.id } });
+    const existingImage = await prisma.imageAsset.findFirst({
+      where: { physicalObjectId: physicalObject.id, removedAt: null },
+    });
     if (existingImage) {
       await prisma.imageAsset.update({ where: { id: existingImage.id }, data: normalized.image });
     } else {
@@ -69,6 +59,13 @@ export async function writeNormalizedArtwork(
   }
 
   for (const assertion of normalized.assertions) {
+    const mostRecent = await prisma.assertion.findFirst({
+      where: { subjectType: "Artwork", subjectId: artwork.id, field: assertion.field },
+      orderBy: { retrievedAt: "desc" },
+    });
+    // Unchanged re-observation from the same source — skip, don't pad history with noise.
+    if (mostRecent && mostRecent.value === assertion.value && mostRecent.sourceId === sourceRow.id) continue;
+
     await prisma.assertion.create({
       data: {
         subjectType: "Artwork",
@@ -80,10 +77,84 @@ export async function writeNormalizedArtwork(
         precision: assertion.precision,
         sourceId: sourceRow.id,
         retrievedAt,
-        isPreferred: true,
+        // First-ever observation for this field is auto-preferred; a second, competing
+        // one needs an admin to pick between them (§9 point 7 / ticket 05's review UI).
+        isPreferred: !mostRecent,
       },
     });
   }
 
-  return { artwork, physicalObject, institution, artist, sourceUrl: normalized.sourceUrl };
+  return { artwork, physicalObject, institution, artist, sourceUrl: normalized.sourceUrl, duplicateFlagged };
+}
+
+async function resolveArtworkAndPhysicalObject(
+  prisma: PrismaClient,
+  normalized: NormalizedArtwork,
+  institutionId: string,
+  artistId: string | undefined
+) {
+  // Seen this exact source record before? Re-ingest: update in place, same Artwork.
+  const existingByExternalUrl = await prisma.physicalObject.findUnique({
+    where: { externalRecordUrl: normalized.sourceUrl },
+    include: { artwork: true },
+  });
+  if (existingByExternalUrl) {
+    const artwork = await prisma.artwork.update({
+      where: { id: existingByExternalUrl.artworkId },
+      data: { title: normalized.title, artistId },
+    });
+    const physicalObject = await prisma.physicalObject.update({
+      where: { id: existingByExternalUrl.id },
+      data: { institutionId, ...normalized.physicalObject },
+    });
+    return { artwork, physicalObject, duplicateFlagged: false };
+  }
+
+  const existingBySlug = await prisma.artwork.findUnique({ where: { slug: normalized.slug } });
+  if (!existingBySlug) {
+    const artwork = await prisma.artwork.create({
+      data: { slug: normalized.slug, title: normalized.title, artistId },
+    });
+    const physicalObject = await prisma.physicalObject.create({
+      data: {
+        artworkId: artwork.id,
+        institutionId,
+        externalRecordUrl: normalized.sourceUrl,
+        ...normalized.physicalObject,
+      },
+    });
+    return { artwork, physicalObject, duplicateFlagged: false };
+  }
+
+  // Slug collision with an unrelated source record: never merge. Disambiguate a new
+  // Artwork and flag the pair for human review.
+  const disambiguatedSlug = await nextAvailableSlug(prisma, normalized.slug, normalized.institution.slug);
+  const artwork = await prisma.artwork.create({
+    data: { slug: disambiguatedSlug, title: normalized.title, artistId },
+  });
+  const physicalObject = await prisma.physicalObject.create({
+    data: {
+      artworkId: artwork.id,
+      institutionId,
+      externalRecordUrl: normalized.sourceUrl,
+      ...normalized.physicalObject,
+    },
+  });
+  await prisma.duplicateFlag.create({
+    data: {
+      artworkAId: existingBySlug.id,
+      artworkBId: artwork.id,
+      reason: `Same title "${normalized.title}" from a different source record — not verified as the same physical work.`,
+    },
+  });
+  return { artwork, physicalObject, duplicateFlagged: true };
+}
+
+async function nextAvailableSlug(prisma: PrismaClient, baseSlug: string, institutionSlug: string) {
+  const candidate = `${baseSlug}-${institutionSlug}`;
+  if (!(await prisma.artwork.findUnique({ where: { slug: candidate } }))) return candidate;
+  for (let n = 2; ; n++) {
+    const numbered = `${candidate}-${n}`;
+    if (!(await prisma.artwork.findUnique({ where: { slug: numbered } }))) return numbered;
+  }
 }
