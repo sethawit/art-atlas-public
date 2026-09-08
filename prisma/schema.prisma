@@ -1,0 +1,150 @@
+// Core Phase 1 data model — see docs/superpowers/specs/2026-09-08-art-atlas-product-definition-and-sitemap.md
+// and .scratch/art-atlas-mvp/issues/02-core-data-model.md for the ticket this implements.
+//
+// Deliberate distinctions preserved here (master prompt §10):
+// - Artwork is the named artistic work/concept; PhysicalObject is one physical impression
+//   of it. A single-object painting has exactly one PhysicalObject; a series or an edition
+//   has many, each with its own identifiers/dimensions/location history.
+// - MovementStyle.kind distinguishes period / movement / technique / style rather than
+//   conflating them under one label.
+// - Assertion is a generic, polymorphic fact table: every field on every entity that came
+//   from a source is recorded here (not just written directly onto the entity), so multiple
+//   conflicting values, their sources, and the preferred one can all be preserved.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Artwork {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  artistId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  artist          Artist?           @relation(fields: [artistId], references: [id])
+  physicalObjects PhysicalObject[]
+  movements       ArtworkMovement[]
+
+  @@index([artistId])
+}
+
+model PhysicalObject {
+  id              String   @id @default(cuid())
+  artworkId       String
+  institutionId   String?
+  accessionNumber String?
+  medium          String?
+  dimensions      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  artwork     Artwork      @relation(fields: [artworkId], references: [id])
+  institution Institution? @relation(fields: [institutionId], references: [id])
+  images      ImageAsset[]
+
+  @@index([artworkId])
+  @@index([institutionId])
+}
+
+model Artist {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  artworks Artwork[]
+}
+
+model MovementStyle {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  // "period" | "movement" | "technique" | "style" — kept as a plain string rather than an
+  // enum so editorial content can name a new kind without a migration; validated in app code.
+  kind      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  artworks ArtworkMovement[]
+}
+
+model ArtworkMovement {
+  artworkId  String
+  movementId String
+
+  artwork  Artwork       @relation(fields: [artworkId], references: [id])
+  movement MovementStyle @relation(fields: [movementId], references: [id])
+
+  @@id([artworkId, movementId])
+}
+
+model Institution {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  city      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  physicalObjects PhysicalObject[]
+}
+
+model ImageAsset {
+  id               String  @id @default(cuid())
+  physicalObjectId String
+  sourceUrl        String
+  credit           String?
+  rightsUrl        String?
+  eligibleUses      String?
+  altText          String?
+
+  physicalObject PhysicalObject @relation(fields: [physicalObjectId], references: [id])
+
+  @@index([physicalObjectId])
+}
+
+model Source {
+  id        String   @id @default(cuid())
+  name      String
+  url       String
+  createdAt DateTime @default(now())
+
+  assertions Assertion[]
+}
+
+// Polymorphic fact table: one row per (subject, field, competing value). subjectType +
+// subjectId identify the entity the field belongs to (e.g. subjectType: "Artwork",
+// field: "creationDate"). value carries the original source wording verbatim; the
+// earliest/latest/precision trio is the sortable, filterable interpretation of that same
+// fact, used for date fields (see ticket 02 acceptance: display text alongside sortable
+// earliest/latest + precision).
+model Assertion {
+  id              String    @id @default(cuid())
+  subjectType     String
+  subjectId       String
+  field           String
+  value           String
+  valueEarliest   DateTime?
+  valueLatest     DateTime?
+  // "exact" | "approximate" | "disputed" — plain string for the same reason as
+  // MovementStyle.kind.
+  precision       String?
+  sourceId        String
+  retrievedAt     DateTime
+  effectiveFrom   DateTime?
+  effectiveTo     DateTime?
+  isPreferred     Boolean   @default(false)
+  selectionReason String?
+  createdAt       DateTime  @default(now())
+
+  source Source @relation(fields: [sourceId], references: [id])
+
+  @@index([subjectType, subjectId, field])
+}

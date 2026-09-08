@@ -4,10 +4,10 @@
 
 **Blocked by:** 01 — Verify Met + AIC source register
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Migrations create all listed entity tables plus their key relationships
-- [ ] Assertion table supports multiple values per field with source, retrieval date, effective dates, and selection reason
-- [ ] Creation-date fields store display text alongside sortable earliest/latest values and a precision marker (exact/approximate/disputed)
-- [ ] A physical object's own identifiers/dimensions are distinct from the named artistic work/concept it belongs to
-- [ ] Seed-and-read round-trip test passes for each entity
+- [x] Migrations create all listed entity tables plus their key relationships
+- [x] Assertion table supports multiple values per field with source, retrieval date, effective dates, and selection reason
+- [x] Creation-date fields store display text alongside sortable earliest/latest values and a precision marker (exact/approximate/disputed)
+- [x] A physical object's own identifiers/dimensions are distinct from the named artistic work/concept it belongs to
+- [x] Seed-and-read round-trip test passes for each entity
