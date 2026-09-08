@@ -1,0 +1,109 @@
+import type { MetObject } from "@/lib/met/client";
+
+export interface NormalizedAssertion {
+  field: string;
+  value: string;
+  valueEarliest?: Date;
+  valueLatest?: Date;
+  precision?: "exact" | "approximate" | "disputed";
+}
+
+export interface NormalizedArtwork {
+  slug: string;
+  title: string;
+  artist: { slug: string; name: string } | null;
+  institution: { slug: string; name: string; city: string | null };
+  physicalObject: {
+    accessionNumber: string | null;
+    medium: string | null;
+    dimensions: string | null;
+  };
+  /** null when the object isn't eligible for reuse — the page must render "unavailable", not a broken image. */
+  image: { sourceUrl: string; credit: string | null; rightsUrl: string | null; altText: string } | null;
+  assertions: NormalizedAssertion[];
+  sourceUrl: string;
+}
+
+export function slugify(input: string): string {
+  return input
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-+|-+$)/g, "");
+}
+
+const MET_OPEN_ACCESS_POLICY_URL =
+  "https://www.metmuseum.org/about-the-met/policies-and-documents/open-access";
+
+/**
+ * Normalize a raw Met API object into the core data model's shape. Pure function — no
+ * I/O — so it can be unit-tested against a fixture without a live network call or a
+ * database. See docs/sources/source-register.md for the field-level rules this encodes.
+ */
+export function normalizeMetObject(obj: MetObject): NormalizedArtwork {
+  const artistName = obj.artistDisplayName?.trim();
+  const artist = artistName ? { slug: slugify(artistName), name: artistName } : null;
+
+  // Register gotcha: isPublicDomain and image-URL presence aren't reliably correlated —
+  // both must be checked before treating an image as usable.
+  const image =
+    obj.isPublicDomain && obj.primaryImage
+      ? {
+          sourceUrl: obj.primaryImage,
+          credit: obj.creditLine || null,
+          rightsUrl: MET_OPEN_ACCESS_POLICY_URL,
+          altText: `${obj.title}, ${obj.artistDisplayName || "artist unknown"}`,
+        }
+      : null;
+
+  const assertions: NormalizedAssertion[] = [];
+
+  if (obj.objectDate) {
+    // No explicit "disputed" signal in the Met payload; a "?" in the display text is the
+    // only hint the docs' example data ever shows for disputed dating. begin === end means
+    // a single confirmed year; otherwise treat the range as approximate.
+    const precision: NormalizedAssertion["precision"] = obj.objectDate.includes("?")
+      ? "disputed"
+      : obj.objectBeginDate === obj.objectEndDate
+        ? "exact"
+        : "approximate";
+
+    assertions.push({
+      field: "creationDate",
+      value: obj.objectDate,
+      valueEarliest: obj.objectBeginDate ? new Date(Date.UTC(obj.objectBeginDate, 0, 1)) : undefined,
+      valueLatest: obj.objectEndDate ? new Date(Date.UTC(obj.objectEndDate, 11, 31)) : undefined,
+      precision,
+    });
+  }
+
+  if (obj.artistDisplayBio) {
+    assertions.push({ field: "artistBio", value: obj.artistDisplayBio });
+  }
+
+  if (obj.tags && obj.tags.length > 0) {
+    assertions.push({ field: "subjectTags", value: obj.tags.map((t) => t.term).join(", ") });
+  }
+
+  // The per-object record URL, recorded as an assertion (not a schema column) so the
+  // generic Assertion mechanism is the single place every sourced fact — including "where
+  // did this citation come from" — lives. Read by the Sources tab.
+  if (obj.objectURL) {
+    assertions.push({ field: "sourceRecordUrl", value: obj.objectURL });
+  }
+
+  return {
+    slug: slugify(obj.title),
+    title: obj.title,
+    artist,
+    institution: { slug: "the-metropolitan-museum-of-art", name: "The Metropolitan Museum of Art", city: "New York" },
+    physicalObject: {
+      accessionNumber: obj.accessionNumber || null,
+      medium: obj.medium || null,
+      dimensions: obj.dimensions || null,
+    },
+    image,
+    assertions,
+    sourceUrl: obj.objectURL,
+  };
+}
