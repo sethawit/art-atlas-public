@@ -4,10 +4,10 @@
 
 **Blocked by:** 02 — Core data model + migrations
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] AIC source adapter fetches using the confirmed API shape from the source register, respecting its open-access reuse caveat
-- [ ] Retrieved fields normalized into the core data model, original wording preserved as an Assertion
-- [ ] `/artwork/<slug>` renders the seeded AIC artwork correctly using the same page built in ticket 03 (no AIC-specific page fork)
-- [ ] Sources tab links to the original AIC record and shows retrieval date
-- [ ] Image rendered with correct credit/rights, or labeled unavailable if ineligible
+- [x] AIC source adapter fetches using the confirmed API shape from the source register, respecting its open-access reuse caveat (`is_public_domain` gate, mirrored from the Met's `isPublicDomain`/`primaryImage` gotcha)
+- [x] Retrieved fields normalized into the core data model, original wording preserved as an Assertion
+- [x] `/artwork/<slug>` renders the seeded AIC artwork correctly using the same page built in ticket 03 (no AIC-specific page fork) — verified live at `/artwork/the-bedroom` (Van Gogh, "The Bedroom", AIC id 28560)
+- [x] Sources tab links to the original AIC record and shows retrieval date
+- [x] Image rendered with correct credit/rights, or labeled unavailable if ineligible (both branches unit-tested)

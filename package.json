@@ -11,7 +11,8 @@
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "test": "vitest run",
-    "ingest:met": "tsx scripts/ingest-met-artwork.ts"
+    "ingest:met": "tsx scripts/ingest-met-artwork.ts",
+    "ingest:aic": "tsx scripts/ingest-aic-artwork.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",
