@@ -4,9 +4,9 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Met Collection API: access method (auth or none), object fields available, open-access image eligibility rule, pagination, rate limits, documented in the register
-- [ ] AIC API: same, plus its open-access reuse policy caveat (not every image is eligible)
-- [ ] Register records, per source: access method, useful fields, rights, coverage gaps, freshness, integration priority
-- [ ] Any missing capability (auth wall, undocumented rate limit, restricted field) identified explicitly rather than assumed
+- [x] Met Collection API: access method (auth or none), object fields available, open-access image eligibility rule, pagination, rate limits, documented in the register
+- [x] AIC API: same, plus its open-access reuse policy caveat (not every image is eligible)
+- [x] Register records, per source: access method, useful fields, rights, coverage gaps, freshness, integration priority
+- [x] Any missing capability (auth wall, undocumented rate limit, restricted field) identified explicitly rather than assumed
