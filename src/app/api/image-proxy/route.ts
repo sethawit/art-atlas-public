@@ -16,9 +16,16 @@
 // Strict allowlist below (protocol + hostname + path prefix, checked after URL parsing,
 // not a naive string prefix match) keeps this from becoming an open SSRF proxy.
 
-// Diagnostic: AIC's Cloudflare protection 403s Vercel's default us-east-1 (iad1) function
-// IP range even with a passing Referer (confirmed live) — testing whether it's specific
-// to that region/ASN or a blanket datacenter-IP block regardless of region.
+// Known limitation, confirmed live in production (not reproducible from a residential/
+// dev-sandbox IP, which is why this wasn't caught before deploying): AIC's Cloudflare
+// protection still 403s this proxy's outbound fetch from Vercel's iad1 (us-east-1)
+// function IP range even with a Referer that passes reliably from a non-datacenter IP —
+// most likely an IP/ASN reputation rule layered on top of the Referer check, not
+// something a header alone can satisfy. `preferredRegion` is set here as a documented
+// intent, but Vercel's Hobby tier pins functions to iad1 regardless (confirmed via
+// x-vercel-id on a live response) — this has no effect without a paid plan that supports
+// region selection, and is not confirmed to fix it even then. See the ticket file for the
+// full trail and remaining options.
 export const preferredRegion = ["fra1", "lhr1", "sin1", "hnd1"];
 
 const ALLOWED_HOSTNAME = "www.artic.edu";
