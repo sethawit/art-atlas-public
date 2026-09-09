@@ -16,6 +16,11 @@
 // Strict allowlist below (protocol + hostname + path prefix, checked after URL parsing,
 // not a naive string prefix match) keeps this from becoming an open SSRF proxy.
 
+// Diagnostic: AIC's Cloudflare protection 403s Vercel's default us-east-1 (iad1) function
+// IP range even with a passing Referer (confirmed live) — testing whether it's specific
+// to that region/ASN or a blanket datacenter-IP block regardless of region.
+export const preferredRegion = ["fra1", "lhr1", "sin1", "hnd1"];
+
 const ALLOWED_HOSTNAME = "www.artic.edu";
 const ALLOWED_PATH_PREFIX = "/iiif/2/";
 const OUTBOUND_REFERER = "https://www.artic.edu/";
