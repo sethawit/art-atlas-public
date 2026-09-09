@@ -77,6 +77,10 @@ const AIC_URL_BY_SLUG: Record<string, string> = {
     "/artworks/87008",
   "under-the-wave-off-kanagawa-kanagawa-oki-nami-ura-also-known-as-the-great-wave-from-the-series-thirty-six-views-of-mount-fuji-fugaku-sanjurokkei":
     "/artworks/77333",
+  "under-the-wave-off-kanagawa-kanagawa-oki-nami-ura-also-known-as-the-great-wave-from-the-series-thirty-six-views-of-mount-fuji-fugaku-sanjurokkei-art-institute-of-chicago":
+    "/artworks/89503",
+  "under-the-wave-off-kanagawa-kanagawa-oki-nami-ura-also-known-as-the-great-wave-from-the-series-thirty-six-views-of-mount-fuji-fugaku-sanj-rokkei":
+    "/artworks/24645",
   "odawara-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi": "/artworks/2906",
   "sakanoshita-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi": "/artworks/3035",
   "shinagawa-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi": "/artworks/2887",
@@ -98,14 +102,63 @@ const AIC_URL_BY_SLUG: Record<string, string> = {
   "no-32-seba-from-the-series-sixty-nine-stations-of-the-kisokaido-kisokaido-rokujukyu-tsugi-no-uchi": "/artworks/11054",
 };
 
-const mountFujiPair = sameSeriesClique(
-  [
-    "shower-below-the-summit-sanka-hakuu-from-the-series-thirty-six-views-of-mount-fuji-fugaku-sanjurokkei",
-    "under-the-wave-off-kanagawa-kanagawa-oki-nami-ura-also-known-as-the-great-wave-from-the-series-thirty-six-views-of-mount-fuji-fugaku-sanjurokkei",
-  ],
-  "Thirty-Six Views of Mount Fuji (Fugaku sanjurokkei)",
-  "Katsushika Hokusai"
-);
+// Session-later addition: a Wikidata cross-check (P4610 ARTIC artwork ID) surfaced two
+// more Hokusai "Great Wave" objects already in our corpus (89503, 24645) — real, distinct
+// AIC accessions (confirmed live: same title/date/medium as the already-published 77333,
+// different artwork IDs — AIC genuinely holds three separate impressions of this print)
+// that had never been linked to anything. Each is same_series with "Shower Below the
+// Summit" (a different image in the same named series); the three Great Wave objects are
+// linked to each other as print_impression instead — §4's more precise type for multiple
+// impressions of one print, not same_series (which would misdescribe identical-image
+// impressions as merely "the same series").
+const mountFujiSeries = [
+  ...sameSeriesClique(
+    [
+      "shower-below-the-summit-sanka-hakuu-from-the-series-thirty-six-views-of-mount-fuji-fugaku-sanjurokkei",
+      "under-the-wave-off-kanagawa-kanagawa-oki-nami-ura-also-known-as-the-great-wave-from-the-series-thirty-six-views-of-mount-fuji-fugaku-sanjurokkei",
+    ],
+    "Thirty-Six Views of Mount Fuji (Fugaku sanjurokkei)",
+    "Katsushika Hokusai"
+  ),
+  ...sameSeriesClique(
+    [
+      "shower-below-the-summit-sanka-hakuu-from-the-series-thirty-six-views-of-mount-fuji-fugaku-sanjurokkei",
+      "under-the-wave-off-kanagawa-kanagawa-oki-nami-ura-also-known-as-the-great-wave-from-the-series-thirty-six-views-of-mount-fuji-fugaku-sanjurokkei-art-institute-of-chicago",
+    ],
+    "Thirty-Six Views of Mount Fuji (Fugaku sanjurokkei)",
+    "Katsushika Hokusai"
+  ),
+  ...sameSeriesClique(
+    [
+      "shower-below-the-summit-sanka-hakuu-from-the-series-thirty-six-views-of-mount-fuji-fugaku-sanjurokkei",
+      "under-the-wave-off-kanagawa-kanagawa-oki-nami-ura-also-known-as-the-great-wave-from-the-series-thirty-six-views-of-mount-fuji-fugaku-sanj-rokkei",
+    ],
+    "Thirty-Six Views of Mount Fuji (Fugaku sanjurokkei)",
+    "Katsushika Hokusai"
+  ),
+];
+
+const greatWaveImpressions = [
+  "under-the-wave-off-kanagawa-kanagawa-oki-nami-ura-also-known-as-the-great-wave-from-the-series-thirty-six-views-of-mount-fuji-fugaku-sanjurokkei",
+  "under-the-wave-off-kanagawa-kanagawa-oki-nami-ura-also-known-as-the-great-wave-from-the-series-thirty-six-views-of-mount-fuji-fugaku-sanjurokkei-art-institute-of-chicago",
+  "under-the-wave-off-kanagawa-kanagawa-oki-nami-ura-also-known-as-the-great-wave-from-the-series-thirty-six-views-of-mount-fuji-fugaku-sanj-rokkei",
+] as const;
+const greatWavePrintImpressions: VerifiedRelationship[] = [];
+for (let i = 0; i < greatWaveImpressions.length; i++) {
+  for (let j = i + 1; j < greatWaveImpressions.length; j++) {
+    greatWavePrintImpressions.push({
+      subjectSlug: greatWaveImpressions[i],
+      objectSlug: greatWaveImpressions[j],
+      type: "print_impression",
+      explanation:
+        'Both are separate Art Institute of Chicago accessions of the identical print — Hokusai\'s "Under the Wave off Kanagawa," also known as The Great Wave — same title, date (1830/33), medium, and dimensions in each object\'s own AIC catalogue record, confirmed against distinct artwork IDs.',
+      evidence: {
+        sourceName: `Art Institute of Chicago — object record (${greatWaveImpressions[i]})`,
+        sourceUrl: `https://www.artic.edu${AIC_URL_BY_SLUG[greatWaveImpressions[i]]}`,
+      },
+    });
+  }
+}
 
 const hokusaiTokaidoClique = sameSeriesClique(
   [
@@ -167,7 +220,8 @@ const pendantPair: VerifiedRelationship[] = [
 
 const relationships: VerifiedRelationship[] = [
   ...grainstackPairs,
-  ...mountFujiPair,
+  ...mountFujiSeries,
+  ...greatWavePrintImpressions,
   ...hokusaiTokaidoClique,
   ...oceanPair,
   ...hiroshigeTokaidoClique,

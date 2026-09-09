@@ -60,3 +60,41 @@ series/pair isn't in the corpus yet (ticket 09's own Stacks-of-Wheat expansion d
       afterward, confirmed 0 leftover artworks after each.
 - [x] 88 tests passing, typecheck clean
 - [x] README's story count and §3-target disclosure updated (2 → 8)
+
+## Resumed later this session — still 8, real search exhausted for now
+
+Asked directly to chase 2 more stories toward §3's "at least 10." Four new research
+methods tried against the full 334-object corpus, beyond ticket 09/16's title-text and AIC
+description-field passes:
+
+- [x] Scanned `PhysicalObject.rawRecord` (full raw API JSON, real since ticket 27) for
+      phrase hits (`pendant`, `diptych`, `triptych`, `study for`, `cast of`, `copy after`,
+      etc.) — 35 hits. Every one was either already published (the same ukiyo-e series),
+      a false positive (`"L'Indépendant"` containing the substring `pendant`), a single
+      accessioned multi-panel object (a real diptych/triptych *is* one `PhysicalObject`,
+      not two linkable ones — confirmed live for the Van Eyck diptych and Patinir
+      triptych), or a historically real pendant whose companion isn't in our corpus and
+      isn't traceable to a Met/AIC holding (§8: can't cite a third, unverified source).
+- [x] Scanned `OwnershipEvent`/`ExhibitionEvent` description text (real since ticket 25)
+      the same way — 9 hits, same outcome: named companions ("Flageolet Player," "portrait
+      of a young warrior," an unnamed "no. 234") checked against our own corpus and AIC's
+      live search API — none held by Met or AIC today, so none can be linked without going
+      outside our verified sources.
+- [x] Wikidata SPARQL, `P3634`/`P4610` (Met/AIC ID) cross-check against our own 334
+      objects: any two of ours sharing a `P179` (part of the series) value, or any direct
+      statement between two of our own Wikidata items. Real, new finding: two more AIC
+      accessions of Hokusai's "Great Wave" (89503, 24645) already in our corpus, never
+      linked to anything — confirmed live against AIC's API (same title/date/medium,
+      distinct artwork IDs; AIC genuinely holds three separate impressions).
+- [x] Published: each new Great Wave impression linked to "Shower Below the Summit" as
+      `same_series` (real — same named series, different image), and the three Great Wave
+      impressions linked to each other as `print_impression` instead of `same_series` —
+      §4's more precise type for multiple impressions of one identical print, first real
+      use of that relationship type in the catalogue.
+- [x] Net result: 38 → 43 edges, but **still 8 distinct stories** — the new edges enriched
+      the already-counted Hokusai cluster rather than forming a new one. No second story
+      found this pass either.
+- [x] 130 tests still passing, typecheck clean. README's "8" stands — genuinely re-checked,
+      not stale, and no honest path to 10 found without either a new source (outside §8's
+      Met/AIC/Europeana list already exhausted for these leads) or a specific new
+      acquisition ingest, the way ticket 09's grainstack expansion did.
