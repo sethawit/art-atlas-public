@@ -25,6 +25,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           </Link>
           <nav aria-label="Primary">
             <Link href="/explore">Explore</Link>
+            <Link href="/timeline">Timeline</Link>
             <Link href="/map">Map</Link>
             <Link href="/passport">My Art Passport</Link>
           </nav>

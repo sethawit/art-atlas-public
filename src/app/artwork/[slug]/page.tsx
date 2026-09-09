@@ -4,9 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { getArtworkBySlug } from "@/lib/queries/get-artwork-by-slug";
 import { getRelatedPieces } from "@/lib/queries/get-related-pieces";
 import PassportControls from "@/components/PassportControls";
+import { INSTITUTION_REFERENCE } from "@/lib/institutions/reference";
+import { slugify } from "@/lib/ingest/normalize-met";
 
 // Ticket 03 scope: Overview, Understand, and Sources. Ticket 09 adds Related pieces.
-// Where to see it (ticket 10) and Journey (Phase 2, §5) extend this same page later —
+// Ticket 13 adds Where to see it as its own tab (§6 lists six: Overview, Understand,
+// Related pieces, Where to see it, Journey, Sources — it had been folded into Overview).
+// Journey (provenance) stays deferred to Phase 2 (§3) —
 // see docs/superpowers/specs/2026-09-08-art-atlas-product-definition-and-sitemap.md.
 
 type RelatedView = "grid" | "comparison" | "map";
@@ -110,14 +114,6 @@ export default async function ArtworkPage({
                 <dd>{physicalObject.accessionNumber}</dd>
               </>
             )}
-            {physicalObject?.institution && (
-              <>
-                <dt>Institution</dt>
-                <dd>{physicalObject.institution.name}</dd>
-              </>
-            )}
-            <dt>Display status</dt>
-            <dd>{(physicalObject?.displayStatus ?? "unconfirmed").replace(/_/g, " ")}</dd>
           </dl>
         </section>
 
@@ -274,6 +270,50 @@ export default async function ArtworkPage({
                 </>
               )}
             </>
+          )}
+        </section>
+
+        <section aria-labelledby="where-heading">
+          <h2 id="where-heading">Where to see it</h2>
+          {physicalObject?.institution ? (
+            <>
+              <dl>
+                <dt>Institution</dt>
+                <dd>
+                  <Link href={`/museum/${physicalObject.institution.slug}`}>{physicalObject.institution.name}</Link>
+                </dd>
+                {physicalObject.institution.city && (
+                  <>
+                    <dt>City</dt>
+                    <dd>
+                      <Link href={`/city/${slugify(physicalObject.institution.city)}`}>
+                        {physicalObject.institution.city}
+                      </Link>
+                    </dd>
+                  </>
+                )}
+                <dt>Display status</dt>
+                <dd>{(physicalObject.displayStatus ?? "unconfirmed").replace(/_/g, " ")}</dd>
+                <dt>Public access</dt>
+                <dd>{(physicalObject.publicAccess ?? "unknown").replace(/_/g, " ")}</dd>
+              </dl>
+              {INSTITUTION_REFERENCE[physicalObject.institution.slug] && (
+                <p>
+                  <a
+                    href={INSTITUTION_REFERENCE[physicalObject.institution.slug].visitUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Official visit information
+                  </a>
+                  {" — "}an institution holding a work, or a general museum-access grant,
+                  doesn&apos;t establish that this specific piece is currently on view.
+                  Check before visiting.
+                </p>
+              )}
+            </>
+          ) : (
+            <p role="status">No holding institution on record for this piece.</p>
           )}
         </section>
 

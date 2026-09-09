@@ -53,11 +53,12 @@ dev DB: **69 artworks**, 18 artists, 2 institutions, 4 movements, 22 verified re
 | Page | What it does |
 |---|---|
 | `/` | Hero (real credited artwork), functional search, artist/museum discovery cards |
-| `/artwork/<slug>` | Overview, Understand, Related pieces (Family Explorer — grid/comparison/map), Sources, My Art Passport controls |
+| `/artwork/<slug>` | Overview, Understand, Related pieces (Family Explorer — grid/comparison/map), Where to see it, Sources, My Art Passport controls |
 | `/artist/<slug>` | Parsed bio (nationality/lifespan) where the source gives one, per-work style labels, works list |
 | `/movement/<slug>` | Kind (period vs. movement, distinguished), geography/characteristics, associated artists, representative works |
 | `/museum/<slug>`, `/city/<slug>` | Real holdings, official visit link, saved-works tie-in |
 | `/map` | Real Leaflet map (OpenStreetMap tiles) + accessible institution list |
+| `/timeline` | Artworks grouped by century from real creationDate data, undated works in their own honest bucket |
 | `/explore` | Title/artist search with spelling tolerance, 5 combinable filters, pagination |
 | `/passport` | Local-only saved lists (want to see / seen / want to understand), private notes, filters |
 | `/admin` | Duplicate-flag review, per-artwork assertion approval, image removal — **unauthenticated, see below** |
@@ -102,8 +103,25 @@ an oversight, and each is written up in more detail in its ticket file under
 - **`art_atlas_test` database creation is a manual setup step**, not automated via
   `docker-compose.yml` (which only auto-creates the first DB via `POSTGRES_DB`). See
   Setup above.
-- **No Timeline page, no photo identification, no semantic search, no accounts.** All
-  explicitly Phase 2/3 in the master prompt, not attempted here.
+- **No photo identification, semantic search, or accounts.** Explicitly Phase 2/3 in the
+  master prompt, not attempted here. (Timeline exists — see the feature table above;
+  added in ticket 13 after a fresh master-prompt-vs-implementation pass found it missing.)
+- **No "Why does this look familiar?" or "What else was happening then?"** (§5) — two of
+  the master prompt's three "memorable experiences." "Compare and understand" exists but
+  only inside the Family Explorer (tied to verified relationships, capped at 3 works),
+  not as a general-purpose "pick any works and compare" tool. Not yet attempted.
+- **No per-page SEO metadata.** Every page shares the root layout's static title/
+  description — §13 asks for "meaningful metadata" per detail page (dynamic Next.js
+  `generateMetadata`), not implemented.
+- **No alternate-title data.** §6 asks for "title/alternate titles" on the artwork page;
+  no alt-title field exists anywhere in the data model or either source adapter.
+- **`ImageAsset.eligibleUses` is a dead column.** In the schema, never populated by
+  either normalizer.
+- **Journey (ownership/provenance) stays deferred**, per §3's own phase gating —
+  "publicly documented provenance" is explicitly Phase 2 — even though §6 lists it as
+  one of the artwork page's six tabs without a phase caveat there. A deliberate reading
+  of §3 over §6's literal tab list, not an oversight; flagged here so it's a visible
+  choice, not a silent gap.
 
 ## Source coverage
 
@@ -119,14 +137,21 @@ artwork page falls back to an explicit "unavailable" state instead.
 
 In rough priority order for continuing this backlog:
 
-1. Run `npm run ingest:bulk` with a larger target to grow the corpus toward 200–500 —
+1. Build §5's remaining two "memorable experiences" — "Why does this look familiar?"
+   (grouped by subject/technique/movement/influence/visual similarity, each explained)
+   and "What else was happening then?" (contemporaneous works across regions/traditions,
+   explicit about a movement label's geographic scope). Both are read-only queries over
+   data already in the database, same shape as ticket 13's timeline.
+2. Add per-page `generateMetadata` (title/description/OG per artwork, artist, movement)
+   — §13's SEO requirement, currently only a static site-wide title exists.
+3. Run `npm run ingest:bulk` with a larger target to grow the corpus toward 200–500 —
    the pipeline is proven, this is purely a longer run (respecting AIC's rate limit). As
    the corpus grows, watch for more known series/companion pieces the way ticket 09's
    Stacks of Wheat expansion did, and publish them the same way.
-2. Add authentication to `/admin` before any public deployment.
-3. Extend ticket 08's movement backfill to Met-sourced works once a suitable Met field
+4. Add authentication to `/admin` before any public deployment.
+5. Extend ticket 08's movement backfill to Met-sourced works once a suitable Met field
    or a Getty AAT reconciliation pass is chosen (source register flags Getty AAT as an
    enrichment source not yet integrated).
-4. Phase 2 per the master prompt: interactive timelines, deeper provenance /
-   `OwnershipEvent` + `Exhibition`/`LoanEvent` modeling, `LocationAssertion` freshness
+6. Phase 2 per the master prompt: deeper provenance / `OwnershipEvent` +
+   `Exhibition`/`LoanEvent` modeling (the Journey tab), `LocationAssertion` freshness
    policy, more collections beyond the Met and AIC.

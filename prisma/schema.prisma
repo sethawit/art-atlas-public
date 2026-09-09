@@ -57,6 +57,13 @@ model PhysicalObject {
   // Phase 2). Filterable (ticket 07) and shown on Family Explorer cards (ticket 09)
   // regardless — an honest "unconfirmed" is still real, functioning data.
   displayStatus     String   @default("unconfirmed")
+  // "museum_access" | "appointment" | "private_no_access" | "unknown" — §7's public-access
+  // concept, distinct from displayStatus (an institution can hold a work with full public
+  // museum access even while that specific piece is off view). Defaults to museum_access,
+  // not "unknown": every current source (Met, AIC) is a public museum — a verified,
+  // stable institutional fact, not a per-object guess. A future private-collection source
+  // would need to override this explicitly at ingest time.
+  publicAccess      String   @default("museum_access")
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
