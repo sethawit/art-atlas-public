@@ -9,6 +9,7 @@ import { getWhatElseWasHappening } from "@/lib/queries/get-what-else-was-happeni
 import PassportControls from "@/components/PassportControls";
 import { INSTITUTION_REFERENCE } from "@/lib/institutions/reference";
 import { isDisplayStatusStale, DISPLAY_STATUS_FRESHNESS_DAYS } from "@/lib/institutions/freshness";
+import { getJourney } from "@/lib/queries/get-journey";
 import { slugify } from "@/lib/ingest/normalize-met";
 
 // Ticket 03 scope: Overview, Understand, and Sources. Ticket 09 adds Related pieces.
@@ -76,6 +77,7 @@ export default async function ArtworkPage({
     { heading: "A documented influence", entries: looksFamiliar.documentedInfluence },
   ].filter((g) => g.entries.length > 0);
   const whatElse = await getWhatElseWasHappening(prisma, artwork.id);
+  const journey = physicalObject ? await getJourney(prisma, physicalObject.id) : { ownership: [], exhibitions: [] };
 
   // Map view: this work plus every related piece, grouped by holding institution.
   const mapEntries = [
@@ -432,6 +434,58 @@ export default async function ArtworkPage({
             </>
           ) : (
             <p role="status">No holding institution on record for this piece.</p>
+          )}
+        </section>
+
+        <section aria-labelledby="journey-heading">
+          <h2 id="journey-heading">Journey</h2>
+          {journey.ownership.length === 0 && journey.exhibitions.length === 0 ? (
+            <p>
+              No documented ownership or exhibition history for this piece yet — most of
+              our catalogue doesn&apos;t have this level of research done. Not the same as
+              an unowned or unexhibited work; simply undocumented here.
+            </p>
+          ) : (
+            <>
+              {journey.ownership.length > 0 && (
+                <div>
+                  <h3>Ownership</h3>
+                  <p>
+                    In the source&apos;s own order, shown verbatim — not split into
+                    separate owner/date fields, since doing that reliably from prose risks
+                    misattributing an agent as an owner or guessing a date the text
+                    doesn&apos;t clearly give.
+                  </p>
+                  <ol>
+                    {journey.ownership.map((event) => (
+                      <li key={event.sequence}>{event.description}</li>
+                    ))}
+                  </ol>
+                  <p>
+                    Source:{" "}
+                    <a href={journey.ownership[0].sourceUrl} target="_blank" rel="noopener noreferrer">
+                      {journey.ownership[0].sourceName}
+                    </a>
+                  </p>
+                </div>
+              )}
+              {journey.exhibitions.length > 0 && (
+                <div>
+                  <h3>Exhibitions</h3>
+                  <ol>
+                    {journey.exhibitions.map((event) => (
+                      <li key={event.sequence}>{event.description}</li>
+                    ))}
+                  </ol>
+                  <p>
+                    Source:{" "}
+                    <a href={journey.exhibitions[0].sourceUrl} target="_blank" rel="noopener noreferrer">
+                      {journey.exhibitions[0].sourceName}
+                    </a>
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </section>
 

@@ -41,7 +41,7 @@ npm run relationships:publish       # publish the hand-verified Family Explorer 
 ```
 
 ```bash
-npm test           # vitest — 94 tests, run against .env.test's DB
+npm test           # vitest — 110 tests, run against .env.test's DB
 npx tsc --noEmit    # typecheck
 ```
 
@@ -56,12 +56,13 @@ of §3's "at least 10" Phase 1 launch target despite a real, thorough search (ti
 patterns beyond series membership, plus reading actual AIC curatorial description text
 for connections not visible in titles at all); disclosed here per the master prompt's own
 instruction to report a shortfall honestly rather than let the relationship-row count
-read as more stories than it is.
+read as more stories than it is. 884 real `OwnershipEvent` + 1,772 real `ExhibitionEvent`
+rows (ticket 25) across 208/264 AIC-sourced physical objects.
 
 | Page | What it does |
 |---|---|
 | `/` | Hero (real credited artwork), functional search, a real featured related-piece story, artist/museum/style discovery cards |
-| `/artwork/<slug>` | Overview, Understand, Related pieces (Family Explorer — grid/comparison/map), Why does this look familiar? (subject/technique/movement/documented-influence pattern matches), What else was happening then? (contemporaneous works, favoring a different place/culture), Where to see it, Sources, My Art Passport controls |
+| `/artwork/<slug>` | Overview, Understand, Related pieces (Family Explorer — grid/comparison/map), Why does this look familiar? (subject/technique/movement/documented-influence pattern matches), What else was happening then? (contemporaneous works, favoring a different place/culture), Where to see it (with a freshness note when stale), Journey (real ownership/exhibition history where documented), Sources, My Art Passport controls |
 | `/artist/<slug>` | Parsed bio (nationality/lifespan) where the source gives one, per-work style labels, works list |
 | `/movement/<slug>` | Kind (period vs. movement, distinguished), geography/characteristics, associated artists, representative works |
 | `/museum/<slug>`, `/city/<slug>` | Real holdings, official visit link, saved-works tie-in |
@@ -140,11 +141,13 @@ an oversight, and each is written up in more detail in its ticket file under
   ship a column that would never display anything.
 - **`ImageAsset.eligibleUses` is a dead column.** In the schema, never populated by
   either normalizer.
-- **Journey (ownership/provenance) stays deferred**, per §3's own phase gating —
-  "publicly documented provenance" is explicitly Phase 2 — even though §6 lists it as
-  one of the artwork page's six tabs without a phase caveat there. A deliberate reading
-  of §3 over §6's literal tab list, not an oversight; flagged here so it's a visible
-  choice, not a silent gap.
+- **Journey (ownership/provenance) date-range/gap presentation isn't attempted.** The
+  tab itself is now built (ticket 25) from real AIC provenance/exhibition text, but §6's
+  "present missing intervals as gaps" needs clean date ranges per owner — extracting
+  those reliably from free-form prose (rather than just preserving the source's own
+  segment order, which is what's built) is real additional parsing risk not taken on
+  here. Loan-specific events (distinct from exhibitions) also aren't populated — no
+  source here gives structured loan data.
 
 ## Source coverage
 
@@ -186,3 +189,12 @@ location freshness management"). Plan: `docs/superpowers/specs/2026-09-09-art-at
   medium filters, generalizing §5's "What else was happening then?" fields from one
   artwork to the whole timeline — a genuine narrowing of the underlying query, verified
   live (`?place=France` returns 93 of 322 total dated works).
+- **Ownership Journey** (ticket 25) — done for ownership + exhibitions. AIC's API turns
+  out to have real `provenance_text`/`exhibition_history` fields (confirmed live, Met has
+  neither) — genuine museum-published scholarly provenance research, not placeholder
+  data. Deliberately not parsed into structured owner-name/date fields (the prose
+  distinguishes an agent from an owner in ways a generic parser risks misattributing);
+  instead the source's own text is split into discrete, ordered segments and shown
+  verbatim. 208/264 AIC-sourced physical objects (79%) ended up with real ownership data
+  after backfilling the existing corpus. Loan-specific events and date-range/gap
+  presentation aren't attempted — see Known limitations.

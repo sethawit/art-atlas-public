@@ -74,12 +74,69 @@ model PhysicalObject {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  artwork     Artwork      @relation(fields: [artworkId], references: [id])
-  institution Institution? @relation(fields: [institutionId], references: [id])
-  images      ImageAsset[]
+  artwork          Artwork           @relation(fields: [artworkId], references: [id])
+  institution      Institution?      @relation(fields: [institutionId], references: [id])
+  images           ImageAsset[]
+  ownershipEvents  OwnershipEvent[]
+  exhibitionEvents ExhibitionEvent[]
 
   @@index([artworkId])
   @@index([institutionId])
+}
+
+// §6 "Ownership journey" / §10 OwnershipEvent, Exhibition/LoanEvent (ticket 25, Phase 2).
+// Tied to PhysicalObject, not Artwork — provenance is a specific physical object's
+// history (§10: "A physical object has its own ... condition/location history"), not the
+// abstract work/concept's.
+//
+// Sourced from AIC's `provenance_text` field (Met's API has no equivalent — confirmed
+// live, see ticket 25's file) — real museum-published scholarly provenance research, but
+// unstructured prose, not discrete structured fields. Deliberately NOT parsed into
+// separate owner-name/date/transfer-type columns: that would require confidently
+// distinguishing an owner from an agent ("sold... as the agent for Knoedler and Company"
+// — the agent is explicitly NOT the owner in the source text) and extracting dates from
+// inconsistent phrasing, both real risks of misattribution the master prompt explicitly
+// warns against (§6: "do not infer identities"). Instead: the source's own text is split
+// into discrete segments (semicolon-separated, respecting bracket/paren nesting so a
+// citation aside is never split mid-thought) and shown verbatim, in the source's own
+// order — sequence preserves that order without asserting a date we can't verify we
+// parsed correctly. "Present missing intervals as gaps" (§6) is honestly not attempted
+// here: it needs clean date ranges per owner, which parsing this prose reliably enough to
+// assert doesn't clear this project's evidentiary bar.
+model OwnershipEvent {
+  id               String   @id @default(cuid())
+  physicalObjectId String
+  sequence         Int
+  description      String
+  sourceId         String
+  retrievedAt      DateTime
+
+  physicalObject PhysicalObject @relation(fields: [physicalObjectId], references: [id])
+  source         Source         @relation(fields: [sourceId], references: [id])
+
+  @@unique([physicalObjectId, sequence])
+  @@index([physicalObjectId])
+}
+
+// Covers §10's "Exhibition/LoanEvent" as one model — AIC's `exhibition_history` field
+// documents exhibitions only; no source here gives structured loan-specific data (a
+// current/temporary loan feed), so "loan" as a distinct sub-type isn't populated. Same
+// segment-preservation approach as OwnershipEvent, but split on the source's own blank
+// lines (confirmed live: each exhibition entry is its own paragraph), which is a much
+// more reliable boundary than provenance_text's semicolon-in-prose format.
+model ExhibitionEvent {
+  id               String   @id @default(cuid())
+  physicalObjectId String
+  sequence         Int
+  description      String
+  sourceId         String
+  retrievedAt      DateTime
+
+  physicalObject PhysicalObject @relation(fields: [physicalObjectId], references: [id])
+  source         Source         @relation(fields: [sourceId], references: [id])
+
+  @@unique([physicalObjectId, sequence])
+  @@index([physicalObjectId])
 }
 
 model Artist {
@@ -149,8 +206,10 @@ model Source {
   url       String
   createdAt DateTime @default(now())
 
-  assertions    Assertion[]
-  relationships Relationship[]
+  assertions       Assertion[]
+  relationships    Relationship[]
+  ownershipEvents  OwnershipEvent[]
+  exhibitionEvents ExhibitionEvent[]
 }
 
 // Polymorphic fact table: one row per (subject, field, competing value). subjectType +

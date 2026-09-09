@@ -25,6 +25,11 @@ const ARTWORK_FIELDS = [
   "term_titles",
   "style_title",
   "image_id",
+  // Ticket 25 (Phase 2) — real museum-published provenance/exhibition text. Confirmed
+  // live: present on roughly 40% of a general sample, null on the rest (not every AIC
+  // record has this research done) — see ticket 25's file.
+  "provenance_text",
+  "exhibition_history",
 ].join(",");
 
 export interface AicThumbnail {
@@ -49,6 +54,8 @@ export interface AicArtwork {
   term_titles: string[] | null;
   style_title: string | null;
   image_id: string | null;
+  provenance_text: string | null;
+  exhibition_history: string | null;
 }
 
 export class AicApiError extends Error {
