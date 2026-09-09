@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Note (ticket 06):** `/explore?q=` already exists as a minimal title/artist search (`src/app/explore/page.tsx`, `src/lib/queries/search-artworks.ts`) — the homepage search bar needed a real destination. Extend this route with filters/pagination/aliases rather than creating a new one.
+
 - [ ] All six filter dimensions work and combine correctly
 - [ ] Filter state round-trips through the URL (reload/share preserves results)
 - [ ] Title aliases and basic spelling tolerance are supported in search

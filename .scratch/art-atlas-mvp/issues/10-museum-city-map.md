@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Note (ticket 06):** `/museum/<slug>` already exists as a minimal page (`src/app/museum/[slug]/page.tsx`, `src/lib/queries/get-institution-by-slug.ts`) — name, city, real holdings list. Extend rather than recreate: still needed here — official visit link, `/city/<slug>`, `/map`, freshness-labeled hours/exhibitions, and the Art Passport tie-in.
+
 - [ ] Museum page lists its catalogued artworks and links to the institution's official site
 - [ ] Any hours/ticket/exhibition info carries a source and freshness label, or is omitted
 - [ ] `/map` shows all institutions holding catalogued artworks with working links to their pages
