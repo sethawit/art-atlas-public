@@ -69,13 +69,13 @@ means: more relationship types actually populated (currently 2 of 9 types have r
 `print_impression`, `cast_from_model`, `copy_after` have zero), which is really Track A's
 item 16 (more research) continued at larger scale, not new engineering.
 
-### B4 — More collections beyond Met/AIC
+### B4 — More collections beyond Met/AIC — done (research), blocked (ingestion)
 
-§8 lists Europeana as the natural next source (cross-institution discovery, item-level
-rights per record) — Art UK and individual museum APIs are alternatives. Needs its own
-source-register entry (`docs/sources/source-register.md`) verifying access, pagination,
-rate limits, and image rights before any ingestion code — same bar §8 held the original
-two sources to, not a shortcut for a third.
+Ticket 26. Europeana confirmed live to require a registered API key (unlike Met/AIC's
+keyless access) — obtaining one needs account creation on Europeana's site, outside what
+this agent does on the user's behalf. Endpoints, pagination, and the rights field
+(`edm:rights`) are all confirmed and source-registered; a real adapter is ready to build
+once the user supplies a key.
 
 ### B5 — Interactive historical timeline
 

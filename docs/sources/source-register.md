@@ -66,3 +66,52 @@ Method note: `www.metmuseum.org` and `www.artic.edu` (the museum marketing sites
   - The 10,000-record cap on a single search query (same shape as the Met's 10,000-offset+limit cap) means true full-collection harvesting requires either the documented bulk data dump (linked from the docs site but not fetched/verified in this pass) or a filtered/sharded set of queries, not a single paginated crawl.
 
 **Integration priority**: Phase 1 (primary ingestion source, alongside the Met — per Art Atlas product definition, Met + AIC are the only two Phase 1 collection sources).
+
+---
+
+## Europeana APIs (Phase 2 candidate — research done, ingestion blocked, ticket 26)
+
+- **Access method**: **Requires a registered API key** — confirmed live: `curl
+  "https://api.europeana.eu/record/v2/search.json?query=van+gogh&rows=1"` with no key
+  returns `{"success":false,"error":"Unauthorized","message":"Invalid API key
+  provided!","code":"invalid_apikey"}`. A real, material difference from the Met/AIC
+  (both fully keyless) — since 28 May 2025 keys are issued via account registration on
+  the Europeana website (Personal vs. Project tiers). — https://api.europeana.eu/record/v2/search.json
+  (verified live 2026-09-09); https://europeana.atlassian.net/wiki/spaces/EF/pages/2360508417 (retrieved 2026-09-09).
+
+- **Endpoints**: Search API (`api.europeana.eu/record/v2/search.json` —
+  keyword/faceted search across metadata+media) and Record API (fetch one item's full
+  EDM-modelled metadata by Record ID). — https://europeana.atlassian.net/wiki/spaces/EF/pages/2385739812 (retrieved 2026-09-09).
+
+- **Item-level rights field**: `edm:rights` (also surfaced as `europeana:rights`) — a
+  real, documented per-item rights-statement field, the same kind of gate §8 requires
+  before treating any Europeana image as reusable (same shape as the Met's
+  `isPublicDomain`/AIC's `is_public_domain`, though not independently confirmed live
+  here since ingestion is blocked — see below). — search result summary, not directly
+  fetched (retrieved 2026-09-09) — **treat as needing live re-verification before any
+  real ingestion**, per this project's own standing rule not to trust docs alone.
+
+- **Pagination**: Offset-based pagination is capped — beyond the first 1,000 results,
+  the API returns "It is not possible to paginate beyond the first 1000 search results.
+  Please use cursor-based pagination instead," meaning any real harvest needs
+  cursor-based pagination, not a naive page-number loop. — https://europeana.atlassian.net/wiki/spaces/EF/pages/2360508417 (retrieved 2026-09-09).
+
+- **Rate limits**: A fair-use policy is referenced as governing Personal vs. Project key
+  limits, but the exact numeric ceiling (requests/day or /minute) was **not confirmed** —
+  the linked "Fair use policy & guidelines" page wasn't directly fetchable in this pass.
+  Flagged honestly as an open gap, not guessed at.
+
+- **Why ingestion is blocked here, not just deprioritized**: obtaining a Europeana API
+  key requires creating an account on Europeana's own site. That's account creation on a
+  third-party service — outside what this agent does on a user's behalf without them
+  doing it directly (see this session's own operating constraints). This isn't a
+  technical or research gap: the access method, pagination shape, and rights-field name
+  are all confirmed real and workable. The blocker is real for *any* agent working
+  hands-off in this environment, not specific to how this session happened to run.
+  **Continuing with permitted sources** (§8's own instruction for exactly this
+  situation) — Met + AIC stay Phase 1/2's only ingested collections. If the user
+  registers a personal API key themselves, a real Europeana adapter is a reasonable
+  next step, following the same "verify a live sample before writing the normalizer"
+  discipline as the Met/AIC adapters.
+
+**Integration priority**: Phase 2 candidate, blocked pending a user-provided API key — see ticket 26.

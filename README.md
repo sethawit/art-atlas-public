@@ -198,3 +198,12 @@ location freshness management"). Plan: `docs/superpowers/specs/2026-09-09-art-at
   verbatim. 208/264 AIC-sourced physical objects (79%) ended up with real ownership data
   after backfilling the existing corpus. Loan-specific events and date-range/gap
   presentation aren't attempted — see Known limitations.
+- **More collections (Europeana)** (ticket 26) — research done, ingestion genuinely
+  blocked. Verified live that Europeana's Search API requires a registered API key
+  (unauthenticated calls return a real `invalid_apikey` error) — a material difference
+  from the Met/AIC's fully keyless access. Obtaining a key requires account creation on
+  Europeana's site, which is outside what gets done on the user's behalf without them
+  doing it directly — a real operating constraint, not a research shortfall. Endpoints,
+  pagination (cursor-based beyond 1,000 results), and the item-level rights field
+  (`edm:rights`) are all confirmed and documented in the source register, ready for a
+  real adapter if the user provides a key.
