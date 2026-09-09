@@ -46,7 +46,7 @@ export default async function MuseumPage({ params }: { params: Promise<{ slug: s
             return (
               <li key={po.id}>
                 <Link href={`/artwork/${po.artwork.slug}`}>
-                  {image && <img src={image.sourceUrl} alt={image.altText ?? po.artwork.title} width={120} />}
+                  {image && <img src={image.sourceUrl} alt={image.altText ?? po.artwork.title} width={120} loading="lazy" />}
                   {po.artwork.title}
                   {po.artwork.artist && <> — {po.artwork.artist.name}</>}
                 </Link>

@@ -25,6 +25,7 @@ function normalizedFixture(overrides: Partial<NormalizedArtwork> = {}): Normaliz
     image: null,
     assertions: [],
     sourceUrl: `https://a.example.org/objects/1-${runId}`,
+    rawRecord: { fixture: true },
     ...overrides,
   };
 }
@@ -44,6 +45,22 @@ describe("writeNormalizedArtwork — identity and re-ingest", () => {
 
     const count = await prisma.physicalObject.count({ where: { artworkId: r1.artwork.id } });
     expect(count).toBe(1);
+  });
+
+  it("stores the raw source record verbatim, and updates it on re-ingest — §9's raw-record retention", async () => {
+    const first = normalizedFixture({
+      sourceUrl: `https://a.example.org/objects/raw-${runId}`,
+      rawRecord: { objectID: 1, title: "First fetch" },
+    });
+    const r1 = await writeNormalizedArtwork(prisma, first, SOURCE_A);
+    expect(r1.physicalObject.rawRecord).toEqual({ objectID: 1, title: "First fetch" });
+
+    const reFetched = normalizedFixture({
+      sourceUrl: `https://a.example.org/objects/raw-${runId}`,
+      rawRecord: { objectID: 1, title: "Re-fetched" },
+    });
+    const r2 = await writeNormalizedArtwork(prisma, reFetched, SOURCE_A);
+    expect(r2.physicalObject.rawRecord).toEqual({ objectID: 1, title: "Re-fetched" });
   });
 });
 

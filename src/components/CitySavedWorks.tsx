@@ -27,7 +27,7 @@ export default function CitySavedWorks({ cityName }: { cityName: string }) {
           {entries.map((entry) => (
             <li key={entry.artworkSlug}>
               <Link href={`/artwork/${entry.artworkSlug}`}>
-                {entry.imageUrl && <img src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={100} />}
+                {entry.imageUrl && <img src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={100} loading="lazy" />}
                 {entry.title}
               </Link>
               {entry.artistName && <> — {entry.artistName}</>}

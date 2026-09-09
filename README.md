@@ -41,7 +41,7 @@ npm run relationships:publish       # publish the hand-verified Family Explorer 
 ```
 
 ```bash
-npm test           # vitest — 120 tests, run against .env.test's DB
+npm test           # vitest — 121 tests, run against .env.test's DB
 npx tsc --noEmit    # typecheck
 ```
 
@@ -75,14 +75,17 @@ rows (ticket 25) across 208/264 AIC-sourced physical objects.
 
 Ingestion: adapters for the Met Collection API and AIC API, source-register-verified
 (`docs/sources/source-register.md`), idempotent bulk pipeline with retry and rate-limit
-spacing, sync logging (`IngestLog`), and duplicate-safe writes (two different physical
-objects sharing a title-slug get a disambiguated second `Artwork` + a `DuplicateFlag`,
-never a silent merge — see ADR 0001 and ticket 05's file for the bug this fixed).
+spacing, sync logging (`IngestLog`), raw source record retention (`PhysicalObject.rawRecord`
+— the full Met/AIC API response, real on all 334 physical objects, ticket 27), and
+duplicate-safe writes (two different physical objects sharing a title-slug get a
+disambiguated second `Artwork` + a `DuplicateFlag`, never a silent merge — see ADR 0001
+and ticket 05's file for the bug this fixed).
 
 Design: a real stylesheet (ticket 12) — warm off-white background, restrained teal
 accent, Libre Franklin (navigation/labels) + Source Serif 4 (reading content), WCAG
 AA-passing contrast, visible keyboard focus everywhere, mobile-safe comparison table,
-real loading/error/not-found states.
+real loading/error/not-found states, lazy-loaded gallery images (ticket 27) on every
+list/grid page.
 
 ## Known limitations
 

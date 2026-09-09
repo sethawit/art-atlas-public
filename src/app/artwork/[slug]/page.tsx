@@ -205,7 +205,7 @@ export default async function ArtworkPage({
                       <li key={rp.relationship.id}>
                         <Link href={`/artwork/${rp.artwork.slug}`}>
                           {rpImage && (
-                            <img src={rpImage.sourceUrl} alt={rpImage.altText ?? rp.artwork.title} width={160} />
+                            <img src={rpImage.sourceUrl} alt={rpImage.altText ?? rp.artwork.title} width={160} loading="lazy" />
                           )}
                           <p>{rp.artwork.title}</p>
                         </Link>
@@ -248,7 +248,7 @@ export default async function ArtworkPage({
                   <tbody>
                     <tr>
                       <td data-label="Image">
-                        {image && <img src={image.sourceUrl} alt={image.altText ?? artwork.title} width={100} />}
+                        {image && <img src={image.sourceUrl} alt={image.altText ?? artwork.title} width={100} loading="lazy" />}
                       </td>
                       <td data-label="Title">{artwork.title} (this work)</td>
                       <td data-label="Artist">{artwork.artist?.name}</td>
@@ -265,7 +265,7 @@ export default async function ArtworkPage({
                         <tr key={rp.relationship.id}>
                           <td data-label="Image">
                             {rpImage && (
-                              <img src={rpImage.sourceUrl} alt={rpImage.altText ?? rp.artwork.title} width={100} />
+                              <img src={rpImage.sourceUrl} alt={rpImage.altText ?? rp.artwork.title} width={100} loading="lazy" />
                             )}
                           </td>
                           <td data-label="Title">
@@ -335,7 +335,7 @@ export default async function ArtworkPage({
                   {group.entries.map((entry) => (
                     <li key={entry.slug}>
                       <Link href={`/artwork/${entry.slug}`}>
-                        {entry.imageUrl && <img src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={120} />}
+                        {entry.imageUrl && <img src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={120} loading="lazy" />}
                         <p>{entry.title}</p>
                       </Link>
                       {entry.artistName && <p>{entry.artistName}</p>}
@@ -367,7 +367,7 @@ export default async function ArtworkPage({
                   <li key={entry.slug}>
                     <Link href={`/artwork/${entry.slug}`}>
                       {entry.imageUrl && (
-                        <img src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={120} />
+                        <img src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={120} loading="lazy" />
                       )}
                       <p>{entry.title}</p>
                     </Link>

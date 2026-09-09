@@ -45,7 +45,7 @@ export function normalizeAicArtwork(obj: AicArtwork): NormalizedArtwork {
 
   if (obj.term_titles && obj.term_titles.length > 0) {
     // AIC's term_titles mixes technique/subject/period terms and can repeat — dedupe for
-    // display, original full list stays retrievable from the raw API response if needed.
+    // display; the original full list is retained verbatim in PhysicalObject.rawRecord.
     const uniqueTerms = Array.from(new Set(obj.term_titles));
     assertions.push({ field: "subjectTags", value: uniqueTerms.join(", ") });
   }
@@ -73,5 +73,6 @@ export function normalizeAicArtwork(obj: AicArtwork): NormalizedArtwork {
     image,
     assertions,
     sourceUrl: aicArtworkPageUrl(obj.id),
+    rawRecord: obj,
   };
 }

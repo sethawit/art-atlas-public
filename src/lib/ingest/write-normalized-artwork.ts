@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient, Prisma } from "@prisma/client";
 import type { NormalizedArtwork } from "@/lib/ingest/normalize-met";
 
 /**
@@ -105,7 +105,7 @@ async function resolveArtworkAndPhysicalObject(
     });
     const physicalObject = await prisma.physicalObject.update({
       where: { id: existingByExternalUrl.id },
-      data: { institutionId, ...normalized.physicalObject },
+      data: { institutionId, ...normalized.physicalObject, rawRecord: normalized.rawRecord as Prisma.InputJsonValue },
     });
     return { artwork, physicalObject, duplicateFlagged: false };
   }
@@ -121,6 +121,7 @@ async function resolveArtworkAndPhysicalObject(
         institutionId,
         externalRecordUrl: normalized.sourceUrl,
         ...normalized.physicalObject,
+        rawRecord: normalized.rawRecord as Prisma.InputJsonValue,
       },
     });
     return { artwork, physicalObject, duplicateFlagged: false };
@@ -138,6 +139,7 @@ async function resolveArtworkAndPhysicalObject(
       institutionId,
       externalRecordUrl: normalized.sourceUrl,
       ...normalized.physicalObject,
+      rawRecord: normalized.rawRecord as Prisma.InputJsonValue,
     },
   });
   await prisma.duplicateFlag.create({

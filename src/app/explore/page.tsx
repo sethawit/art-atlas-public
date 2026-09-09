@@ -155,7 +155,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
                     <label>
                       <input type="checkbox" name="slug" value={artwork.slug} />
                       <Link href={`/artwork/${artwork.slug}`}>
-                        {image && <img src={image.sourceUrl} alt={image.altText ?? artwork.title} width={120} />}
+                        {image && <img src={image.sourceUrl} alt={image.altText ?? artwork.title} width={120} loading="lazy" />}
                         {artwork.title}
                         {artwork.artist && <> — {artwork.artist.name}</>}
                       </Link>

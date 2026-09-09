@@ -72,7 +72,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
             return (
               <li key={artwork.id}>
                 <Link href={`/artwork/${artwork.slug}`}>
-                  {image && <img src={image.sourceUrl} alt={image.altText ?? artwork.title} width={120} />}
+                  {image && <img src={image.sourceUrl} alt={image.altText ?? artwork.title} width={120} loading="lazy" />}
                   {artwork.title}
                 </Link>
                 {/* Per-work style, not one blanket label for the whole artist — ticket 08. */}

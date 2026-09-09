@@ -73,7 +73,7 @@ export default async function TimelinePage({
               {century.entries.map((entry) => (
                 <li key={entry.artworkId}>
                   <Link href={`/artwork/${entry.slug}`}>
-                    {entry.imageUrl && <img src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={120} />}
+                    {entry.imageUrl && <img src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={120} loading="lazy" />}
                     {entry.title}
                   </Link>
                   {entry.artistName && <> — {entry.artistName}</>}

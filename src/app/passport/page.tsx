@@ -111,7 +111,7 @@ export default function PassportPage() {
                   {inList.map((entry) => (
                     <li key={entry.artworkSlug}>
                       <Link href={`/artwork/${entry.artworkSlug}`}>
-                        {entry.imageUrl && <img src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={100} />}
+                        {entry.imageUrl && <img src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={100} loading="lazy" />}
                         {entry.title}
                       </Link>
                       {entry.artistName && <span> — {entry.artistName}</span>}

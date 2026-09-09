@@ -73,7 +73,7 @@ export default async function ComparePage({
               {entries.map((entry) => (
                 <tr key={entry.slug}>
                   <td data-label="Image">
-                    {entry.imageUrl && <img src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={120} />}
+                    {entry.imageUrl && <img src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={120} loading="lazy" />}
                   </td>
                   <td data-label="Title">
                     <Link href={`/artwork/${entry.slug}`}>{entry.title}</Link>

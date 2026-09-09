@@ -68,7 +68,7 @@ export default async function MovementPage({ params }: { params: Promise<{ slug:
             return (
               <li key={artwork.id}>
                 <Link href={`/artwork/${artwork.slug}`}>
-                  {image && <img src={image.sourceUrl} alt={image.altText ?? artwork.title} width={120} />}
+                  {image && <img src={image.sourceUrl} alt={image.altText ?? artwork.title} width={120} loading="lazy" />}
                   {artwork.title}
                 </Link>
                 {artwork.artist && <> — {artwork.artist.name}</>}

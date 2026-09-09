@@ -24,6 +24,8 @@ export interface NormalizedArtwork {
   image: { sourceUrl: string; credit: string | null; rightsUrl: string | null; altText: string } | null;
   assertions: NormalizedAssertion[];
   sourceUrl: string;
+  /** The whole raw source API response, unmodified — §9 item 2's raw-record retention. */
+  rawRecord: unknown;
 }
 
 export function slugify(input: string): string {
@@ -128,5 +130,6 @@ export function normalizeMetObject(obj: MetObject): NormalizedArtwork {
     image,
     assertions,
     sourceUrl: obj.objectURL,
+    rawRecord: obj,
   };
 }

@@ -71,6 +71,14 @@ model PhysicalObject {
   // stable institutional fact, not a per-object guess. A future private-collection source
   // would need to override this explicitly at ingest time.
   publicAccess      String   @default("museum_access")
+  // §9 item 2: "Retain permitted raw source records for traceability." The full raw
+  // Met/AIC API response for this exact object, as returned at the most recent ingest —
+  // both APIs are public metadata with permitted reuse (source register), and this is
+  // the one place the whole response is kept; normalized fields elsewhere are a
+  // derived view, not the record of what the source actually said. Lets a normalizer
+  // bug be re-diagnosed, and a since-changed/removed source record be recovered,
+  // without needing to re-fetch (which may no longer even be possible).
+  rawRecord         Json?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
