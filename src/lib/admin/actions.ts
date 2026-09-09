@@ -68,3 +68,16 @@ export async function reviewExhibitionEvent(eventId: string, decision: "approved
   revalidatePath("/admin/journey");
   revalidatePath("/artwork/[slug]", "page");
 }
+
+/**
+ * §10's `Relationship.reviewStatus` — corrective, not a pending-approval queue (every
+ * row is already hand-researched before `publishRelationship` writes it, defaulting to
+ * "approved" — see the schema comment). This lets an admin flag one found to be wrong
+ * after publish, hiding it from Related pieces / "looks familiar" / Compare without
+ * deleting the row.
+ */
+export async function reviewRelationship(relationshipId: string, decision: "approved" | "flagged") {
+  await prisma.relationship.update({ where: { id: relationshipId }, data: { reviewStatus: decision } });
+  revalidatePath("/admin/artworks/[slug]", "page");
+  revalidatePath("/artwork/[slug]", "page");
+}

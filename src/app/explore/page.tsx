@@ -59,7 +59,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
       <h1>Explore</h1>
 
       <form action="/explore">
-        <label htmlFor="q">Search by artwork or artist</label>
+        <label htmlFor="q">Search by artwork, artist, or subject</label>
         <input id="q" name="q" type="search" defaultValue={params.q} />
 
         <fieldset>

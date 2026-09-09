@@ -152,6 +152,7 @@ async function findByDocumentedInfluence(prisma: PrismaClient, artworkId: string
     where: {
       relationshipType: "documented_influence",
       OR: [{ subjectArtworkId: artworkId }, { objectArtworkId: artworkId }],
+      reviewStatus: { not: "flagged" },
     },
     include: { subjectArtwork: true, objectArtwork: true },
   });

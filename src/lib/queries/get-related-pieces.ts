@@ -8,7 +8,10 @@ import { relationshipLabel, type RelationshipType } from "@/lib/relationships/ty
  */
 export async function getRelatedPieces(prisma: PrismaClient, artworkId: string) {
   const relationships = await prisma.relationship.findMany({
-    where: { OR: [{ subjectArtworkId: artworkId }, { objectArtworkId: artworkId }] },
+    where: {
+      OR: [{ subjectArtworkId: artworkId }, { objectArtworkId: artworkId }],
+      reviewStatus: { not: "flagged" },
+    },
     include: {
       subjectArtwork: {
         include: {

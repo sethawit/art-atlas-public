@@ -43,6 +43,7 @@ async function seedArtwork(opts: {
   displayStatus?: string;
   year: number;
   sourceId: string;
+  subjectTags?: string;
 }) {
   const artist = await prisma.artist.upsert({
     where: { slug: `${opts.artistName.toLowerCase().replace(/\s+/g, "-")}-${runId}` },
@@ -80,6 +81,19 @@ async function seedArtwork(opts: {
       isPreferred: true,
     },
   });
+  if (opts.subjectTags) {
+    await prisma.assertion.create({
+      data: {
+        subjectType: "Artwork",
+        subjectId: artwork.id,
+        field: "subjectTags",
+        value: opts.subjectTags,
+        sourceId: opts.sourceId,
+        retrievedAt: new Date(),
+        isPreferred: true,
+      },
+    });
+  }
   return artwork;
 }
 
@@ -123,6 +137,10 @@ beforeAll(async () => {
     medium: "Oil on canvas",
     year: 1950,
     sourceId,
+    // A runId-unique tag term, not a real subject word — a real word here would collide
+    // with genuine corpus subjectTags data the same way "Oil on canvas"/"Cypresses" did
+    // in earlier tickets (14/16's postmortems).
+    subjectTags: `TestSubjectTag-${runId}`,
   });
 });
 
@@ -172,6 +190,11 @@ describe("searchArtworks — filters", () => {
 
   it("finds matches on artist name", async () => {
     const { results } = await searchArtworks(prisma, { q: `Test Painter B ${runId}` });
+    expect(results.map((a) => a.title)).toEqual([`Moonrise ${runId}`]);
+  });
+
+  it("finds matches on subject/description text — §6's 'search by artwork, artist, or description'", async () => {
+    const { results } = await searchArtworks(prisma, { q: `TestSubjectTag-${runId}` });
     expect(results.map((a) => a.title)).toEqual([`Moonrise ${runId}`]);
   });
 

@@ -75,6 +75,15 @@ export async function listUnreviewedJourneyEvents(prisma: PrismaClient, take = 5
   return { ownership, exhibitions };
 }
 
+/** Every Relationship touching one artwork, either direction — for the per-artwork review page. */
+export async function getArtworkRelationshipsForReview(prisma: PrismaClient, artworkId: string) {
+  return prisma.relationship.findMany({
+    where: { OR: [{ subjectArtworkId: artworkId }, { objectArtworkId: artworkId }] },
+    include: { subjectArtwork: true, objectArtwork: true, evidenceSource: true },
+    orderBy: { createdAt: "asc" },
+  });
+}
+
 /** Every assertion for one artwork, grouped by field — for the per-artwork review page. */
 export async function getArtworkAssertionsForReview(prisma: PrismaClient, artworkId: string) {
   const assertions = await prisma.assertion.findMany({

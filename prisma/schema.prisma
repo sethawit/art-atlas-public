@@ -310,6 +310,15 @@ model Relationship {
   // Reader-facing sentence, written for a museum visitor, not art-history jargon.
   explanation      String
   evidenceSourceId String
+  // "approved" | "flagged" — §10: "Relationships should have ... review status."
+  // Defaults to "approved", not "unreviewed" like OwnershipEvent/ExhibitionEvent: unlike
+  // those (auto-published straight from raw source text), every Relationship row is
+  // already hand-researched before `publishRelationship` ever writes it (ticket 09's own
+  // process — never machine-generated, so there's no "candidate" state to hold rows in).
+  // The field exists so an admin can flag one after the fact if it's later found wrong,
+  // same corrective shape as ImageAsset.removedAt / OwnershipEvent.reviewStatus, not to
+  // gate a review queue that would otherwise be permanently empty.
+  reviewStatus     String    @default("approved")
   effectiveFrom    DateTime?
   effectiveTo      DateTime?
   createdAt        DateTime  @default(now())

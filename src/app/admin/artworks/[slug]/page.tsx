@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getArtworkAssertionsForReview } from "@/lib/admin/queries";
-import { approveAssertion, removeImage } from "@/lib/admin/actions";
+import { getArtworkAssertionsForReview, getArtworkRelationshipsForReview } from "@/lib/admin/queries";
+import { approveAssertion, removeImage, reviewRelationship } from "@/lib/admin/actions";
 
 export default async function AdminArtworkReviewPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -12,6 +12,7 @@ export default async function AdminArtworkReviewPage({ params }: { params: Promi
   if (!artwork) notFound();
 
   const byField = await getArtworkAssertionsForReview(prisma, artwork.id);
+  const relationships = await getArtworkRelationshipsForReview(prisma, artwork.id);
   const activeImage = artwork.physicalObjects.flatMap((po) => po.images)[0] ?? null;
 
   return (
@@ -63,6 +64,34 @@ export default async function AdminArtworkReviewPage({ params }: { params: Promi
             </ul>
           </fieldset>
         ))}
+      </section>
+
+      <section aria-labelledby="relationships-heading">
+        <h2 id="relationships-heading">Relationships</h2>
+        {relationships.length === 0 ? (
+          <p>No relationships touch this artwork.</p>
+        ) : (
+          <ul>
+            {relationships.map((rel) => (
+              <li key={rel.id}>
+                <strong>[{rel.reviewStatus}]</strong> {rel.relationshipType}:{" "}
+                {rel.subjectArtwork.title} → {rel.objectArtwork.title} — {rel.explanation}
+                {" — "}
+                <a href={rel.evidenceSource.url}>{rel.evidenceSource.name}</a>
+                <form
+                  action={async () => {
+                    "use server";
+                    await reviewRelationship(rel.id, rel.reviewStatus === "flagged" ? "approved" : "flagged");
+                  }}
+                >
+                  <button type="submit">
+                    {rel.reviewStatus === "flagged" ? "Unflag" : "Flag — hide from public pages"}
+                  </button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </main>
   );

@@ -41,7 +41,7 @@ npm run relationships:publish       # publish the hand-verified Family Explorer 
 ```
 
 ```bash
-npm test           # vitest — 119 tests, run against .env.test's DB
+npm test           # vitest — 120 tests, run against .env.test's DB
 npx tsc --noEmit    # typecheck
 ```
 
@@ -68,10 +68,10 @@ rows (ticket 25) across 208/264 AIC-sourced physical objects.
 | `/museum/<slug>`, `/city/<slug>` | Real holdings, official visit link, saved-works tie-in |
 | `/map` | Real Leaflet map (OpenStreetMap tiles) + accessible institution list |
 | `/timeline` | Artworks grouped by century from real creationDate data, undated works in their own honest bucket, filterable by real place/culture and medium |
-| `/explore` | Title/artist search with spelling tolerance, 6 combinable filters, pagination, select works to compare |
+| `/explore` | Title/artist/subject search with spelling tolerance, 6 combinable filters, pagination, select works to compare |
 | `/compare` | Compare 2–4 works of any kind side by side — images, dates, medium, dimensions, collections, any documented relationship between them, and real computed differences |
 | `/passport` | Local-only saved lists (want to see / seen / want to understand), private notes, filters |
-| `/admin` | Duplicate-flag review, per-artwork assertion approval, image removal, Journey (ownership/exhibition) review — HTTP Basic Auth protected (`ADMIN_PASSWORD`, ticket 19) |
+| `/admin` | Duplicate-flag review, per-artwork assertion approval, image removal, relationship review, Journey (ownership/exhibition) review — HTTP Basic Auth protected (`ADMIN_PASSWORD`, ticket 19) |
 
 Ingestion: adapters for the Met Collection API and AIC API, source-register-verified
 (`docs/sources/source-register.md`), idempotent bulk pipeline with retry and rate-limit

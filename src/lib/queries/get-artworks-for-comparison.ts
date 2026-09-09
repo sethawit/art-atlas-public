@@ -103,6 +103,7 @@ export async function getPairwiseComparisonInsights(
         { subjectArtworkId: { in: artworkIds }, objectArtworkId: { in: artworkIds } },
         { objectArtworkId: { in: artworkIds }, subjectArtworkId: { in: artworkIds } },
       ],
+      reviewStatus: { not: "flagged" },
     },
   });
 

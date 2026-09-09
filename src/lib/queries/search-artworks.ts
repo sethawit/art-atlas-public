@@ -17,8 +17,9 @@ const PAGE_SIZE = 24;
 /**
  * Full Explore search (ticket 07, movement/style filter added ticket 17): six real,
  * combinable filters (creation date range, medium, museum, city, display status,
- * movement/style) plus title/artist text search with a basic spelling-tolerance
- * fallback.
+ * movement/style) plus title/artist/description text search (subjectTags added in the
+ * §6 "search by artwork, artist, or description" follow-up) with a basic
+ * spelling-tolerance fallback on title/artist.
  */
 export async function searchArtworks(prisma: PrismaClient, filters: SearchFilters) {
   const page = Math.max(1, filters.page ?? 1);
@@ -81,13 +82,25 @@ export async function searchArtworks(prisma: PrismaClient, filters: SearchFilter
 }
 
 async function matchingArtworkIdsForQuery(prisma: PrismaClient, q: string): Promise<Set<string>> {
-  const exact = await prisma.artwork.findMany({
-    where: {
-      OR: [{ title: { contains: q, mode: "insensitive" } }, { artist: { name: { contains: q, mode: "insensitive" } } }],
-    },
-    select: { id: true },
-  });
-  if (exact.length > 0) return new Set(exact.map((a) => a.id));
+  const [exact, taggedIds] = await Promise.all([
+    prisma.artwork.findMany({
+      where: {
+        OR: [{ title: { contains: q, mode: "insensitive" } }, { artist: { name: { contains: q, mode: "insensitive" } } }],
+      },
+      select: { id: true },
+    }),
+    // §6: "search by artwork, artist, or description" — subjectTags is the real
+    // descriptive text this catalogue has (e.g. "Landscapes, Cypresses, Summer"); search
+    // previously covered only title/artist. A live subject-tag search ("Cypresses"
+    // matching Wheat Field with Cypresses even though the word isn't in its title)
+    // confirmed this was a real, not theoretical, gap.
+    prisma.assertion.findMany({
+      where: { subjectType: "Artwork", field: "subjectTags", value: { contains: q, mode: "insensitive" } },
+      select: { subjectId: true },
+    }),
+  ]);
+  const combined = new Set([...exact.map((a) => a.id), ...taggedIds.map((t) => t.subjectId)]);
+  if (combined.size > 0) return combined;
 
   // Basic spelling tolerance: trigram similarity fallback when substring match finds
   // nothing (e.g. "munet" for "Monet"). pg_trgm enabled in the display-status-and-search

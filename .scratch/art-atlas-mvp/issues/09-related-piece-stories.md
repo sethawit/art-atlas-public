@@ -27,3 +27,14 @@ Everything else was investigated and explicitly rejected, not skipped — generi
 **Second resumption pass — real Wikidata SPARQL queries, not just search excerpts:** ran actual structured queries against query.wikidata.org for every `P179` ("part of the series") and `P4969` ("studies") claim on Van Gogh, Cézanne, and Monet works — the three best-documented artists in the corpus, covering essentially every plausible lead (Sunflowers, L'Arlésienne, Bedroom in Arles, Roulin Family, Sower, Zouave, Night Café, Almond Blossoms, Haystacks, Gare Saint-Lazare, Houses of Parliament, Rouen Cathedral, Waterloo Bridge, Mont Sainte-Victoire, Bathers, Water Lilies, and more — hundreds of rows returned). Result: **every single series/study claim has exactly one end in our 64-item corpus, never both.** The corpus's items are consistently the *sole representative* of whatever series or subject they belong to, not one of a documented pair we happen to hold two sides of. This is now the third independent line of evidence (institutional catalogues, a dedicated background research agent, and structured Wikidata data) converging on the same result — not a research-effort ceiling anymore, a fact about which specific 64 objects this ingestion run happened to pull.
 
 **Conclusion:** the original 64-artwork corpus, researched to the depth the master prompt requires (no inference from title/subject/visual match) across two independent passes plus a dedicated background research agent, genuinely had a ceiling of 2 verified relationships — that finding was correct, not a research shortfall. What it actually revealed was that the corpus itself needed to grow to include known series members, which is exactly what "Corpus growth" above did: 5 real artworks ingested, 21 real relationships published from a single well-documented AIC series, no inference or fabrication involved. **10-relationship target met (22 published).**
+
+**Follow-up (found in a later master-prompt comparison pass):** §10 explicitly lists
+`Relationship`'s required fields, including "review status" — the original model didn't
+have one. Added `reviewStatus` ("approved" | "flagged"), defaulting to "approved" (not
+"unreviewed" like the Journey events' equivalent — every row here is already
+hand-researched before `publishRelationship` writes it, so there's no unreviewed backlog
+to hold rows in; the field exists so an admin can flag one after the fact if it's later
+found wrong). `getRelatedPieces`, `findByDocumentedInfluence`, and
+`getPairwiseComparisonInsights` all now exclude flagged rows. New "Relationships" section
+on the per-artwork admin review page with a flag/unflag toggle, gated by the existing
+`/admin` auth. Verified live.

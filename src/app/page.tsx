@@ -73,7 +73,7 @@ export default async function HomePage() {
       </header>
 
       <form action="/explore">
-        <label htmlFor="q">Search by artwork or artist</label>
+        <label htmlFor="q">Search by artwork, artist, or subject</label>
         <input id="q" name="q" type="search" placeholder="e.g. Van Gogh, Water Lilies" />
         <button type="submit">Search</button>
       </form>
