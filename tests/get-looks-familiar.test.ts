@@ -1,13 +1,15 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { newRunId } from "./helpers/run-id";
+import { cleanupByRunId } from "./helpers/cleanup";
 import { prisma } from "@/lib/prisma";
 import { getLooksFamiliar } from "@/lib/queries/get-looks-familiar";
 
+const runId = newRunId();
+
 afterAll(async () => {
+  await cleanupByRunId(prisma, runId);
   await prisma.$disconnect();
 });
-
-const runId = newRunId();
 const sharedTag = `Cypresses-${runId}`;
 
 async function seedArtwork(slug: string, title: string, medium: string, subjectTags: string | null, sourceId: string) {

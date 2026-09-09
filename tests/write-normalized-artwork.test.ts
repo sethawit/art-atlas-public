@@ -1,14 +1,16 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { newRunId } from "./helpers/run-id";
+import { cleanupByRunId } from "./helpers/cleanup";
 import { prisma } from "@/lib/prisma";
 import { writeNormalizedArtwork } from "@/lib/ingest/write-normalized-artwork";
 import type { NormalizedArtwork } from "@/lib/ingest/normalize-met";
 
+const runId = newRunId();
+
 afterAll(async () => {
+  await cleanupByRunId(prisma, runId);
   await prisma.$disconnect();
 });
-
-const runId = newRunId();
 const SOURCE_A = { name: `Source A ${runId}`, url: "https://a.example.org" };
 const SOURCE_B = { name: `Source B ${runId}`, url: "https://b.example.org" };
 

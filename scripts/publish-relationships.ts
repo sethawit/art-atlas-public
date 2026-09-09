@@ -147,6 +147,24 @@ const kisokaidoPair = sameSeriesClique(
   "Utagawa Hiroshige"
 );
 
+// Ticket 16 resumption — a real Met-held pendant pair, found by title text ("(one of a
+// pair)", the Met's own cataloguing) and confirmed live against the Met API: both
+// objects (189709, 189708) carry the identical title, date ("18th century"), and
+// attribution ("French Painter"), consecutive accession IDs.
+const pendantPair: VerifiedRelationship[] = [
+  {
+    subjectSlug: "still-life-with-musical-instruments-one-of-a-pair",
+    objectSlug: "still-life-with-musical-instruments-one-of-a-pair-the-metropolitan-museum-of-art",
+    type: "pendant_companion",
+    explanation:
+      'Both works are explicitly titled "(one of a pair)" in the Metropolitan Museum\'s own catalogue record, sharing an identical attribution ("French Painter", 18th century) and consecutive accession identifiers.',
+    evidence: {
+      sourceName: "The Metropolitan Museum of Art — object record (189709)",
+      sourceUrl: "https://www.metmuseum.org/art/collection/search/189709",
+    },
+  },
+];
+
 const relationships: VerifiedRelationship[] = [
   ...grainstackPairs,
   ...mountFujiPair,
@@ -154,6 +172,7 @@ const relationships: VerifiedRelationship[] = [
   ...oceanPair,
   ...hiroshigeTokaidoClique,
   ...kisokaidoPair,
+  ...pendantPair,
   {
     subjectSlug: "water-lily-pond",
     objectSlug: "water-lilies",

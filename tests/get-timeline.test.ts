@@ -1,13 +1,15 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { newRunId } from "./helpers/run-id";
+import { cleanupByRunId } from "./helpers/cleanup";
 import { prisma } from "@/lib/prisma";
 import { getTimeline } from "@/lib/queries/get-timeline";
 
+const runId = newRunId();
+
 afterAll(async () => {
+  await cleanupByRunId(prisma, runId);
   await prisma.$disconnect();
 });
-
-const runId = newRunId();
 
 async function seedDatedArtwork(slug: string, title: string, year: number | null, sourceId: string) {
   const artwork = await prisma.artwork.create({ data: { slug: `${slug}-${runId}`, title } });

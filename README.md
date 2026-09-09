@@ -48,13 +48,15 @@ npx tsc --noEmit    # typecheck
 ## What's implemented
 
 Real data throughout — nothing in the running app is placeholder or fabricated. Current
-dev DB: **334 artworks**, 177 artists, 2 institutions, 33 movements, 37 verified relationships
-across **7 distinct related-piece stories** — a full Monet "Stacks of Wheat" clique (7
-works), one documented-influence pair, and five real Hokusai/Hiroshige ukiyo-e print
-series found after ticket 18's corpus growth (ticket 16) — still short of §3's "at least
-10" Phase 1 launch target; disclosed here per the master prompt's own instruction to
-report a shortfall honestly rather than let the relationship-row count read as more
-stories than it is.
+dev DB: **334 artworks**, 177 artists, 2 institutions, 33 movements, 38 verified relationships
+across **8 distinct related-piece stories** — a full Monet "Stacks of Wheat" clique (7
+works), one documented-influence pair, five real Hokusai/Hiroshige ukiyo-e print series,
+and one Met-held pendant pair (ticket 16, after ticket 18's corpus growth) — still short
+of §3's "at least 10" Phase 1 launch target despite a real, thorough search (title-text
+patterns beyond series membership, plus reading actual AIC curatorial description text
+for connections not visible in titles at all); disclosed here per the master prompt's own
+instruction to report a shortfall honestly rather than let the relationship-row count
+read as more stories than it is.
 
 | Page | What it does |
 |---|---|
@@ -154,7 +156,10 @@ artwork page falls back to an explicit "unavailable" state instead.
 In rough priority order for continuing this backlog:
 
 1. Research and publish more related-piece stories toward §3's "at least 10" target —
-   currently 7 (see Known limitations). Same research-then-publish process as ticket 09/16.
+   currently 8 (see Known limitations). Same research-then-publish process as ticket 09/16
+   — a thorough pass already ran (title patterns + AIC description text); the remaining 2
+   likely need either real corpus growth toward a known series/pair not yet ingested, or
+   research into other artists' documented connections beyond Monet/Hokusai/Hiroshige.
 2. Extend ticket 08's movement backfill to Met-sourced works once a suitable Met field
    or a Getty AAT reconciliation pass is chosen (source register flags Getty AAT as an
    enrichment source not yet integrated).

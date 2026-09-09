@@ -28,11 +28,35 @@ series/pair isn't in the corpus yet (ticket 09's own Stacks-of-Wheat expansion d
       for 'Bathers at Asnières'," Seurat) but the finished painting isn't in our corpus
       (held by the National Gallery, London — a third source, not verified per §8) so no
       relationship could be published; left as a single unlinked work, not forced
-- [x] Distinct related-piece stories: 2 → **7** (still short of §3's "at least 10" —
-      disclosed in README, not padded)
-- [x] Verified live: `/artwork/odawara-...` correctly shows its 3 real series-mates with
-      the new explanation text and a working AIC source link
-- [x] 81 tests passing (no test changes needed — data-only change through the existing
-      `publishRelationship` path, already covered by `publish-relationship.test.ts`),
-      typecheck clean
-- [x] README's story count and §3-target disclosure updated (2 → 7)
+- [x] Resumed after the initial pass: broader title-phrase search ("one of a pair",
+      "companion", "diptych", "plate", numbered/roman-numeral parts) found one more real
+      story — "Still life with musical instruments (one of a pair)", two Met-held
+      18th-century French works, both explicitly titled "(one of a pair)" by the Met's
+      own record, confirmed live against the Met API (identical title/date/attribution,
+      consecutive accession IDs). Published as `pendant_companion` — the first real row
+      for that type.
+- [x] Went further still: read the actual AIC curatorial description text (CC-BY
+      licensed, via the API's `description` field, not just title metadata) for 5 major
+      Monet works not yet linked to anything, looking for named documented connections —
+      none found (one, "Branch of the Seine near Giverny (Mist)," is explicitly one of a
+      documented 14-canvas series, but AIC holds only that single canvas from it — no
+      pair to publish)
+- [x] Distinct related-piece stories: 2 → 7 → **8** (still short of §3's "at least 10" —
+      disclosed honestly in README, not padded; real research effort was spent looking
+      for the remaining 2, not just a quick title-text pass)
+- [x] Verified live: `/artwork/odawara-...` and
+      `/artwork/still-life-with-musical-instruments-one-of-a-pair` both correctly show
+      their real related pieces with accurate explanation text and working source links
+- [x] Real bug caught while verifying: `npm test` failed on `search-artworks.test.ts`'s
+      "filters by medium" test — 5 test files (`data-model`, `get-timeline`,
+      `get-looks-familiar`, `publish-relationship`, `write-normalized-artwork`) only
+      called `$disconnect()` in `afterAll`, never deleting their own fixtures. Across many
+      `vitest run` invocations this session, that left ~900 leftover artworks in the
+      shared test DB — 25 "Watercolor"-medium rows crowded the `Sunset` fixture off
+      `searchArtworks`'s first page. Same bug class as ticket 14's capped-query fixes,
+      caused by missing cleanup rather than a colliding real-world term. Fixed with a
+      shared `tests/helpers/cleanup.ts` (`cleanupByRunId`), wired into all 5 files, and
+      the ~900 leftover rows purged from the test DB. Stable across 3 consecutive runs
+      afterward, confirmed 0 leftover artworks after each.
+- [x] 88 tests passing, typecheck clean
+- [x] README's story count and §3-target disclosure updated (2 → 8)
