@@ -7,6 +7,10 @@ const BASE_URL = "https://api.artic.edu/api/v1";
 const IIIF_BASE_URL = "https://www.artic.edu/iiif/2";
 const USER_AGENT = "ArtAtlas (Phase 1 ingestion; contact via repo)";
 
+// Exported so the render-time image proxy (src/lib/images/proxied-image-url.ts) can
+// recognize AIC-hosted image URLs without duplicating the hostname literal.
+export const IIIF_HOSTNAME = "www.artic.edu";
+
 const ARTWORK_FIELDS = [
   "id",
   "title",

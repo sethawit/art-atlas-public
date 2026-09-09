@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import { relationshipLabel, type RelationshipType } from "@/lib/relationships/types";
+import { proxiedImageUrl } from "@/lib/images/proxied-image-url";
 
 export interface ComparisonEntry {
   artworkId: string;
@@ -72,7 +73,7 @@ export async function getArtworksForComparison(prisma: PrismaClient, slugs: stri
         dimensions: physicalObject?.dimensions ?? null,
         institutionName: physicalObject?.institution?.name ?? null,
         institutionSlug: physicalObject?.institution?.slug ?? null,
-        imageUrl: image?.sourceUrl ?? null,
+        imageUrl: proxiedImageUrl(image?.sourceUrl) ?? null,
         imageAlt: image?.altText ?? null,
       };
     });

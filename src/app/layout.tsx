@@ -13,6 +13,15 @@ const body = Newsreader({
 });
 
 export const metadata: Metadata = {
+  // Needed so relative URLs (e.g. the artwork page's og:image, which points at our own
+  // AIC image proxy — see src/app/api/image-proxy) resolve to an absolute URL in
+  // rendered meta tags. VERCEL_PROJECT_PRODUCTION_URL is bare-domain (no protocol) per
+  // Vercel's own convention.
+  metadataBase: new URL(
+    process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : "http://localhost:3000"
+  ),
   title: { default: "Art Atlas", template: "%s — Art Atlas" },
   description: "Discover an artwork. Understand its connections. Find where to see it.",
 };

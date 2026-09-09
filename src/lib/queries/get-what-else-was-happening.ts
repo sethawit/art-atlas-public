@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { proxiedImageUrl } from "@/lib/images/proxied-image-url";
 
 export interface ContemporaryEntry {
   slug: string;
@@ -90,7 +91,7 @@ export async function getWhatElseWasHappening(
       artistName: artwork.artist?.name ?? null,
       placeOrCulture: artwork.placeOrCulture,
       dateDisplay: match.value,
-      imageUrl: image?.sourceUrl ?? null,
+      imageUrl: proxiedImageUrl(image?.sourceUrl) ?? null,
       imageAlt: image?.altText ?? null,
     };
   });
