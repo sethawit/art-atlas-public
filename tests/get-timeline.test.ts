@@ -11,8 +11,19 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-async function seedDatedArtwork(slug: string, title: string, year: number | null, sourceId: string) {
-  const artwork = await prisma.artwork.create({ data: { slug: `${slug}-${runId}`, title } });
+async function seedDatedArtwork(
+  slug: string,
+  title: string,
+  year: number | null,
+  sourceId: string,
+  opts: { placeOrCulture?: string; medium?: string } = {}
+) {
+  const artwork = await prisma.artwork.create({
+    data: { slug: `${slug}-${runId}`, title, placeOrCulture: opts.placeOrCulture ?? null },
+  });
+  if (opts.medium) {
+    await prisma.physicalObject.create({ data: { artworkId: artwork.id, medium: opts.medium } });
+  }
   if (year !== null) {
     await prisma.assertion.create({
       data: {
@@ -68,6 +79,37 @@ describe("getTimeline", () => {
 
     const undatedBucket = byLabel.get("Undated in our records");
     expect(undatedBucket?.entries.some((e) => e.title.includes(`Undated Work ${runId}`))).toBe(true);
+  });
+
+  it("filters by place/culture and by medium, combinably", async () => {
+    const source = await prisma.source.create({ data: { name: `Timeline Filter Source ${runId}`, url: "https://example.org" } });
+    const testPlace = `Test Place ${runId}`;
+    const testMedium = `Test Medium ${runId}`;
+
+    await seedDatedArtwork("t-filter-match", `Filter Match Work ${runId}`, 1700, source.id, {
+      placeOrCulture: testPlace,
+      medium: testMedium,
+    });
+    await seedDatedArtwork("t-filter-wrong-place", `Filter Wrong Place Work ${runId}`, 1700, source.id, {
+      placeOrCulture: `Other Place ${runId}`,
+      medium: testMedium,
+    });
+    await seedDatedArtwork("t-filter-wrong-medium", `Filter Wrong Medium Work ${runId}`, 1700, source.id, {
+      placeOrCulture: testPlace,
+      medium: `Other Medium ${runId}`,
+    });
+
+    const byPlace = await getTimeline(prisma, { placeOrCulture: testPlace });
+    const placeTitles = byPlace.flatMap((c) => c.entries.map((e) => e.title));
+    expect(placeTitles).toContain(`Filter Match Work ${runId}`);
+    expect(placeTitles).toContain(`Filter Wrong Medium Work ${runId}`);
+    expect(placeTitles).not.toContain(`Filter Wrong Place Work ${runId}`);
+
+    const byBoth = await getTimeline(prisma, { placeOrCulture: testPlace, medium: testMedium });
+    const bothTitles = byBoth.flatMap((c) => c.entries.map((e) => e.title));
+    expect(bothTitles).toContain(`Filter Match Work ${runId}`);
+    expect(bothTitles).not.toContain(`Filter Wrong Place Work ${runId}`);
+    expect(bothTitles).not.toContain(`Filter Wrong Medium Work ${runId}`);
   });
 
   it("orders centuries chronologically ascending, with the undated bucket last", async () => {

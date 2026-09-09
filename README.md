@@ -41,7 +41,7 @@ npm run relationships:publish       # publish the hand-verified Family Explorer 
 ```
 
 ```bash
-npm test           # vitest — 93 tests, run against .env.test's DB
+npm test           # vitest — 94 tests, run against .env.test's DB
 npx tsc --noEmit    # typecheck
 ```
 
@@ -66,7 +66,7 @@ read as more stories than it is.
 | `/movement/<slug>` | Kind (period vs. movement, distinguished), geography/characteristics, associated artists, representative works |
 | `/museum/<slug>`, `/city/<slug>` | Real holdings, official visit link, saved-works tie-in |
 | `/map` | Real Leaflet map (OpenStreetMap tiles) + accessible institution list |
-| `/timeline` | Artworks grouped by century from real creationDate data, undated works in their own honest bucket |
+| `/timeline` | Artworks grouped by century from real creationDate data, undated works in their own honest bucket, filterable by real place/culture and medium |
 | `/explore` | Title/artist search with spelling tolerance, 6 combinable filters, pagination, select works to compare |
 | `/compare` | Compare 2–4 works of any kind side by side — images, dates, medium, dimensions, collections |
 | `/passport` | Local-only saved lists (want to see / seen / want to understand), private notes, filters |
@@ -182,3 +182,7 @@ location freshness management"). Plan: `docs/superpowers/specs/2026-09-09-art-at
   source in 180+ days, naming the actual last-checked date. Verified live by temporarily
   backdating a real record, confirming the note rendered, then restoring the original
   timestamp.
+- **Interactive timeline** (ticket 24) — done. `/timeline` now has real place/culture and
+  medium filters, generalizing §5's "What else was happening then?" fields from one
+  artwork to the whole timeline — a genuine narrowing of the underlying query, verified
+  live (`?place=France` returns 93 of 322 total dated works).

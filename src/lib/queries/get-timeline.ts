@@ -7,6 +7,8 @@ export interface TimelineEntry {
   artistName: string | null;
   dateDisplay: string;
   precision: string | null;
+  placeOrCulture: string | null;
+  medium: string | null;
   imageUrl: string | null;
   imageAlt: string | null;
 }
@@ -15,6 +17,11 @@ export interface TimelineCentury {
   centuryStart: number | null; // null = undated bucket
   label: string;
   entries: TimelineEntry[];
+}
+
+export interface TimelineFilters {
+  placeOrCulture?: string;
+  medium?: string;
 }
 
 function centuryLabel(centuryStart: number): string {
@@ -30,8 +37,14 @@ function centuryLabel(centuryStart: number): string {
  * preferred creationDate has no sortable valueEarliest (the BC-dated "Head of a ruler" —
  * see safeYearDate in normalize-met.ts) go in an explicit "Undated in our records"
  * bucket rather than being silently dropped or wrongly placed.
+ *
+ * Ticket 24 (Phase 2, "interactive" per §3) adds optional place/medium filters — the
+ * same real fields §5's "What else was happening then?" already reads
+ * (`Artwork.placeOrCulture`, `PhysicalObject.medium`), generalized from one artwork's
+ * page to the whole timeline so a filtered view genuinely narrows what's shown, not a
+ * client-side visual effect over the same unfiltered data.
  */
-export async function getTimeline(prisma: PrismaClient): Promise<TimelineCentury[]> {
+export async function getTimeline(prisma: PrismaClient, filters: TimelineFilters = {}): Promise<TimelineCentury[]> {
   const assertions = await prisma.assertion.findMany({
     where: { subjectType: "Artwork", field: "creationDate", isPreferred: true },
     select: { subjectId: true, value: true, precision: true, valueEarliest: true },
@@ -39,7 +52,11 @@ export async function getTimeline(prisma: PrismaClient): Promise<TimelineCentury
 
   const artworkIds = assertions.map((a) => a.subjectId);
   const artworks = await prisma.artwork.findMany({
-    where: { id: { in: artworkIds } },
+    where: {
+      id: { in: artworkIds },
+      ...(filters.placeOrCulture ? { placeOrCulture: filters.placeOrCulture } : {}),
+      ...(filters.medium ? { physicalObjects: { some: { medium: { contains: filters.medium, mode: "insensitive" } } } } : {}),
+    },
     include: {
       artist: true,
       physicalObjects: { include: { images: { where: { removedAt: null }, take: 1 } } },
@@ -59,6 +76,8 @@ export async function getTimeline(prisma: PrismaClient): Promise<TimelineCentury
       artistName: artwork.artist?.name ?? null,
       dateDisplay: assertion.value,
       precision: assertion.precision,
+      placeOrCulture: artwork.placeOrCulture,
+      medium: artwork.physicalObjects[0]?.medium ?? null,
       imageUrl: image?.sourceUrl ?? null,
       imageAlt: image?.altText ?? null,
     };
@@ -83,4 +102,26 @@ export async function getTimeline(prisma: PrismaClient): Promise<TimelineCentury
   }
 
   return centuries;
+}
+
+/** Real, distinct filter values for the timeline's place/medium dropdowns — no dead options. */
+export async function getTimelineFilterOptions(prisma: PrismaClient) {
+  const [places, mediums] = await Promise.all([
+    prisma.artwork.findMany({
+      where: { placeOrCulture: { not: null } },
+      select: { placeOrCulture: true },
+      distinct: ["placeOrCulture"],
+      orderBy: { placeOrCulture: "asc" },
+    }),
+    prisma.physicalObject.findMany({
+      where: { medium: { not: null } },
+      select: { medium: true },
+      distinct: ["medium"],
+      orderBy: { medium: "asc" },
+    }),
+  ]);
+  return {
+    places: places.map((p) => p.placeOrCulture!).filter(Boolean),
+    mediums: mediums.map((m) => m.medium!).filter(Boolean),
+  };
 }
