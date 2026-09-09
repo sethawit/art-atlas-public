@@ -18,3 +18,11 @@
 - `/movement/<slug>` — kind explanation, geography/characteristics/context (short, defensible general-knowledge text for the 3 movements actually in the catalogue — encyclopedic definitions, not per-object claims, so no per-fact citation the way a Relationship needs one), associated artists, representative works.
 - "Places worked" and "related artists": honestly absent, not faked — no source gives structured place-of-work data, and no artist-to-artist relationship has been verified to the same bar ticket 09 set for artwork relationships.
 - 55 tests passing (5 new for the bio parser against real data), typecheck clean.
+
+**Follow-up (Track A wrap, post-ticket-18/19/20/21/22):** checked live whether Met has any
+field that could extend `normalizeMovements` to Met-sourced works — `period` is empty on
+every major painting checked (including 3 Van Goghs), `classification`/`objectName` are
+medium categories ("Paintings", "Painting"), not movement/style. Confirmed absent, not
+just unattempted. The real path is a Getty AAT reconciliation pass (§8) — genuinely new
+scope (an enrichment source + entity reconciliation, not a field-mapping tweak) — left to
+Phase 2, recorded in README's Next actions there rather than as a pending Track A item.

@@ -100,10 +100,15 @@ an oversight, and each is written up in more detail in its ticket file under
   "Great Wave" correctly kept as separate `PhysicalObject`s rather than merged. All 26
   resolved `confirmed_distinct`. See ticket 05 (original pipeline) and ticket 18 (this
   growth run).
-- **Movement/style data is AIC-only.** The Met doesn't provide an equivalent field in
-  what we ingest, so Met-only artists (most of the Old Masters in the corpus) show no
-  style. Not fabricated — genuinely absent from the source.
-  See ticket 08.
+- **Movement/style data is AIC-only — confirmed, not just unattempted.** Checked live
+  against the Met API on 4 major paintings (including 3 Van Goghs): `period` is empty,
+  `classification`/`objectName` are medium categories ("Paintings", "Painting"), not
+  movement/style — no field there plays AIC `style_title`'s role. `dynasty`/`period` do
+  carry real data for ancient/non-Western departments, but that's period-of-origin
+  territory `placeOrCulture`/`department` already covers, not a movement label. The real
+  path forward is a Getty AAT reconciliation pass (§8) — real scope (a new enrichment
+  source, entity reconciliation, not a field-mapping tweak), correctly left to Phase 2
+  rather than forced in here. See ticket 08.
 - **Artist "places worked" and "related artists" are unimplemented, not faked.** No
   source we ingest gives structured place-of-work data, and no artist-to-artist
   relationship has been verified to the same evidentiary bar ticket 09 set for artwork
@@ -160,9 +165,7 @@ In rough priority order for continuing this backlog:
    — a thorough pass already ran (title patterns + AIC description text); the remaining 2
    likely need either real corpus growth toward a known series/pair not yet ingested, or
    research into other artists' documented connections beyond Monet/Hokusai/Hiroshige.
-2. Extend ticket 08's movement backfill to Met-sourced works once a suitable Met field
-   or a Getty AAT reconciliation pass is chosen (source register flags Getty AAT as an
-   enrichment source not yet integrated).
-3. Phase 2 per the master prompt: deeper provenance / `OwnershipEvent` +
+2. Phase 2 per the master prompt: deeper provenance / `OwnershipEvent` +
    `Exhibition`/`LoanEvent` modeling (the Journey tab), `LocationAssertion` freshness
-   policy, more collections beyond the Met and AIC.
+   policy, more collections beyond the Met and AIC, and a Getty AAT reconciliation pass
+   (the confirmed real path to Met-sourced movement/style data — see Known limitations).
