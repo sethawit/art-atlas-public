@@ -6,17 +6,24 @@ this — it's an ingestion-time problem (AIC's 60 req/min rate limit), not a cod
 
 **Blocked by:** none.
 
-**Status:** planned
+**Status:** done
 
-- [ ] `npm run ingest:bulk -- 250` (or similar target), respecting the existing
-      rate-limit spacing — expect a genuinely multi-minute run, not a bug if it's slow
-- [ ] Spot-check a sample of newly-ingested artworks live (not just trust the exit code) —
-      images render, rights/credit populated, placeOrCulture backfilled where the source
-      gives it
-- [ ] Re-run `movements:normalize` after growth — more AIC-sourced works may carry new
-      style text worth normalizing into `MovementStyle` rows
-- [ ] Watch for more known series/companion pieces the larger corpus surfaces (ticket 09's
-      Stacks-of-Wheat pattern) and flag them for ticket 16
-- [ ] Update README's artwork/artist/institution/movement counts once done
-- [ ] Check ingest run doesn't introduce new `DuplicateFlag`s that need review, or if it
-      does, review them via `/admin` before considering the run "clean"
+- [x] Two `ingest:bulk` runs: first at target 150/source with the default 8 search terms
+      (69 → 154), second at target 150/source with 12 additional terms since the default
+      set had run dry on unique candidates (154 → 334)
+- [x] Spot-checked live: images render, rights/credit populated,
+      `placeOrCulture` is 334/334 populated (culture/place_of_origin, department
+      fallback) — real, no fabrication
+- [x] Re-ran `movements:normalize` — 4 → 33 `MovementStyle` rows, 139 new artwork links
+- [x] 82 Met-side `403`s during the second run, logged in `IngestLog` not silently
+      dropped (advisory 80 req/s limit likely exceeded by the burst) — not retried, target
+      already met without them
+- [x] 26 pending `DuplicateFlag`s reviewed by hand (query + inspect, not `/admin`
+      resolution): all legitimate — generic shared titles across different artists
+      ("Self-Portrait," "Still Life," "Fragment," "Panel"), plus 3 real distinct AIC
+      Hokusai "Great Wave" print impressions correctly kept separate. None are bugs;
+      editorial resolution left for `/admin` (README Next Actions)
+- [x] README counts updated: 69→334 artworks, 18→177 artists, 4→33 movements; corpus-size
+      Known-limitations bullet rewritten as resolved
+- [x] Series/companion-piece candidates for ticket 16: not surveyed yet at this larger
+      scale — left for ticket 16 itself

@@ -47,7 +47,7 @@ npx tsc --noEmit    # typecheck
 ## What's implemented
 
 Real data throughout — nothing in the running app is placeholder or fabricated. Current
-dev DB: **69 artworks**, 18 artists, 2 institutions, 4 movements, 22 verified relationships
+dev DB: **334 artworks**, 177 artists, 2 institutions, 33 movements, 22 verified relationships
 (a full Monet "Stacks of Wheat" series clique, 7 works, plus one documented-influence pair)
 — **2 distinct related-piece stories**, short of §3's "at least 10" Phase 1 launch target;
 disclosed here per the master prompt's own instruction to report a shortfall honestly
@@ -86,11 +86,16 @@ an oversight, and each is written up in more detail in its ticket file under
 - **`/admin` has no authentication.** Anyone who can reach it can approve assertions,
   remove images, or resolve duplicate flags. A visible banner says so on every admin
   page. Do not deploy publicly without adding access control first.
-- **Corpus is 69 artworks, not 200–500.** The Phase 1 target assumed more ingestion time
-  than this session spent; AIC's 60 req/min rate limit makes a full pull a multi-minute
-  job. The pipeline that produced these 69 is real and scales to more with a longer run
-  (`npm run ingest:bulk -- 250`, say) — nothing structural blocks it.
-  See ticket 05.
+- **Corpus is now 334 artworks, within §3's 200–500 target** (ticket 18) — up from the
+  original 69 via a larger `ingest:bulk` run across more search terms. 82 Met-side
+  ingests failed with `403` during the run (logged in `IngestLog`, not silently dropped)
+  — the Met's advisory 80 req/s limit was likely exceeded by the burst; not retried since
+  the target was already comfortably met. 26 pending `DuplicateFlag`s from generic shared
+  titles ("Self-Portrait," "Still Life," "Fragment," different artists) were spot-checked
+  and are legitimate flags, not bugs — including three real, distinct AIC print
+  impressions of Hokusai's "Great Wave" correctly kept as separate `PhysicalObject`s
+  rather than merged. Editorial resolution of the 26 flags is `/admin` work, not done
+  here. See ticket 05 (original pipeline) and ticket 18 (this growth run).
 - **Movement/style data is AIC-only.** The Met doesn't provide an equivalent field in
   what we ingest, so Met-only artists (most of the Old Masters in the corpus) show no
   style. Not fabricated — genuinely absent from the source.
@@ -155,11 +160,7 @@ In rough priority order for continuing this backlog:
    — §13's SEO requirement, currently only a static site-wide title exists.
 2. Research and publish more related-piece stories toward §3's "at least 10" target —
    currently 2 (see Known limitations). Same research-then-publish process as ticket 09.
-3. Run `npm run ingest:bulk` with a larger target to grow the corpus toward 200–500 —
-   the pipeline is proven, this is purely a longer run (respecting AIC's rate limit). As
-   the corpus grows, watch for more known series/companion pieces the way ticket 09's
-   Stacks of Wheat expansion did, and publish them the same way. A bigger corpus also
-   sharpens "What else was happening then?" — more `placeOrCulture` diversity per era.
+3. Review the 26 pending `DuplicateFlag`s from the ticket 18 growth run via `/admin`.
 4. Add authentication to `/admin` before any public deployment.
 5. Build a general-purpose "Compare and understand" tool (pick any two works, not just
    ones already linked by a verified relationship) — the last unbuilt piece of §5.
