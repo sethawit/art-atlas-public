@@ -45,8 +45,115 @@ for (let i = 0; i < GRAINSTACK_SERIES.length; i++) {
   }
 }
 
+// Ticket 16 — five real ukiyo-e print series found in the corpus after ticket 18's
+// growth run. Evidence here is different in kind from the grainstack citation above but
+// no weaker: AIC's own `title` field states series membership directly ("Odawara, from
+// the series 'Fifty-three Stations of the Tokaido'..."), confirmed live against the AIC
+// API for a sample object (`api.artic.edu/api/v1/artworks/2906`), not inferred from
+// matching titles the way §4 warns against — the museum's own cataloguing states it.
+// Each edge cites the subject artwork's own AIC record, where that exact statement is
+// directly readable.
+function sameSeriesClique(slugs: readonly string[], seriesName: string, artistName: string): VerifiedRelationship[] {
+  const pairs: VerifiedRelationship[] = [];
+  for (let i = 0; i < slugs.length; i++) {
+    for (let j = i + 1; j < slugs.length; j++) {
+      pairs.push({
+        subjectSlug: slugs[i],
+        objectSlug: slugs[j],
+        type: "same_series",
+        explanation: `Both prints belong to ${artistName}'s series "${seriesName}" — stated directly in each work's own Art Institute of Chicago catalogue record, not inferred from matching titles.`,
+        evidence: {
+          sourceName: `Art Institute of Chicago — object record (${slugs[i]})`,
+          sourceUrl: `https://www.artic.edu${AIC_URL_BY_SLUG[slugs[i]]}`,
+        },
+      });
+    }
+  }
+  return pairs;
+}
+
+const AIC_URL_BY_SLUG: Record<string, string> = {
+  "shower-below-the-summit-sanka-hakuu-from-the-series-thirty-six-views-of-mount-fuji-fugaku-sanjurokkei":
+    "/artworks/87008",
+  "under-the-wave-off-kanagawa-kanagawa-oki-nami-ura-also-known-as-the-great-wave-from-the-series-thirty-six-views-of-mount-fuji-fugaku-sanjurokkei":
+    "/artworks/77333",
+  "odawara-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi": "/artworks/2906",
+  "sakanoshita-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi": "/artworks/3035",
+  "shinagawa-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi": "/artworks/2887",
+  "fuchu-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi": "/artworks/2927",
+  "whaling-off-the-coast-of-the-goto-islands-goto-kujira-tsuki-from-the-series-one-thousand-pictures-of-the-ocean-chie-no-umi":
+    "/artworks/100626",
+  "fishing-boats-at-choshi-in-shimosa-soshu-choshi-from-the-series-one-thousand-pictures-of-the-ocean-chie-no-umi":
+    "/artworks/100627",
+  "hamamatsu-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi-also-known-as-the-tokaido-with-poem-kyoka-iri-tokaido":
+    "/artworks/4371",
+  "mitsuke-ferries-crossing-the-tenryu-river-mitsuke-tenryugawa-funawatashi-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi-also-known-as-the-tokaido-with-poem-kyoka-iri-tokaido":
+    "/artworks/4368",
+  "arai-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi-also-known-as-the-tokaido-with-poem-kyoka-iri-tokaido":
+    "/artworks/4378",
+  "maisaka-the-ferry-at-imagiri-maisaka-imagiri-funawatashi-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi-also-known-as-the-tokaido-with-poem-kyoka-iri-tokaido":
+    "/artworks/4374",
+  "no-37-miyanokoshi-from-the-series-sixty-nine-stations-of-the-kisokaido-kisokaido-rokujukyu-tsugi-no-uchi":
+    "/artworks/11050",
+  "no-32-seba-from-the-series-sixty-nine-stations-of-the-kisokaido-kisokaido-rokujukyu-tsugi-no-uchi": "/artworks/11054",
+};
+
+const mountFujiPair = sameSeriesClique(
+  [
+    "shower-below-the-summit-sanka-hakuu-from-the-series-thirty-six-views-of-mount-fuji-fugaku-sanjurokkei",
+    "under-the-wave-off-kanagawa-kanagawa-oki-nami-ura-also-known-as-the-great-wave-from-the-series-thirty-six-views-of-mount-fuji-fugaku-sanjurokkei",
+  ],
+  "Thirty-Six Views of Mount Fuji (Fugaku sanjurokkei)",
+  "Katsushika Hokusai"
+);
+
+const hokusaiTokaidoClique = sameSeriesClique(
+  [
+    "odawara-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi",
+    "sakanoshita-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi",
+    "shinagawa-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi",
+    "fuchu-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi",
+  ],
+  "Fifty-three Stations of the Tokaido (Tokaido gojusan tsugi)",
+  "Katsushika Hokusai"
+);
+
+const oceanPair = sameSeriesClique(
+  [
+    "whaling-off-the-coast-of-the-goto-islands-goto-kujira-tsuki-from-the-series-one-thousand-pictures-of-the-ocean-chie-no-umi",
+    "fishing-boats-at-choshi-in-shimosa-soshu-choshi-from-the-series-one-thousand-pictures-of-the-ocean-chie-no-umi",
+  ],
+  "One Thousand Pictures of the Ocean (Chie no umi)",
+  "Katsushika Hokusai"
+);
+
+const hiroshigeTokaidoClique = sameSeriesClique(
+  [
+    "hamamatsu-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi-also-known-as-the-tokaido-with-poem-kyoka-iri-tokaido",
+    "mitsuke-ferries-crossing-the-tenryu-river-mitsuke-tenryugawa-funawatashi-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi-also-known-as-the-tokaido-with-poem-kyoka-iri-tokaido",
+    "arai-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi-also-known-as-the-tokaido-with-poem-kyoka-iri-tokaido",
+    "maisaka-the-ferry-at-imagiri-maisaka-imagiri-funawatashi-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi-also-known-as-the-tokaido-with-poem-kyoka-iri-tokaido",
+  ],
+  'Fifty-three Stations of the Tokaido (Tokaido gojusan tsugi, also known as the "Tokaido with Poem")',
+  "Utagawa Hiroshige"
+);
+
+const kisokaidoPair = sameSeriesClique(
+  [
+    "no-37-miyanokoshi-from-the-series-sixty-nine-stations-of-the-kisokaido-kisokaido-rokujukyu-tsugi-no-uchi",
+    "no-32-seba-from-the-series-sixty-nine-stations-of-the-kisokaido-kisokaido-rokujukyu-tsugi-no-uchi",
+  ],
+  "Sixty-nine Stations of the Kisokaido (Kisokaido rokujukyu tsugi no uchi)",
+  "Utagawa Hiroshige"
+);
+
 const relationships: VerifiedRelationship[] = [
   ...grainstackPairs,
+  ...mountFujiPair,
+  ...hokusaiTokaidoClique,
+  ...oceanPair,
+  ...hiroshigeTokaidoClique,
+  ...kisokaidoPair,
   {
     subjectSlug: "water-lily-pond",
     objectSlug: "water-lilies",

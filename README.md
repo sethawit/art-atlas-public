@@ -47,11 +47,13 @@ npx tsc --noEmit    # typecheck
 ## What's implemented
 
 Real data throughout — nothing in the running app is placeholder or fabricated. Current
-dev DB: **334 artworks**, 177 artists, 2 institutions, 33 movements, 22 verified relationships
-(a full Monet "Stacks of Wheat" series clique, 7 works, plus one documented-influence pair)
-— **2 distinct related-piece stories**, short of §3's "at least 10" Phase 1 launch target;
-disclosed here per the master prompt's own instruction to report a shortfall honestly
-rather than let the relationship count (22) read as more stories than it is.
+dev DB: **334 artworks**, 177 artists, 2 institutions, 33 movements, 37 verified relationships
+across **7 distinct related-piece stories** — a full Monet "Stacks of Wheat" clique (7
+works), one documented-influence pair, and five real Hokusai/Hiroshige ukiyo-e print
+series found after ticket 18's corpus growth (ticket 16) — still short of §3's "at least
+10" Phase 1 launch target; disclosed here per the master prompt's own instruction to
+report a shortfall honestly rather than let the relationship-row count read as more
+stories than it is.
 
 | Page | What it does |
 |---|---|
@@ -159,7 +161,7 @@ In rough priority order for continuing this backlog:
 1. Add per-page `generateMetadata` (title/description/OG per artwork, artist, movement)
    — §13's SEO requirement, currently only a static site-wide title exists.
 2. Research and publish more related-piece stories toward §3's "at least 10" target —
-   currently 2 (see Known limitations). Same research-then-publish process as ticket 09.
+   currently 7 (see Known limitations). Same research-then-publish process as ticket 09/16.
 3. Review the 26 pending `DuplicateFlag`s from the ticket 18 growth run via `/admin`.
 4. Add authentication to `/admin` before any public deployment.
 5. Build a general-purpose "Compare and understand" tool (pick any two works, not just
