@@ -31,6 +31,17 @@ beforeAll(async () => {
 
   const artworkB = await prisma.artwork.create({ data: { slug: `journey-b-${runId}`, title: `Journey B ${runId}` } });
   withoutJourney = await prisma.physicalObject.create({ data: { artworkId: artworkB.id } });
+
+  await prisma.ownershipEvent.create({
+    data: {
+      physicalObjectId: withJourney.id,
+      sequence: 2,
+      description: "Flagged owner",
+      sourceId: source.id,
+      retrievedAt: new Date(),
+      reviewStatus: "flagged",
+    },
+  });
 });
 
 describe("getJourney", () => {
@@ -53,5 +64,11 @@ describe("getJourney", () => {
     const result = await getJourney(prisma, withoutJourney.id);
     expect(result.ownership).toEqual([]);
     expect(result.exhibitions).toEqual([]);
+  });
+
+  it("excludes flagged events from the public result", async () => {
+    const result = await getJourney(prisma, withJourney.id);
+    expect(result.ownership.some((e) => e.description === "Flagged owner")).toBe(false);
+    expect(result.ownership).toHaveLength(2);
   });
 });

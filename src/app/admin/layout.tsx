@@ -10,7 +10,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         user/roles system.
       </div>
       <nav>
-        <a href="/admin">Dashboard</a> · <a href="/admin/duplicates">Duplicate flags</a>
+        <a href="/admin">Dashboard</a> · <a href="/admin/duplicates">Duplicate flags</a> ·{" "}
+        <a href="/admin/journey">Journey review</a>
       </nav>
       {children}
     </div>

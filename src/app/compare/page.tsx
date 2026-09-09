@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { getArtworksForComparison } from "@/lib/queries/get-artworks-for-comparison";
+import { getArtworksForComparison, getPairwiseComparisonInsights } from "@/lib/queries/get-artworks-for-comparison";
 
 // §5 "Compare and understand" (ticket 22) — a general-purpose compare tool, unlike the
 // artwork page's comparison view which only shows an artwork's own verified related
@@ -16,6 +16,7 @@ export default async function ComparePage({
   const slugs = slug ? (Array.isArray(slug) ? slug : [slug]) : [];
   const entries = slugs.length > 0 ? await getArtworksForComparison(prisma, slugs) : [];
   const skippedCount = slugs.length - entries.length;
+  const insights = entries.length >= 2 ? await getPairwiseComparisonInsights(prisma, entries) : [];
 
   return (
     <main>
@@ -99,6 +100,43 @@ export default async function ComparePage({
               ))}
             </tbody>
           </table>
+
+          {insights.length > 0 && (
+            <section aria-labelledby="insights-heading">
+              <h2 id="insights-heading">How these works relate and differ</h2>
+              <ul>
+                {insights.map((insight) => {
+                  const titleA = entries.find((e) => e.slug === insight.slugA)?.title ?? insight.slugA;
+                  const titleB = entries.find((e) => e.slug === insight.slugB)?.title ?? insight.slugB;
+                  return (
+                    <li key={`${insight.slugA}-${insight.slugB}`}>
+                      <p>
+                        <strong>
+                          {titleA} & {titleB}
+                        </strong>
+                      </p>
+                      {insight.relationshipLabel ? (
+                        <p>
+                          Documented relationship: <strong>{insight.relationshipLabel}</strong>
+                        </p>
+                      ) : (
+                        <p>No documented relationship between these two in our catalogue.</p>
+                      )}
+                      {insight.differences.length > 0 ? (
+                        <ul>
+                          {insight.differences.map((d) => (
+                            <li key={d}>{d}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p>No differences found in the fields we have for both.</p>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
         </>
       )}
     </main>

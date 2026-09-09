@@ -3,10 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
-// No auth exists in Phase 1 (§2/§3 of the product spec — MVP is account-free). These
-// actions are therefore unauthenticated entry points: anyone who can reach /admin can
-// call them. That's a recorded, deliberate Phase 1 gap, not an oversight — flag it
-// before any public deploy (see the banner on every /admin page).
+// Gated by src/middleware.ts's HTTP Basic Auth on /admin/:path* (ticket 19) — a Server
+// Action call POSTs back to the page it was invoked from, so the same matcher covers
+// these too, not just page loads.
 
 /**
  * Approve one competing Assertion as the preferred value for its (subject, field) —
@@ -51,4 +50,21 @@ export async function resolveDuplicateFlag(flagId: string, resolution: "confirme
   });
   revalidatePath("/admin/duplicates");
   revalidatePath("/admin");
+}
+
+/**
+ * §9 item 7's provenance review (ticket 25 follow-up): approve a segment as reviewed, or
+ * flag it to hide it from the public Journey tab (getJourney excludes "flagged" — see
+ * that query's comment). Never deletes the row, same soft-hide shape as removeImage.
+ */
+export async function reviewOwnershipEvent(eventId: string, decision: "approved" | "flagged") {
+  await prisma.ownershipEvent.update({ where: { id: eventId }, data: { reviewStatus: decision } });
+  revalidatePath("/admin/journey");
+  revalidatePath("/artwork/[slug]", "page");
+}
+
+export async function reviewExhibitionEvent(eventId: string, decision: "approved" | "flagged") {
+  await prisma.exhibitionEvent.update({ where: { id: eventId }, data: { reviewStatus: decision } });
+  revalidatePath("/admin/journey");
+  revalidatePath("/artwork/[slug]", "page");
 }

@@ -30,17 +30,49 @@ export async function listPendingDuplicateFlags(prisma: PrismaClient) {
 }
 
 export async function getAdminDashboardCounts(prisma: PrismaClient) {
-  const [totalArtworks, pendingDuplicateFlags, recentFailures, needingReview] = await Promise.all([
-    prisma.artwork.count(),
-    prisma.duplicateFlag.count({ where: { status: "pending" } }),
-    prisma.ingestLog.findMany({
-      where: { status: "failure" },
-      orderBy: { createdAt: "desc" },
-      take: 10,
+  const [totalArtworks, pendingDuplicateFlags, recentFailures, needingReview, unreviewedOwnership, unreviewedExhibitions] =
+    await Promise.all([
+      prisma.artwork.count(),
+      prisma.duplicateFlag.count({ where: { status: "pending" } }),
+      prisma.ingestLog.findMany({
+        where: { status: "failure" },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+      }),
+      listArtworksNeedingAssertionReview(prisma),
+      prisma.ownershipEvent.count({ where: { reviewStatus: "unreviewed" } }),
+      prisma.exhibitionEvent.count({ where: { reviewStatus: "unreviewed" } }),
+    ]);
+  return {
+    totalArtworks,
+    pendingDuplicateFlags,
+    recentFailures,
+    artworksNeedingReview: needingReview,
+    unreviewedJourneyEvents: unreviewedOwnership + unreviewedExhibitions,
+  };
+}
+
+/**
+ * Unreviewed OwnershipEvent/ExhibitionEvent rows (ticket 25 follow-up, §9 item 7's
+ * provenance review requirement) — capped, most-recent-first, so this stays a real
+ * review queue rather than trying to render all 2,600+ rows at once.
+ */
+export async function listUnreviewedJourneyEvents(prisma: PrismaClient, take = 50) {
+  const [ownership, exhibitions] = await Promise.all([
+    prisma.ownershipEvent.findMany({
+      where: { reviewStatus: "unreviewed" },
+      include: { physicalObject: { include: { artwork: true } }, source: true },
+      orderBy: { retrievedAt: "desc" },
+      take,
     }),
-    listArtworksNeedingAssertionReview(prisma),
+    prisma.exhibitionEvent.findMany({
+      where: { reviewStatus: "unreviewed" },
+      include: { physicalObject: { include: { artwork: true } }, source: true },
+      orderBy: { retrievedAt: "desc" },
+      take,
+    }),
   ]);
-  return { totalArtworks, pendingDuplicateFlags, recentFailures, artworksNeedingReview: needingReview };
+  return { ownership, exhibitions };
 }
 
 /** Every assertion for one artwork, grouped by field — for the per-artwork review page. */

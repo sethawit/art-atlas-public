@@ -33,3 +33,28 @@ verified related pieces, capped at 3. §5 asks for a general-purpose tool: pick 
       Lilies) plus a deliberately-invalid third slug renders correctly with a visible
       skip note; both entry points confirmed live on real pages
 - [x] Removed the matching README Known-limitations bullet
+
+## Follow-up: related-piece labels + sourced differences (found in the next master-prompt comparison pass)
+
+§5 requires "images, dates, materials, dimensions, **related-piece labels**, collections,
+and **concise sourced differences**" — the original build shipped everything except the
+last two. Closed:
+
+- [x] `getPairwiseComparisonInsights` — for every pair among the compared works, checks
+      for a real `Relationship` row (either direction) and surfaces its
+      `relationshipLabel` if one exists, or an honest "no documented relationship between
+      these two" otherwise
+- [x] "Concise sourced differences" — factual sentences derived only from fields already
+      shown on the page (medium, dimensions, date, institution), never generated prose or
+      a judgment call about which work is "better." Year gaps only computed from a clean
+      single 4-digit date on both sides (a range or "c." qualifier is skipped, not
+      guessed at)
+- [x] New "How these works relate and differ" section on `/compare`, one entry per pair
+      (so 3-4 works show multiple pairwise comparisons, not just adjacent ones)
+- [x] 5 new tests (real relationship surfaced, no-relationship case, all 4 difference
+      types on a real mismatched pair, no-differences case, one-insight-per-pair for 3+
+      works). 119 tests total, stable across 3 runs, typecheck clean
+- [x] Verified live: a real documented `same_series` pair shows the label with no
+      differences (matching fields); Wheat Field with Cypresses vs. Water Lilies (no
+      relationship) shows real computed differences — dimensions, "17 years apart,"
+      different institutions

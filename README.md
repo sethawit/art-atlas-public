@@ -41,7 +41,7 @@ npm run relationships:publish       # publish the hand-verified Family Explorer 
 ```
 
 ```bash
-npm test           # vitest — 110 tests, run against .env.test's DB
+npm test           # vitest — 119 tests, run against .env.test's DB
 npx tsc --noEmit    # typecheck
 ```
 
@@ -69,9 +69,9 @@ rows (ticket 25) across 208/264 AIC-sourced physical objects.
 | `/map` | Real Leaflet map (OpenStreetMap tiles) + accessible institution list |
 | `/timeline` | Artworks grouped by century from real creationDate data, undated works in their own honest bucket, filterable by real place/culture and medium |
 | `/explore` | Title/artist search with spelling tolerance, 6 combinable filters, pagination, select works to compare |
-| `/compare` | Compare 2–4 works of any kind side by side — images, dates, medium, dimensions, collections |
+| `/compare` | Compare 2–4 works of any kind side by side — images, dates, medium, dimensions, collections, any documented relationship between them, and real computed differences |
 | `/passport` | Local-only saved lists (want to see / seen / want to understand), private notes, filters |
-| `/admin` | Duplicate-flag review, per-artwork assertion approval, image removal — HTTP Basic Auth protected (`ADMIN_PASSWORD`, ticket 19) |
+| `/admin` | Duplicate-flag review, per-artwork assertion approval, image removal, Journey (ownership/exhibition) review — HTTP Basic Auth protected (`ADMIN_PASSWORD`, ticket 19) |
 
 Ingestion: adapters for the Met Collection API and AIC API, source-register-verified
 (`docs/sources/source-register.md`), idempotent bulk pipeline with retry and rate-limit
@@ -197,7 +197,9 @@ location freshness management"). Plan: `docs/superpowers/specs/2026-09-09-art-at
   instead the source's own text is split into discrete, ordered segments and shown
   verbatim. 208/264 AIC-sourced physical objects (79%) ended up with real ownership data
   after backfilling the existing corpus. Loan-specific events and date-range/gap
-  presentation aren't attempted — see Known limitations.
+  presentation aren't attempted — see Known limitations. Has an admin review gate
+  (`/admin/journey`) — a segment defaults to visible (real museum text, not a fabricated
+  claim) but an admin can flag one found to be wrong to hide it from the public page.
 - **More collections (Europeana)** (ticket 26) — research done, ingestion genuinely
   blocked. Verified live that Europeana's Search API requires a registered API key
   (unauthenticated calls return a real `invalid_apikey` error) — a material difference

@@ -19,16 +19,21 @@ export interface Journey {
  * (Met has no equivalent — AIC-only, same as movement/style). Empty arrays, not an
  * error, for a Met-sourced or under-researched AIC work — most of the corpus genuinely
  * has none of this, and an empty Journey tab is the honest state, not a bug.
+ *
+ * Excludes reviewStatus "flagged" rows — an admin's way to hide one specific segment
+ * they've found to be wrong (§9 item 7's provenance review requirement), without
+ * deleting it or gating the whole feature behind pre-approval (see the schema comment
+ * on OwnershipEvent for why "unreviewed" still shows).
  */
 export async function getJourney(prisma: PrismaClient, physicalObjectId: string): Promise<Journey> {
   const [ownershipRows, exhibitionRows] = await Promise.all([
     prisma.ownershipEvent.findMany({
-      where: { physicalObjectId },
+      where: { physicalObjectId, reviewStatus: { not: "flagged" } },
       include: { source: true },
       orderBy: { sequence: "asc" },
     }),
     prisma.exhibitionEvent.findMany({
-      where: { physicalObjectId },
+      where: { physicalObjectId, reviewStatus: { not: "flagged" } },
       include: { source: true },
       orderBy: { sequence: "asc" },
     }),

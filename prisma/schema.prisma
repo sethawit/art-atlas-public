@@ -103,6 +103,15 @@ model PhysicalObject {
 // parsed correctly. "Present missing intervals as gaps" (§6) is honestly not attempted
 // here: it needs clean date ranges per owner, which parsing this prose reliably enough to
 // assert doesn't clear this project's evidentiary bar.
+// "unreviewed" | "approved" | "flagged" — §9 item 7 requires reviewing "sensitive or
+// uncertain relationships, attribution, provenance, and image rights" before publishing.
+// Every other editorial surface here (relationships, assertions, images) goes through
+// /admin or a hand-verified publish script; these rows were originally auto-published
+// straight from AIC's raw text with no review gate at all — added in the ticket 25
+// follow-up. New rows default to "unreviewed" and still display (this is real,
+// verbatim museum-published text, not a fabricated or inferred claim, so hiding it
+// pending review would suppress real information over a low real risk) — but an admin
+// can now flag a specific segment to hide it, same shape as ImageAsset.removedAt.
 model OwnershipEvent {
   id               String   @id @default(cuid())
   physicalObjectId String
@@ -110,6 +119,7 @@ model OwnershipEvent {
   description      String
   sourceId         String
   retrievedAt      DateTime
+  reviewStatus     String   @default("unreviewed")
 
   physicalObject PhysicalObject @relation(fields: [physicalObjectId], references: [id])
   source         Source         @relation(fields: [sourceId], references: [id])
@@ -131,6 +141,7 @@ model ExhibitionEvent {
   description      String
   sourceId         String
   retrievedAt      DateTime
+  reviewStatus     String   @default("unreviewed")
 
   physicalObject PhysicalObject @relation(fields: [physicalObjectId], references: [id])
   source         Source         @relation(fields: [sourceId], references: [id])

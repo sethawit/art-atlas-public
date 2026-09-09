@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getAdminDashboardCounts } from "@/lib/admin/queries";
 
 export default async function AdminDashboard() {
-  const { totalArtworks, pendingDuplicateFlags, recentFailures, artworksNeedingReview } =
+  const { totalArtworks, pendingDuplicateFlags, recentFailures, artworksNeedingReview, unreviewedJourneyEvents } =
     await getAdminDashboardCounts(prisma);
 
   return (
@@ -19,6 +19,11 @@ export default async function AdminDashboard() {
         </dd>
         <dt>Recent ingest failures</dt>
         <dd>{recentFailures.length}</dd>
+        <dt>Unreviewed Journey events</dt>
+        <dd>
+          {unreviewedJourneyEvents}
+          {unreviewedJourneyEvents > 0 && <> — <Link href="/admin/journey">review</Link></>}
+        </dd>
       </dl>
 
       {recentFailures.length > 0 && (
