@@ -4,10 +4,17 @@
 
 **Blocked by:** 06 — Homepage, 07 — Explore/search with filters, 08 — Artist pages + movement/style pages, 09 — Related-piece stories + Family Explorer, 10 — Museum/city pages + map view, 11 — Art Passport
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Every primary action has a working destination and visible feedback
-- [ ] Keyboard-only navigation reaches every primary control across all Phase 1 pages
-- [ ] Colour is never the sole carrier of era or status information
-- [ ] Loading/empty/error/offline/unknown-location/no-match states are implemented and visually distinct from success states
-- [ ] Mobile layouts verified on all Phase 1 pages, no horizontal comparison layout on small screens
+- [x] Every primary action has a working destination and visible feedback — all links point at real pages (verified across every ticket in this backlog); buttons/inputs now have real hover/focus states via the new stylesheet, not just raw unstyled elements
+- [x] Keyboard-only navigation reaches every primary control — verified structurally (`document.querySelectorAll` tab-order check confirms skip-link → wordmark → nav → search, in that order) since the browser tool's synthetic Tab key doesn't move real DOM focus in this environment; every control is a native `<a>`/`<button>`/`<input>`/`<select>`/`<textarea>`, no custom widgets that break native keyboard behavior, and grepped for `outline: none` — none exists anywhere, so `:focus-visible` is never suppressed
+- [x] Colour is never the sole carrier of era or status information — display status, precision (exact/approximate/disputed), and relationship types are always spelled out as text, never color-coded
+- [x] Loading/empty/error/offline/unknown-location/no-match states are implemented and visually distinct — added `loading.tsx`, `error.tsx` (with retry), custom `not-found.tsx`; empty-passport, no-match-search, and image-unavailable states already existed (tickets 07/09/11) and are now visually styled instead of bare text
+- [x] Mobile layouts verified, no horizontal comparison layout on small screens — the Family Explorer comparison table (ticket 09, an 8-column table) now stacks into per-work cards below 640px via CSS, verified by injecting the breakpoint's rules directly and screenshotting (the browser tool's window resize didn't actually shrink the page viewport in this environment, so verified the mechanism this way instead); every other page is fluid single-column with no fixed-width elements, `img { max-width: 100% }` globally
+
+**Built:**
+- A real design system (there was none before this ticket — every page was unstyled default HTML): warm off-white background, restrained deep-teal accent (deliberately not the terracotta that's become a generic AI-design tell), Libre Franklin (sans) for navigation/labels/structure, Source Serif 4 for reading content — "museum wall-label meets catalogue entry," grounded in how real museums actually typeset object labels vs. catalogue text. Contrast checked by hand: body text ~13.4:1, muted text ~5.4:1, accent ~8:1 against the background — all comfortably pass WCAG AA.
+- Persistent header (wordmark, Explore/Map/My Art Passport nav, global search) + skip-to-content link — the site had no persistent navigation before this ticket; every page was an island reachable only by URL.
+- `role="note"` (amber, informational disclosures), `role="alert"` (the unauthenticated-admin warning), `role="status"` (missing-image placeholder) each get distinct, real styling — not just distinguishable in markup but visually distinguishable too.
+- Fixed a real bug caught in this pass: `InstitutionMap` (ticket 10) had `role="img"` on its container, which would tell assistive tech to treat Leaflet's real interactive children (zoom buttons, marker popups) as flattened image content, masking them. Removed.
+- 64 tests passing (no new ones — this ticket is styling/markup/structure, not new business logic), typecheck clean. This ticket closes out the Phase 1 MVP backlog (09 remains honestly partial — see its own file).

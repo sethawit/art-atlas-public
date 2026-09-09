@@ -189,7 +189,7 @@ export default async function ArtworkPage({
               )}
 
               {relatedView === "comparison" && (
-                <table>
+                <table className="comparison-table">
                   <caption>Comparing {artwork.title} with its documented related pieces</caption>
                   <thead>
                     <tr>
@@ -205,34 +205,36 @@ export default async function ArtworkPage({
                   </thead>
                   <tbody>
                     <tr>
-                      <td>{image && <img src={image.sourceUrl} alt={image.altText ?? artwork.title} width={100} />}</td>
-                      <td>{artwork.title} (this work)</td>
-                      <td>{artwork.artist?.name}</td>
-                      <td>{dateAssertion?.value}</td>
-                      <td>{physicalObject?.medium}</td>
-                      <td>{physicalObject?.dimensions}</td>
-                      <td>{physicalObject?.institution?.name}</td>
-                      <td>—</td>
+                      <td data-label="Image">
+                        {image && <img src={image.sourceUrl} alt={image.altText ?? artwork.title} width={100} />}
+                      </td>
+                      <td data-label="Title">{artwork.title} (this work)</td>
+                      <td data-label="Artist">{artwork.artist?.name}</td>
+                      <td data-label="Date">{dateAssertion?.value}</td>
+                      <td data-label="Medium">{physicalObject?.medium}</td>
+                      <td data-label="Dimensions">{physicalObject?.dimensions}</td>
+                      <td data-label="Collection">{physicalObject?.institution?.name}</td>
+                      <td data-label="Relationship">—</td>
                     </tr>
                     {relatedPieces.slice(0, 3).map((rp) => {
                       const rpImage = rp.artwork.physicalObjects.flatMap((po) => po.images)[0];
                       const rpObject = rp.artwork.physicalObjects[0];
                       return (
                         <tr key={rp.relationship.id}>
-                          <td>
+                          <td data-label="Image">
                             {rpImage && (
                               <img src={rpImage.sourceUrl} alt={rpImage.altText ?? rp.artwork.title} width={100} />
                             )}
                           </td>
-                          <td>
+                          <td data-label="Title">
                             <Link href={`/artwork/${rp.artwork.slug}`}>{rp.artwork.title}</Link>
                           </td>
-                          <td>{rp.artwork.artist?.name}</td>
-                          <td>{rp.date}</td>
-                          <td>{rpObject?.medium}</td>
-                          <td>{rpObject?.dimensions}</td>
-                          <td>{rpObject?.institution?.name}</td>
-                          <td>{rp.label}</td>
+                          <td data-label="Artist">{rp.artwork.artist?.name}</td>
+                          <td data-label="Date">{rp.date}</td>
+                          <td data-label="Medium">{rpObject?.medium}</td>
+                          <td data-label="Dimensions">{rpObject?.dimensions}</td>
+                          <td data-label="Collection">{rpObject?.institution?.name}</td>
+                          <td data-label="Relationship">{rp.label}</td>
                         </tr>
                       );
                     })}

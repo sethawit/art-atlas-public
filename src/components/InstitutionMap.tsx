@@ -62,5 +62,9 @@ export default function InstitutionMap({ institutions }: { institutions: MapInst
     };
   }, [institutions]);
 
-  return <div ref={containerRef} style={{ height: 400, width: "100%" }} role="img" aria-label="Map of holding institutions" />;
+  // No role="img" here — Leaflet's zoom controls and marker popups are real interactive
+  // children (buttons, links), and role="img" would tell assistive tech to treat them as
+  // flattened image content, masking them. aria-label on the region is enough; Leaflet
+  // supplies its own accessible names for the controls it renders inside.
+  return <div ref={containerRef} style={{ height: 400, width: "100%" }} aria-label="Map of holding institutions" />;
 }
