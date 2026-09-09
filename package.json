@@ -13,7 +13,8 @@
     "test": "vitest run",
     "ingest:met": "tsx scripts/ingest-met-artwork.ts",
     "ingest:aic": "tsx scripts/ingest-aic-artwork.ts",
-    "ingest:bulk": "tsx scripts/bulk-ingest.ts"
+    "ingest:bulk": "tsx scripts/bulk-ingest.ts",
+    "relationships:publish": "tsx scripts/publish-relationships.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",

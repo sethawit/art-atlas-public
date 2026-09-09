@@ -27,11 +27,13 @@ model Artwork {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  artist            Artist?           @relation(fields: [artistId], references: [id])
-  physicalObjects   PhysicalObject[]
-  movements         ArtworkMovement[]
-  duplicateFlagsAsA DuplicateFlag[]   @relation("DuplicateFlagArtworkA")
-  duplicateFlagsAsB DuplicateFlag[]   @relation("DuplicateFlagArtworkB")
+  artist                 Artist?           @relation(fields: [artistId], references: [id])
+  physicalObjects        PhysicalObject[]
+  movements              ArtworkMovement[]
+  duplicateFlagsAsA      DuplicateFlag[]   @relation("DuplicateFlagArtworkA")
+  duplicateFlagsAsB      DuplicateFlag[]   @relation("DuplicateFlagArtworkB")
+  relationshipsAsSubject Relationship[]    @relation("RelationshipSubject")
+  relationshipsAsObject  Relationship[]    @relation("RelationshipObject")
 
   @@index([artistId])
 }
@@ -126,7 +128,8 @@ model Source {
   url       String
   createdAt DateTime @default(now())
 
-  assertions Assertion[]
+  assertions    Assertion[]
+  relationships Relationship[]
 }
 
 // Polymorphic fact table: one row per (subject, field, competing value). subjectType +
@@ -196,4 +199,35 @@ model IngestLog {
 
   @@index([sourceName, externalId])
   @@index([status])
+}
+
+// A verified relationship between two artworks (ticket 09 / master prompt §4, §10).
+// Every row must be backed by a specific citable source discussing those two objects —
+// never created from matching titles, subjects, or visual similarity alone. Direction
+// matters for some types (subject is "the study", object is "the finished work" for
+// preparatory_study; subject is "the copy", object is "the original" for copy_after);
+// for symmetric types (same_series, another_version, pendant_companion,
+// multi_part_work, documented_influence) direction is only bookkeeping.
+model Relationship {
+  id               String    @id @default(cuid())
+  subjectArtworkId String
+  objectArtworkId  String
+  // "same_series" | "preparatory_study" | "another_version" | "pendant_companion" |
+  // "multi_part_work" | "print_impression" | "cast_from_model" | "copy_after" |
+  // "documented_influence" — plain string, same rationale as MovementStyle.kind.
+  relationshipType String
+  // Reader-facing sentence, written for a museum visitor, not art-history jargon.
+  explanation      String
+  evidenceSourceId String
+  effectiveFrom    DateTime?
+  effectiveTo      DateTime?
+  createdAt        DateTime  @default(now())
+
+  subjectArtwork Artwork @relation("RelationshipSubject", fields: [subjectArtworkId], references: [id])
+  objectArtwork  Artwork @relation("RelationshipObject", fields: [objectArtworkId], references: [id])
+  evidenceSource Source  @relation(fields: [evidenceSourceId], references: [id])
+
+  @@unique([subjectArtworkId, objectArtworkId, relationshipType])
+  @@index([subjectArtworkId])
+  @@index([objectArtworkId])
 }
