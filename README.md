@@ -41,7 +41,7 @@ npm run relationships:publish       # publish the hand-verified Family Explorer 
 ```
 
 ```bash
-npm test           # vitest — 88 tests, run against .env.test's DB
+npm test           # vitest — 93 tests, run against .env.test's DB
 npx tsc --noEmit    # typecheck
 ```
 
@@ -165,7 +165,20 @@ In rough priority order for continuing this backlog:
    — a thorough pass already ran (title patterns + AIC description text); the remaining 2
    likely need either real corpus growth toward a known series/pair not yet ingested, or
    research into other artists' documented connections beyond Monet/Hokusai/Hiroshige.
-2. Phase 2 per the master prompt: deeper provenance / `OwnershipEvent` +
-   `Exhibition`/`LoanEvent` modeling (the Journey tab), `LocationAssertion` freshness
-   policy, more collections beyond the Met and AIC, and a Getty AAT reconciliation pass
-   (the confirmed real path to Met-sourced movement/style data — see Known limitations).
+2. Phase 2 per the master prompt (started — see below): deeper provenance /
+   `OwnershipEvent` + `Exhibition`/`LoanEvent` modeling (the Journey tab), more
+   collections beyond the Met and AIC, and a Getty AAT reconciliation pass (the confirmed
+   real path to Met-sourced movement/style data — see Known limitations).
+
+## Phase 2 progress (Track B)
+
+Phase 2 per the master prompt's own scope (§3: "Add interactive historical timelines,
+richer relationship exploration, publicly documented provenance, more collections, and
+location freshness management"). Plan: `docs/superpowers/specs/2026-09-09-art-atlas-phase2-plan.md`.
+
+- **Location freshness policy** (ticket 23) — done. `displayStatus`/`publicAccess` are the
+  fields most likely to go stale (no live feed from either source); a visible note now
+  appears on the artwork page when a `PhysicalObject` hasn't been reverified against its
+  source in 180+ days, naming the actual last-checked date. Verified live by temporarily
+  backdating a real record, confirming the note rendered, then restoring the original
+  timestamp.

@@ -8,6 +8,7 @@ import { getLooksFamiliar, type FamiliarEntry } from "@/lib/queries/get-looks-fa
 import { getWhatElseWasHappening } from "@/lib/queries/get-what-else-was-happening";
 import PassportControls from "@/components/PassportControls";
 import { INSTITUTION_REFERENCE } from "@/lib/institutions/reference";
+import { isDisplayStatusStale, DISPLAY_STATUS_FRESHNESS_DAYS } from "@/lib/institutions/freshness";
 import { slugify } from "@/lib/ingest/normalize-met";
 
 // Ticket 03 scope: Overview, Understand, and Sources. Ticket 09 adds Related pieces.
@@ -406,6 +407,14 @@ export default async function ArtworkPage({
                 <dt>Public access</dt>
                 <dd>{(physicalObject.publicAccess ?? "unknown").replace(/_/g, " ")}</dd>
               </dl>
+              {isDisplayStatusStale(physicalObject.updatedAt) && (
+                <p role="status">
+                  We haven&apos;t reverified this display status and public access against
+                  the source in over {DISPLAY_STATUS_FRESHNESS_DAYS} days (last checked{" "}
+                  {physicalObject.updatedAt.toISOString().slice(0, 10)}) — treat it as
+                  possibly out of date.
+                </p>
+              )}
               {INSTITUTION_REFERENCE[physicalObject.institution.slug] && (
                 <p>
                   <a
