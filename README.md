@@ -47,7 +47,8 @@ npx tsc --noEmit    # typecheck
 ## What's implemented
 
 Real data throughout — nothing in the running app is placeholder or fabricated. Current
-dev DB: **64 artworks**, 18 artists, 2 institutions, 4 movements, 2 verified relationships.
+dev DB: **69 artworks**, 18 artists, 2 institutions, 4 movements, 22 verified relationships
+(a full Monet "Stacks of Wheat" series clique, 7 works, plus one documented-influence pair).
 
 | Page | What it does |
 |---|---|
@@ -81,18 +82,11 @@ an oversight, and each is written up in more detail in its ticket file under
 - **`/admin` has no authentication.** Anyone who can reach it can approve assertions,
   remove images, or resolve duplicate flags. A visible banner says so on every admin
   page. Do not deploy publicly without adding access control first.
-- **Corpus is 64 artworks, not 200–500.** The Phase 1 target assumed more ingestion time
+- **Corpus is 69 artworks, not 200–500.** The Phase 1 target assumed more ingestion time
   than this session spent; AIC's 60 req/min rate limit makes a full pull a multi-minute
-  job. The pipeline that produced these 64 is real and scales to more with a longer run
+  job. The pipeline that produced these 69 is real and scales to more with a longer run
   (`npm run ingest:bulk -- 250`, say) — nothing structural blocks it.
   See ticket 05.
-- **Related-piece stories: 2 verified, not 10.** Real research (including a dedicated
-  background agent covering ~60 of the 64 works) found exactly one more candidate, and
-  even that one carries a real evidentiary caveat. The corpus's genuinely documented
-  inter-object relationships appear to be rare at this size — hitting 10 needs either a
-  larger, more deliberately curated corpus, or a lower evidentiary bar than the master
-  prompt sets. See ticket 09's file for the full research log, including everything
-  investigated and rejected.
 - **Movement/style data is AIC-only.** The Met doesn't provide an equivalent field in
   what we ingest, so Met-only artists (most of the Old Masters in the corpus) show no
   style. Not fabricated — genuinely absent from the source.
@@ -126,14 +120,13 @@ artwork page falls back to an explicit "unavailable" state instead.
 In rough priority order for continuing this backlog:
 
 1. Run `npm run ingest:bulk` with a larger target to grow the corpus toward 200–500 —
-   the pipeline is proven, this is purely a longer run (respecting AIC's rate limit).
-2. Revisit ticket 09 periodically as the corpus grows — a larger, more diverse corpus is
-   the real lever for more verified relationships, not more research effort against the
-   current 64.
-3. Add authentication to `/admin` before any public deployment.
-4. Extend ticket 08's movement backfill to Met-sourced works once a suitable Met field
+   the pipeline is proven, this is purely a longer run (respecting AIC's rate limit). As
+   the corpus grows, watch for more known series/companion pieces the way ticket 09's
+   Stacks of Wheat expansion did, and publish them the same way.
+2. Add authentication to `/admin` before any public deployment.
+3. Extend ticket 08's movement backfill to Met-sourced works once a suitable Met field
    or a Getty AAT reconciliation pass is chosen (source register flags Getty AAT as an
    enrichment source not yet integrated).
-5. Phase 2 per the master prompt: interactive timelines, deeper provenance /
+4. Phase 2 per the master prompt: interactive timelines, deeper provenance /
    `OwnershipEvent` + `Exhibition`/`LoanEvent` modeling, `LocationAssertion` freshness
    policy, more collections beyond the Met and AIC.
