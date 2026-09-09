@@ -216,6 +216,11 @@ export default async function ArtworkPage({
                         <p>
                           Source: <a href={rp.evidenceSource.url}>{rp.evidenceSource.name}</a>
                         </p>
+                        <p>
+                          <Link href={`/compare?slug=${artwork.slug}&slug=${rp.artwork.slug}`}>
+                            Compare with this work
+                          </Link>
+                        </p>
                       </li>
                     );
                   })}

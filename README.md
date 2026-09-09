@@ -41,7 +41,7 @@ npm run relationships:publish       # publish the hand-verified Family Explorer 
 ```
 
 ```bash
-npm test           # vitest — 83 tests, run against .env.test's DB
+npm test           # vitest — 88 tests, run against .env.test's DB
 npx tsc --noEmit    # typecheck
 ```
 
@@ -65,7 +65,8 @@ stories than it is.
 | `/museum/<slug>`, `/city/<slug>` | Real holdings, official visit link, saved-works tie-in |
 | `/map` | Real Leaflet map (OpenStreetMap tiles) + accessible institution list |
 | `/timeline` | Artworks grouped by century from real creationDate data, undated works in their own honest bucket |
-| `/explore` | Title/artist search with spelling tolerance, 6 combinable filters, pagination |
+| `/explore` | Title/artist search with spelling tolerance, 6 combinable filters, pagination, select works to compare |
+| `/compare` | Compare 2–4 works of any kind side by side — images, dates, medium, dimensions, collections |
 | `/passport` | Local-only saved lists (want to see / seen / want to understand), private notes, filters |
 | `/admin` | Duplicate-flag review, per-artwork assertion approval, image removal — HTTP Basic Auth protected (`ADMIN_PASSWORD`, ticket 19) |
 
@@ -114,16 +115,15 @@ an oversight, and each is written up in more detail in its ticket file under
 - **No photo identification, semantic search, or accounts.** Explicitly Phase 2/3 in the
   master prompt, not attempted here. (Timeline exists — see the feature table above;
   added in ticket 13 after a fresh master-prompt-vs-implementation pass found it missing.)
-- **"Compare and understand" only exists inside the Family Explorer** (tied to verified
-  relationships, capped at 3 works), not as a general-purpose "pick any works and
-  compare" tool. The other two §5 "memorable experiences" — "Why does this look
+- **All three §5 "memorable experiences" are now built.** "Why does this look
   familiar?" (subject/technique/movement/documented-influence, each labeled a pattern
-  match, not a documented connection) and "What else was happening then?" (a ±25-year
-  window over creationDate, favoring a different `placeOrCulture` than the anchor) — are
-  now built, on every artwork page. "Visual similarity" (image-embedding resemblance) is
-  the one sub-case of "looks familiar" deliberately not attempted — real ML
-  infrastructure the master prompt itself gates to Phase 3 (§3), not a query over
-  existing data the way the other four categories are.
+  match, not a documented connection), "What else was happening then?" (a ±25-year
+  window over creationDate, favoring a different `placeOrCulture` than the anchor), and
+  "Compare and understand" (`/compare`, any 2–4 works, not just verified-related ones —
+  ticket 22). "Visual similarity" (image-embedding resemblance) is the one sub-case of
+  "looks familiar" deliberately not attempted — real ML infrastructure the master prompt
+  itself gates to Phase 3 (§3), not a query over existing data the way the other four
+  categories are.
 - **No alternate-title data — confirmed absent from both sources, not unbuilt.** §6 asks
   for "title/alternate titles" on the artwork page. The Met API has no such field at all
   (checked its full live response schema). AIC's API does have an `alt_titles` field, but
@@ -155,11 +155,9 @@ In rough priority order for continuing this backlog:
 1. Research and publish more related-piece stories toward §3's "at least 10" target —
    currently 7 (see Known limitations). Same research-then-publish process as ticket 09/16.
 2. Review the 26 pending `DuplicateFlag`s from the ticket 18 growth run via `/admin`.
-3. Build a general-purpose "Compare and understand" tool (pick any two works, not just
-   ones already linked by a verified relationship) — the last unbuilt piece of §5.
-4. Extend ticket 08's movement backfill to Met-sourced works once a suitable Met field
+3. Extend ticket 08's movement backfill to Met-sourced works once a suitable Met field
    or a Getty AAT reconciliation pass is chosen (source register flags Getty AAT as an
    enrichment source not yet integrated).
-5. Phase 2 per the master prompt: deeper provenance / `OwnershipEvent` +
+4. Phase 2 per the master prompt: deeper provenance / `OwnershipEvent` +
    `Exhibition`/`LoanEvent` modeling (the Journey tab), `LocationAssertion` freshness
    policy, more collections beyond the Met and AIC.

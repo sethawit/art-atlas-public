@@ -108,7 +108,7 @@ Slug collisions (e.g. two artists sharing a name) are resolved by appending a di
                                    current source with freshness info
 ```
 
-Compare view (`/compare?a=<slug>&b=<slug>&...`) is reached from Related pieces and Explore, not a standalone nav item — up to 4 works on desktop, 2 on mobile.
+Compare view (`/compare?slug=<a>&slug=<b>&...`, built ticket 22 — repeated `slug` params rather than the originally-sketched `a`/`b`, so it isn't capped at a fixed number of named params) is reached from Related pieces and Explore, not a standalone nav item — up to 4 works on desktop, 2 on mobile.
 
 ### States every primary page must handle
 

@@ -145,20 +145,27 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
           <p>
             {total} result{total === 1 ? "" : "s"}
           </p>
-          <ul>
-            {results.map((artwork) => {
-              const image = artwork.physicalObjects.flatMap((po) => po.images)[0];
-              return (
-                <li key={artwork.id}>
-                  <Link href={`/artwork/${artwork.slug}`}>
-                    {image && <img src={image.sourceUrl} alt={image.altText ?? artwork.title} width={120} />}
-                    {artwork.title}
-                    {artwork.artist && <> — {artwork.artist.name}</>}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+          <form action="/compare">
+            <p>Select 2–4 works to compare side by side.</p>
+            <ul>
+              {results.map((artwork) => {
+                const image = artwork.physicalObjects.flatMap((po) => po.images)[0];
+                return (
+                  <li key={artwork.id}>
+                    <label>
+                      <input type="checkbox" name="slug" value={artwork.slug} />
+                      <Link href={`/artwork/${artwork.slug}`}>
+                        {image && <img src={image.sourceUrl} alt={image.altText ?? artwork.title} width={120} />}
+                        {artwork.title}
+                        {artwork.artist && <> — {artwork.artist.name}</>}
+                      </Link>
+                    </label>
+                  </li>
+                );
+              })}
+            </ul>
+            <button type="submit">Compare selected</button>
+          </form>
 
           <nav aria-label="Pagination">
             {page > 1 && <Link href={buildQueryString(params, { page: String(page - 1) })}>Previous</Link>}
