@@ -100,6 +100,8 @@ export default async function ArtworkPage({
                 <dd>{physicalObject.institution.name}</dd>
               </>
             )}
+            <dt>Display status</dt>
+            <dd>{(physicalObject?.displayStatus ?? "unconfirmed").replace(/_/g, " ")}</dd>
           </dl>
         </section>
 
@@ -145,6 +147,7 @@ export default async function ArtworkPage({
                   {relatedPieces.map((rp) => {
                     const rpImage = rp.artwork.physicalObjects.flatMap((po) => po.images)[0];
                     const rpInstitution = rp.artwork.physicalObjects[0]?.institution;
+                    const rpDisplayStatus = rp.artwork.physicalObjects[0]?.displayStatus ?? "unconfirmed";
                     return (
                       <li key={rp.relationship.id}>
                         <Link href={`/artwork/${rp.artwork.slug}`}>
@@ -159,7 +162,7 @@ export default async function ArtworkPage({
                           <strong>{rp.label}</strong> — {rp.explanation}
                         </p>
                         {rpInstitution && <p>{rpInstitution.name}</p>}
-                        <p>Display status: unconfirmed</p>
+                        <p>Display status: {rpDisplayStatus.replace(/_/g, " ")}</p>
                         <p>
                           Source: <a href={rp.evidenceSource.url}>{rp.evidenceSource.name}</a>
                         </p>
