@@ -7,16 +7,20 @@ verifying (§8: "inspect actual available fields," not assumed) before building 
 
 **Blocked by:** none.
 
-**Status:** planned
+**Status:** done (no field built — confirmed absent in practice)
 
-- [ ] Check the Met and AIC API docs/actual responses for an alternate-title field (Met:
-      possibly `title` variants or `objectName`; AIC: check `alt_titles` or similar) —
-      confirm with a real API call, not the docs alone, same discipline as the
-      placeOrCulture backfill (ticket 14 found `culture` empty in practice despite being
-      documented)
-- [ ] If real data exists: add `alternateTitles String?` (or a small join table if
-      multiple values are common) to `Artwork`, populate in both normalizers, display on
-      the artwork page
-- [ ] If a source's field is empty/unreliable in practice: say so honestly in the ticket
-      and in README, same as the movement-data-is-AIC-only precedent — don't force a
-      column that stays null for every real record
+- [x] Checked the Met API's actual response schema live (`GET
+      /public/collection/v1/objects/436535`, full key list) — no alternate/former-title
+      field of any kind exists; only a single `title` string.
+- [x] Checked the AIC API live: `alt_titles` does exist as a documented field, but is
+      `null` on every one of 106 real objects sampled (6 individually-checked ukiyo-e/
+      Impressionist works plus a 100-object general search) — present in the schema,
+      unpopulated in practice.
+- [x] Decision: don't build the field. Adding `alternateTitles` to `Artwork` for data
+      that's null on every real record checked would be a column that never displays
+      anything, contradicting the master prompt's own instruction (§13: label
+      placeholders explicitly, exclude from factual results — here the honest move is not
+      adding the column at all rather than shipping a permanently-empty one).
+- [x] Documented in README's Known limitations, same evidentiary bar as the
+      movement-data-is-AIC-only precedent (ticket 08) — a confirmed source gap, not an
+      unbuilt feature.

@@ -126,8 +126,12 @@ an oversight, and each is written up in more detail in its ticket file under
   the one sub-case of "looks familiar" deliberately not attempted — real ML
   infrastructure the master prompt itself gates to Phase 3 (§3), not a query over
   existing data the way the other four categories are.
-- **No alternate-title data.** §6 asks for "title/alternate titles" on the artwork page;
-  no alt-title field exists anywhere in the data model or either source adapter.
+- **No alternate-title data — confirmed absent from both sources, not unbuilt.** §6 asks
+  for "title/alternate titles" on the artwork page. The Met API has no such field at all
+  (checked its full live response schema). AIC's API does have an `alt_titles` field, but
+  it was `null` on all 106 real objects sampled while checking (ticket 21) — present in
+  the schema, unpopulated in practice. No field was added to the data model rather than
+  ship a column that would never display anything.
 - **`ImageAsset.eligibleUses` is a dead column.** In the schema, never populated by
   either normalizer.
 - **Journey (ownership/provenance) stays deferred**, per §3's own phase gating —
