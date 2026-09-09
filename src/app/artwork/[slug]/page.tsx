@@ -115,18 +115,25 @@ export default async function ArtworkPage({
       <article>
         <header>
           <h1>{artwork.title}</h1>
-          {artwork.artist && <p>{artwork.artist.name}</p>}
-          {dateAssertion && (
-            <p>
-              {dateAssertion.value}
-              {dateAssertion.precision === "approximate" && " (approximate)"}
-              {dateAssertion.precision === "disputed" && " (disputed)"}
-            </p>
-          )}
+          <p className="entry-meta">
+            {artwork.artist && <span>{artwork.artist.name}</span>}
+            {dateAssertion && (
+              <span>
+                {dateAssertion.value}
+                {dateAssertion.precision === "approximate" && " (approximate)"}
+                {dateAssertion.precision === "disputed" && " (disputed)"}
+              </span>
+            )}
+            {physicalObject?.institution && (
+              <span>
+                <Link href={`/museum/${physicalObject.institution.slug}`}>{physicalObject.institution.name}</Link>
+              </span>
+            )}
+          </p>
         </header>
 
         {image ? (
-          <figure>
+          <figure className="plate">
             {/* Full artwork view, not a cropped preview — §12. */}
             <img src={image.sourceUrl} alt={image.altText ?? artwork.title} />
             {image.credit && <figcaption>{image.credit}</figcaption>}
@@ -199,7 +206,7 @@ export default async function ArtworkPage({
               </nav>
 
               {relatedView === "grid" && (
-                <ul>
+                <ul className="card-grid">
                   {relatedPieces.map((rp) => {
                     const rpImage = rp.artwork.physicalObjects.flatMap((po) => po.images)[0];
                     const rpInstitution = rp.artwork.physicalObjects[0]?.institution;
@@ -218,7 +225,13 @@ export default async function ArtworkPage({
                           <strong>{rp.label}</strong> — {rp.explanation}
                         </p>
                         {rpInstitution && <p>{rpInstitution.name}</p>}
-                        <p>Display status: {rpDisplayStatus.replace(/_/g, " ")}</p>
+                        <p>
+                          <span
+                            className={`status-tag ${rpDisplayStatus === "on_display" ? "status-tag--verified" : "status-tag--unverified"}`}
+                          >
+                            {rpDisplayStatus.replace(/_/g, " ")}
+                          </span>
+                        </p>
                         <p>
                           Source: <a href={rp.evidenceSource.url}>{rp.evidenceSource.name}</a>
                         </p>
@@ -334,7 +347,7 @@ export default async function ArtworkPage({
             familiarGroups.map((group) => (
               <div key={group.heading}>
                 <h3>{group.heading}</h3>
-                <ul>
+                <ul className="card-grid">
                   {group.entries.map((entry) => (
                     <li key={entry.slug}>
                       <Link href={`/artwork/${entry.slug}`}>
@@ -365,7 +378,7 @@ export default async function ArtworkPage({
                 dates are often themselves approximate, and a shared era isn&apos;t evidence of any
                 connection between the pieces.
               </p>
-              <ul>
+              <ul className="card-grid">
                 {whatElse.entries.map((entry) => (
                   <li key={entry.slug}>
                     <Link href={`/artwork/${entry.slug}`}>
@@ -408,9 +421,21 @@ export default async function ArtworkPage({
                   </>
                 )}
                 <dt>Display status</dt>
-                <dd>{(physicalObject.displayStatus ?? "unconfirmed").replace(/_/g, " ")}</dd>
+                <dd>
+                  <span
+                    className={`status-tag ${physicalObject.displayStatus === "on_display" ? "status-tag--verified" : "status-tag--unverified"}`}
+                  >
+                    {(physicalObject.displayStatus ?? "unconfirmed").replace(/_/g, " ")}
+                  </span>
+                </dd>
                 <dt>Public access</dt>
-                <dd>{(physicalObject.publicAccess ?? "unknown").replace(/_/g, " ")}</dd>
+                <dd>
+                  <span
+                    className={`status-tag ${physicalObject.publicAccess === "museum_access" ? "status-tag--verified" : "status-tag--unverified"}`}
+                  >
+                    {(physicalObject.publicAccess ?? "unknown").replace(/_/g, " ")}
+                  </span>
+                </dd>
               </dl>
               {(displayStatusAssertion || publicAccessAssertion) && (
                 <p>
@@ -474,7 +499,7 @@ export default async function ArtworkPage({
                     misattributing an agent as an owner or guessing a date the text
                     doesn&apos;t clearly give.
                   </p>
-                  <ol>
+                  <ol className="route-list">
                     {journey.ownership.map((event) => (
                       <li key={event.sequence}>{event.description}</li>
                     ))}
@@ -490,7 +515,7 @@ export default async function ArtworkPage({
               {journey.exhibitions.length > 0 && (
                 <div>
                   <h3>Exhibitions</h3>
-                  <ol>
+                  <ol className="route-list">
                     {journey.exhibitions.map((event) => (
                       <li key={event.sequence}>{event.description}</li>
                     ))}

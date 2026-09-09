@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Libre_Franklin, Source_Serif_4 } from "next/font/google";
+import { Fraunces, Newsreader } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
 
-const heading = Libre_Franklin({ subsets: ["latin"], variable: "--font-heading", weight: ["500", "600", "700"] });
-const body = Source_Serif_4({ subsets: ["latin"], variable: "--font-body", weight: ["400", "600"] });
+const display = Fraunces({ subsets: ["latin"], variable: "--font-display", weight: ["500", "600", "700"] });
+const body = Newsreader({
+  subsets: ["latin"],
+  variable: "--font-body",
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+});
 
 export const metadata: Metadata = {
   title: { default: "Art Atlas", template: "%s — Art Atlas" },
@@ -14,15 +19,18 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${heading.variable} ${body.variable}`}>
+    <html lang="en" className={`${display.variable} ${body.variable}`}>
       <body>
         <a href="#main" className="skip-link">
           Skip to content
         </a>
         <header className="site-header">
-          <Link href="/" className="site-header__wordmark">
-            Art Atlas
-          </Link>
+          <span className="site-header__brand">
+            <Link href="/" className="site-header__wordmark">
+              Art Atlas
+            </Link>
+            <span className="site-header__tagline">a field guide to painted places</span>
+          </span>
           <nav aria-label="Primary">
             <Link href="/explore">Explore</Link>
             <Link href="/timeline">Timeline</Link>

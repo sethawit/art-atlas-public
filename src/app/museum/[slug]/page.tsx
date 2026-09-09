@@ -56,7 +56,7 @@ export default async function MuseumPage({ params }: { params: Promise<{ slug: s
 
       <section aria-labelledby="works-heading">
         <h2 id="works-heading">Artworks in our catalogue ({institution.physicalObjects.length})</h2>
-        <ul>
+        <ul className="card-grid">
           {institution.physicalObjects.map((po) => {
             const image = po.images[0];
             return (

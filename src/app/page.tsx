@@ -62,49 +62,53 @@ export default async function HomePage() {
 
   return (
     <main>
-      <header>
-        <p>Art Atlas</p>
-        <h1>Discover an artwork. Understand its connections. Find where to see it.</h1>
-        <p>
-          Every artwork has a story, a family, and a journey. {totalArtworks} verified
-          artworks in our catalogue so far, sourced from the Met and the Art Institute of
-          Chicago.
-        </p>
-      </header>
-
-      <form action="/explore">
-        <label htmlFor="q">Search by artwork, artist, or subject</label>
-        <input id="q" name="q" type="search" placeholder="e.g. Van Gogh, Water Lilies" />
-        <button type="submit">Search</button>
-      </form>
-
-      {hero && (
-        <section aria-labelledby="featured-heading">
-          <h2 id="featured-heading">Featured artwork</h2>
-          <Link href={`/artwork/${hero.slug}`}>
-            {heroImage && <img src={heroImage.sourceUrl} alt={heroImage.altText ?? hero.title} width={480} />}
-            <p>{hero.title}</p>
+      <section className="hero">
+        <div>
+          <p className="hero__eyebrow">Art Atlas</p>
+          <h1>Discover an artwork. Understand its connections. Find where to see it.</h1>
+          <p>
+            Every artwork has a story, a family, and a journey.{" "}
+            <span className="hero__count">{totalArtworks} verified artworks</span> in our
+            catalogue so far, sourced from the Met and the Art Institute of Chicago.
+          </p>
+          <form action="/explore">
+            <label htmlFor="q">Search by artwork, artist, or subject</label>
+            <input id="q" name="q" type="search" placeholder="e.g. Van Gogh, Water Lilies" />
+            <button type="submit">Search</button>
+          </form>
+        </div>
+        {hero && (
+          <Link href={`/artwork/${hero.slug}`} aria-labelledby="featured-heading">
+            <figure className="plate">
+              {heroImage && <img src={heroImage.sourceUrl} alt={heroImage.altText ?? hero.title} width={480} />}
+              <figcaption>
+                <strong id="featured-heading">{hero.title}</strong>
+                {hero.artist && <> — {hero.artist.name}</>}
+              </figcaption>
+            </figure>
           </Link>
-          {hero.artist && <p>{hero.artist.name}</p>}
-          {heroImage?.credit && <p>{heroImage.credit}</p>}
-        </section>
-      )}
+        )}
+      </section>
 
       <section aria-labelledby="related-heading">
         <h2 id="related-heading">A related-piece story</h2>
         {featuredStory ? (
           <>
             <Link href={`/artwork/${featuredStory.subjectArtwork.slug}`}>
-              {storyImage && (
-                <img
-                  src={storyImage.sourceUrl}
-                  alt={storyImage.altText ?? featuredStory.subjectArtwork.title}
-                  width={320}
-                />
-              )}
-              <p>{featuredStory.subjectArtwork.title}</p>
+              <figure className="plate">
+                {storyImage && (
+                  <img
+                    src={storyImage.sourceUrl}
+                    alt={storyImage.altText ?? featuredStory.subjectArtwork.title}
+                    width={320}
+                  />
+                )}
+                <figcaption>
+                  <strong>{featuredStory.subjectArtwork.title}</strong>
+                  {featuredStory.subjectArtwork.artist && <> — {featuredStory.subjectArtwork.artist.name}</>}
+                </figcaption>
+              </figure>
             </Link>
-            {featuredStory.subjectArtwork.artist && <p>{featuredStory.subjectArtwork.artist.name}</p>}
             <p>{featuredStory.explanation}</p>
             <p>
               Related to{" "}
@@ -126,7 +130,7 @@ export default async function HomePage() {
 
       <section aria-labelledby="artists-heading">
         <h2 id="artists-heading">Explore by artist</h2>
-        <ul>
+        <ul className="tag-list">
           {artists.map((artist) => (
             <li key={artist.id}>
               <Link href={`/artist/${artist.slug}`}>
@@ -139,7 +143,7 @@ export default async function HomePage() {
 
       <section aria-labelledby="museums-heading">
         <h2 id="museums-heading">Explore by museum</h2>
-        <ul>
+        <ul className="tag-list">
           {museums.map((museum) => (
             <li key={museum.id}>
               <Link href={`/museum/${museum.slug}`}>
@@ -155,7 +159,7 @@ export default async function HomePage() {
         {styles.length === 0 ? (
           <p>Coming soon — style and movement pages are still being built.</p>
         ) : (
-          <ul>
+          <ul className="tag-list">
             {styles.map((style) => (
               <li key={style.id}>
                 <Link href={`/movement/${style.slug}`}>

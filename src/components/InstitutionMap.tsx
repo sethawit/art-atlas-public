@@ -66,5 +66,11 @@ export default function InstitutionMap({ institutions }: { institutions: MapInst
   // children (buttons, links), and role="img" would tell assistive tech to treat them as
   // flattened image content, masking them. aria-label on the region is enough; Leaflet
   // supplies its own accessible names for the controls it renders inside.
-  return <div ref={containerRef} style={{ height: 400, width: "100%" }} aria-label="Map of holding institutions" />;
+  return (
+    <div
+      ref={containerRef}
+      style={{ height: 400, width: "100%", border: "1px solid var(--line-strong)", marginBottom: "var(--space-6)" }}
+      aria-label="Map of holding institutions"
+    />
+  );
 }

@@ -81,9 +81,12 @@ duplicate-safe writes (two different physical objects sharing a title-slug get a
 disambiguated second `Artwork` + a `DuplicateFlag`, never a silent merge — see ADR 0001
 and ticket 05's file for the bug this fixed).
 
-Design: a real stylesheet (ticket 12) — warm off-white background, restrained teal
-accent, Libre Franklin (navigation/labels) + Source Serif 4 (reading content), WCAG
-AA-passing contrast, visible keyboard focus everywhere, mobile-safe comparison table,
+Design: a full visual redesign (ticket 30) — an atlas/gazetteer identity grounded in what
+the app actually tracks (a work's place and journey, not just its picture): chart-paper
+background, a single cartographer's-ink blue accent, ruled "plate" borders around
+documented images, index-card grids for work lists, and never-color-alone status tags for
+display/verification state. Fraunces (titles/structure) + Newsreader (reading content).
+WCAG AA-passing contrast, visible keyboard focus everywhere, mobile-safe comparison table,
 real loading/error/not-found states, lazy-loaded gallery images (ticket 27) on every
 list/grid page.
 

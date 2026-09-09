@@ -130,7 +130,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
             {params.q && <> for &ldquo;{params.q}&rdquo;</>}. Try removing a filter, or explore
             by artist instead:
           </p>
-          <ul>
+          <ul className="tag-list">
             {suggestedArtists.map((a) => (
               <li key={a.id}>
                 <Link href={`/artist/${a.slug}`}>
@@ -147,17 +147,19 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
           </p>
           <form action="/compare">
             <p>Select 2–4 works to compare side by side.</p>
-            <ul>
+            <ul className="card-grid">
               {results.map((artwork) => {
                 const image = artwork.physicalObjects.flatMap((po) => po.images)[0];
                 return (
                   <li key={artwork.id}>
                     <label>
-                      <input type="checkbox" name="slug" value={artwork.slug} />
+                      <input type="checkbox" name="slug" value={artwork.slug} /> Select to compare
                       <Link href={`/artwork/${artwork.slug}`}>
                         {image && <img src={image.sourceUrl} alt={image.altText ?? artwork.title} width={120} loading="lazy" />}
-                        {artwork.title}
-                        {artwork.artist && <> — {artwork.artist.name}</>}
+                        <p>
+                          {artwork.title}
+                          {artwork.artist && <> — {artwork.artist.name}</>}
+                        </p>
                       </Link>
                     </label>
                   </li>

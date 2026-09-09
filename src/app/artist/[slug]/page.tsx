@@ -65,7 +65,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
 
       <section aria-labelledby="works-heading">
         <h2 id="works-heading">Works in our catalogue ({artist.artworks.length})</h2>
-        <ul>
+        <ul className="card-grid">
           {artist.artworks.map((artwork) => {
             const image = artwork.physicalObjects.flatMap((po) => po.images)[0];
             const artworkStyles = artwork.movements.map((am) => am.movement.name);

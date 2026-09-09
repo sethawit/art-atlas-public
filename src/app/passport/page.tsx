@@ -107,7 +107,7 @@ export default function PassportPage() {
                 <h2 id={`list-${status}`}>
                   {STATUS_LABELS[status]} ({inList.length})
                 </h2>
-                <ul>
+                <ul className="card-grid">
                   {inList.map((entry) => (
                     <li key={entry.artworkSlug}>
                       <Link href={`/artwork/${entry.artworkSlug}`}>

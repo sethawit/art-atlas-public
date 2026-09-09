@@ -69,7 +69,7 @@ export default async function TimelinePage({
             <h2 id={`century-${century.label.replace(/\s+/g, "-")}`}>
               {century.label} ({century.entries.length})
             </h2>
-            <ul>
+            <ul className="card-grid">
               {century.entries.map((entry) => (
                 <li key={entry.artworkId}>
                   <Link href={`/artwork/${entry.slug}`}>

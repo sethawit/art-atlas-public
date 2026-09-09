@@ -50,7 +50,7 @@ export default async function MovementPage({ params }: { params: Promise<{ slug:
       {artists.length > 0 && (
         <section aria-labelledby="artists-heading">
           <h2 id="artists-heading">Associated artists</h2>
-          <ul>
+          <ul className="tag-list">
             {artists.map((a) => (
               <li key={a.slug}>
                 <Link href={`/artist/${a.slug}`}>{a.name}</Link>
@@ -62,7 +62,7 @@ export default async function MovementPage({ params }: { params: Promise<{ slug:
 
       <section aria-labelledby="works-heading">
         <h2 id="works-heading">Representative works ({artworks.length})</h2>
-        <ul>
+        <ul className="card-grid">
           {artworks.map((artwork) => {
             const image = artwork.physicalObjects.flatMap((po) => po.images)[0];
             return (
