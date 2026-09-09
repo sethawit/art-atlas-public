@@ -126,9 +126,6 @@ an oversight, and each is written up in more detail in its ticket file under
   the one sub-case of "looks familiar" deliberately not attempted — real ML
   infrastructure the master prompt itself gates to Phase 3 (§3), not a query over
   existing data the way the other four categories are.
-- **No per-page SEO metadata.** Every page shares the root layout's static title/
-  description — §13 asks for "meaningful metadata" per detail page (dynamic Next.js
-  `generateMetadata`), not implemented.
 - **No alternate-title data.** §6 asks for "title/alternate titles" on the artwork page;
   no alt-title field exists anywhere in the data model or either source adapter.
 - **`ImageAsset.eligibleUses` is a dead column.** In the schema, never populated by
@@ -153,17 +150,15 @@ artwork page falls back to an explicit "unavailable" state instead.
 
 In rough priority order for continuing this backlog:
 
-1. Add per-page `generateMetadata` (title/description/OG per artwork, artist, movement)
-   — §13's SEO requirement, currently only a static site-wide title exists.
-2. Research and publish more related-piece stories toward §3's "at least 10" target —
+1. Research and publish more related-piece stories toward §3's "at least 10" target —
    currently 7 (see Known limitations). Same research-then-publish process as ticket 09/16.
-3. Review the 26 pending `DuplicateFlag`s from the ticket 18 growth run via `/admin`.
-4. Add authentication to `/admin` before any public deployment.
-5. Build a general-purpose "Compare and understand" tool (pick any two works, not just
+2. Review the 26 pending `DuplicateFlag`s from the ticket 18 growth run via `/admin`.
+3. Add authentication to `/admin` before any public deployment.
+4. Build a general-purpose "Compare and understand" tool (pick any two works, not just
    ones already linked by a verified relationship) — the last unbuilt piece of §5.
-6. Extend ticket 08's movement backfill to Met-sourced works once a suitable Met field
+5. Extend ticket 08's movement backfill to Met-sourced works once a suitable Met field
    or a Getty AAT reconciliation pass is chosen (source register flags Getty AAT as an
    enrichment source not yet integrated).
-7. Phase 2 per the master prompt: deeper provenance / `OwnershipEvent` +
+6. Phase 2 per the master prompt: deeper provenance / `OwnershipEvent` +
    `Exhibition`/`LoanEvent` modeling (the Journey tab), `LocationAssertion` freshness
    policy, more collections beyond the Met and AIC.

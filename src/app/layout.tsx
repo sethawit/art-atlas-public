@@ -8,7 +8,7 @@ const heading = Libre_Franklin({ subsets: ["latin"], variable: "--font-heading",
 const body = Source_Serif_4({ subsets: ["latin"], variable: "--font-body", weight: ["400", "600"] });
 
 export const metadata: Metadata = {
-  title: "Art Atlas",
+  title: { default: "Art Atlas", template: "%s — Art Atlas" },
   description: "Discover an artwork. Understand its connections. Find where to see it.",
 };
 

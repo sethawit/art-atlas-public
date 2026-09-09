@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { cache } from "react";
 import { parseArtistBio } from "@/lib/artists/parse-bio";
 
 /**
@@ -13,7 +14,7 @@ import { parseArtistBio } from "@/lib/artists/parse-bio";
  * relationship exists yet (that would need the same evidentiary bar as ticket 09's
  * artwork relationships, applied to artists — not attempted here).
  */
-export async function getArtistBySlug(prisma: PrismaClient, slug: string) {
+export const getArtistBySlug = cache(async function getArtistBySlug(prisma: PrismaClient, slug: string) {
   const artist = await prisma.artist.findUnique({
     where: { slug },
     include: {
@@ -56,4 +57,4 @@ export async function getArtistBySlug(prisma: PrismaClient, slug: string) {
     institutions: Array.from(institutions.values()),
     styles: Array.from(styles.values()),
   };
-}
+});

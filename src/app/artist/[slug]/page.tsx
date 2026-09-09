@@ -1,7 +1,18 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getArtistBySlug } from "@/lib/queries/get-artist-by-slug";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const data = await getArtistBySlug(prisma, slug);
+  if (!data) return {};
+
+  const { artist, bio } = data;
+  const description = [bio?.nationality, bio?.lifespanYears].filter(Boolean).join(", ") || undefined;
+  return { title: artist.name, description };
+}
 
 export default async function ArtistPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

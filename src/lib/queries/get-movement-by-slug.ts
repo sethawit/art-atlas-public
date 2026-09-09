@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { cache } from "react";
 
 // Short, defensible general-knowledge definitions for the movements/periods currently in
 // our catalogue (ticket 08: explain the term, geography, characteristics — no implied
@@ -28,7 +29,7 @@ const MOVEMENT_CONTEXT: Record<string, { geography: string; characteristics: str
   },
 };
 
-export async function getMovementBySlug(prisma: PrismaClient, slug: string) {
+export const getMovementBySlug = cache(async function getMovementBySlug(prisma: PrismaClient, slug: string) {
   const movement = await prisma.movementStyle.findUnique({
     where: { slug },
     include: {
@@ -57,4 +58,4 @@ export async function getMovementBySlug(prisma: PrismaClient, slug: string) {
     artworks: movement.artworks.map((am) => am.artwork),
     artists: Array.from(artists.values()),
   };
-}
+});

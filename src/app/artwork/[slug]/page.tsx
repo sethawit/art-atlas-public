@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getArtworkBySlug } from "@/lib/queries/get-artwork-by-slug";
@@ -16,6 +17,33 @@ import { slugify } from "@/lib/ingest/normalize-met";
 // see docs/superpowers/specs/2026-09-08-art-atlas-product-definition-and-sitemap.md.
 
 type RelatedView = "grid" | "comparison" | "map";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const data = await getArtworkBySlug(prisma, slug);
+  if (!data) return {};
+
+  const { artwork, physicalObject, fields } = data;
+  const image = physicalObject?.images[0] ?? null;
+  const dateAssertion = fields.get("creationDate");
+  const title = artwork.artist ? `${artwork.title}, ${artwork.artist.name}` : artwork.title;
+  const description = [
+    artwork.title,
+    artwork.artist?.name,
+    dateAssertion?.value,
+    physicalObject?.institution?.name,
+  ]
+    .filter(Boolean)
+    .join(" — ");
+
+  return {
+    title,
+    description,
+    openGraph: image
+      ? { title, description, images: [{ url: image.sourceUrl, alt: image.altText ?? artwork.title }] }
+      : { title, description },
+  };
+}
 
 export default async function ArtworkPage({
   params,

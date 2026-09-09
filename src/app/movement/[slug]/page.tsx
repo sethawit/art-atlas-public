@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getMovementBySlug } from "@/lib/queries/get-movement-by-slug";
@@ -9,6 +10,18 @@ const KIND_EXPLANATION: Record<string, string> = {
   technique: "A technique is a way of making a work (a material or method), independent of period or movement.",
   style: "A style is a recognizable visual approach that can recur across different periods, movements, or artists.",
 };
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const data = await getMovementBySlug(prisma, slug);
+  if (!data) return {};
+
+  const { movement, context } = data;
+  return {
+    title: movement.name,
+    description: context?.characteristics ?? `${movement.name} (${movement.kind}) on Art Atlas.`,
+  };
+}
 
 export default async function MovementPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
