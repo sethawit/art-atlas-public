@@ -91,12 +91,13 @@ an oversight, and each is written up in more detail in its ticket file under
   original 69 via a larger `ingest:bulk` run across more search terms. 82 Met-side
   ingests failed with `403` during the run (logged in `IngestLog`, not silently dropped)
   — the Met's advisory 80 req/s limit was likely exceeded by the burst; not retried since
-  the target was already comfortably met. 26 pending `DuplicateFlag`s from generic shared
-  titles ("Self-Portrait," "Still Life," "Fragment," different artists) were spot-checked
-  and are legitimate flags, not bugs — including three real, distinct AIC print
-  impressions of Hokusai's "Great Wave" correctly kept as separate `PhysicalObject`s
-  rather than merged. Editorial resolution of the 26 flags is `/admin` work, not done
-  here. See ticket 05 (original pipeline) and ticket 18 (this growth run).
+  the target was already comfortably met. 26 `DuplicateFlag`s from generic shared titles
+  ("Self-Portrait," "Still Life," "Fragment," different artists) were reviewed — each has
+  a distinct `externalRecordUrl` (a genuinely separate object, not the same record
+  ingested twice), including three real, distinct AIC print impressions of Hokusai's
+  "Great Wave" correctly kept as separate `PhysicalObject`s rather than merged. All 26
+  resolved `confirmed_distinct`. See ticket 05 (original pipeline) and ticket 18 (this
+  growth run).
 - **Movement/style data is AIC-only.** The Met doesn't provide an equivalent field in
   what we ingest, so Met-only artists (most of the Old Masters in the corpus) show no
   style. Not fabricated — genuinely absent from the source.
@@ -154,10 +155,9 @@ In rough priority order for continuing this backlog:
 
 1. Research and publish more related-piece stories toward §3's "at least 10" target —
    currently 7 (see Known limitations). Same research-then-publish process as ticket 09/16.
-2. Review the 26 pending `DuplicateFlag`s from the ticket 18 growth run via `/admin`.
-3. Extend ticket 08's movement backfill to Met-sourced works once a suitable Met field
+2. Extend ticket 08's movement backfill to Met-sourced works once a suitable Met field
    or a Getty AAT reconciliation pass is chosen (source register flags Getty AAT as an
    enrichment source not yet integrated).
-4. Phase 2 per the master prompt: deeper provenance / `OwnershipEvent` +
+3. Phase 2 per the master prompt: deeper provenance / `OwnershipEvent` +
    `Exhibition`/`LoanEvent` modeling (the Journey tab), `LocationAssertion` freshness
    policy, more collections beyond the Met and AIC.

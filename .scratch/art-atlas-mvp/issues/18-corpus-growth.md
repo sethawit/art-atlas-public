@@ -18,11 +18,11 @@ this — it's an ingestion-time problem (AIC's 60 req/min rate limit), not a cod
 - [x] 82 Met-side `403`s during the second run, logged in `IngestLog` not silently
       dropped (advisory 80 req/s limit likely exceeded by the burst) — not retried, target
       already met without them
-- [x] 26 pending `DuplicateFlag`s reviewed by hand (query + inspect, not `/admin`
-      resolution): all legitimate — generic shared titles across different artists
-      ("Self-Portrait," "Still Life," "Fragment," "Panel"), plus 3 real distinct AIC
-      Hokusai "Great Wave" print impressions correctly kept separate. None are bugs;
-      editorial resolution left for `/admin` (README Next Actions)
+- [x] 26 pending `DuplicateFlag`s reviewed and resolved `confirmed_distinct` (each has a
+      distinct `externalRecordUrl` — a genuinely separate object, never the same record
+      ingested twice): generic shared titles across different artists ("Self-Portrait,"
+      "Still Life," "Fragment," "Panel"), plus 3 real distinct AIC Hokusai "Great Wave"
+      print impressions correctly kept separate. None were bugs.
 - [x] README counts updated: 69→334 artworks, 18→177 artists, 4→33 movements; corpus-size
       Known-limitations bullet rewritten as resolved
 - [x] Series/companion-piece candidates for ticket 16: not surveyed yet at this larger
