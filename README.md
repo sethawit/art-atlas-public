@@ -48,11 +48,14 @@ npx tsc --noEmit    # typecheck
 
 Real data throughout — nothing in the running app is placeholder or fabricated. Current
 dev DB: **69 artworks**, 18 artists, 2 institutions, 4 movements, 22 verified relationships
-(a full Monet "Stacks of Wheat" series clique, 7 works, plus one documented-influence pair).
+(a full Monet "Stacks of Wheat" series clique, 7 works, plus one documented-influence pair)
+— **2 distinct related-piece stories**, short of §3's "at least 10" Phase 1 launch target;
+disclosed here per the master prompt's own instruction to report a shortfall honestly
+rather than let the relationship count (22) read as more stories than it is.
 
 | Page | What it does |
 |---|---|
-| `/` | Hero (real credited artwork), functional search, artist/museum discovery cards |
+| `/` | Hero (real credited artwork), functional search, a real featured related-piece story, artist/museum/style discovery cards |
 | `/artwork/<slug>` | Overview, Understand, Related pieces (Family Explorer — grid/comparison/map), Why does this look familiar? (subject/technique/movement/documented-influence pattern matches), What else was happening then? (contemporaneous works, favoring a different place/culture), Where to see it, Sources, My Art Passport controls |
 | `/artist/<slug>` | Parsed bio (nationality/lifespan) where the source gives one, per-work style labels, works list |
 | `/movement/<slug>` | Kind (period vs. movement, distinguished), geography/characteristics, associated artists, representative works |
@@ -100,6 +103,11 @@ an oversight, and each is written up in more detail in its ticket file under
   requires these to carry a source and freshness label or be omitted; we have no such
   source, so they're omitted, with an on-page link to each museum's own visit page
   instead. See ticket 10.
+- **`/explore` has 5 of §6's 6 required filters — no movement/style filter.** Date range,
+  medium, museum, city, and display status are all real and combinable; movement/style is
+  left out rather than faked, pending a decision on how to filter by a many-valued
+  per-artwork relation. Was previously only noted in a code comment, not here — found and
+  disclosed during ticket 14's master-prompt comparison pass.
 - **`art_atlas_test` database creation is a manual setup step**, not automated via
   `docker-compose.yml` (which only auto-creates the first DB via `POSTGRES_DB`). See
   Setup above.
@@ -145,17 +153,20 @@ In rough priority order for continuing this backlog:
 
 1. Add per-page `generateMetadata` (title/description/OG per artwork, artist, movement)
    — §13's SEO requirement, currently only a static site-wide title exists.
-2. Run `npm run ingest:bulk` with a larger target to grow the corpus toward 200–500 —
+2. Research and publish more related-piece stories toward §3's "at least 10" target —
+   currently 2 (see Known limitations). Same research-then-publish process as ticket 09.
+3. Run `npm run ingest:bulk` with a larger target to grow the corpus toward 200–500 —
    the pipeline is proven, this is purely a longer run (respecting AIC's rate limit). As
    the corpus grows, watch for more known series/companion pieces the way ticket 09's
    Stacks of Wheat expansion did, and publish them the same way. A bigger corpus also
    sharpens "What else was happening then?" — more `placeOrCulture` diversity per era.
-3. Add authentication to `/admin` before any public deployment.
-4. Build a general-purpose "Compare and understand" tool (pick any two works, not just
+4. Add authentication to `/admin` before any public deployment.
+5. Build a general-purpose "Compare and understand" tool (pick any two works, not just
    ones already linked by a verified relationship) — the last unbuilt piece of §5.
-5. Extend ticket 08's movement backfill to Met-sourced works once a suitable Met field
+6. Add a movement/style filter to `/explore` — the last of §6's 6 required filters.
+7. Extend ticket 08's movement backfill to Met-sourced works once a suitable Met field
    or a Getty AAT reconciliation pass is chosen (source register flags Getty AAT as an
    enrichment source not yet integrated).
-6. Phase 2 per the master prompt: deeper provenance / `OwnershipEvent` +
+8. Phase 2 per the master prompt: deeper provenance / `OwnershipEvent` +
    `Exhibition`/`LoanEvent` modeling (the Journey tab), `LocationAssertion` freshness
    policy, more collections beyond the Met and AIC.

@@ -1,13 +1,9 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
-// Homepage — ticket 06. Discovery cards cover artists and museums (real data); style
-// cards are omitted rather than faked — MovementStyle rows don't exist yet (ticket 08
-// normalizes the styleTitle/subjectTags text Assertions already ingested into real
-// entities). The featured related-piece story is likewise omitted rather than faked: a
-// single verified relationship needs real per-object research (ticket 09's job), not a
-// guess from matching titles — see the "Coming soon" note below instead of a dead link
-// or an unverified claim.
+// Homepage — ticket 06, updated in ticket 14 to stop showing "coming soon" for features
+// tickets 08/09 already shipped: real MovementStyle rows and 22 verified relationships
+// exist now, so the style cards and featured story below are real data, not placeholders.
 
 async function getHeroArtwork() {
   return prisma.artwork.findUnique({
@@ -32,14 +28,37 @@ async function getMuseums() {
   return prisma.institution.findMany({ include: { _count: { select: { physicalObjects: true } } } });
 }
 
+async function getFeaturedStory() {
+  // The single documented_influence pair rather than an edge from the 7-work Monet
+  // clique — one self-contained story reads better here than one slice of a larger one.
+  return prisma.relationship.findFirst({
+    where: { relationshipType: "documented_influence" },
+    include: {
+      subjectArtwork: {
+        include: { artist: true, physicalObjects: { include: { images: { where: { removedAt: null }, take: 1 } } } },
+      },
+      objectArtwork: { include: { artist: true } },
+      evidenceSource: true,
+    },
+  });
+}
+
+async function getStyles() {
+  const styles = await prisma.movementStyle.findMany({ include: { _count: { select: { artworks: true } } } });
+  return styles.filter((s) => s._count.artworks > 0);
+}
+
 export default async function HomePage() {
-  const [hero, artists, museums, totalArtworks] = await Promise.all([
+  const [hero, artists, museums, totalArtworks, featuredStory, styles] = await Promise.all([
     getHeroArtwork(),
     getFeaturedArtists(),
     getMuseums(),
     prisma.artwork.count(),
+    getFeaturedStory(),
+    getStyles(),
   ]);
   const heroImage = hero?.physicalObjects.flatMap((po) => po.images)[0];
+  const storyImage = featuredStory?.subjectArtwork.physicalObjects.flatMap((po) => po.images)[0];
 
   return (
     <main>
@@ -72,12 +91,37 @@ export default async function HomePage() {
       )}
 
       <section aria-labelledby="related-heading">
-        <h2 id="related-heading">Related pieces</h2>
-        <p>
-          Coming soon — each related-piece story on Art Atlas is individually researched
-          and verified before publishing (never inferred from a matching title alone).
-          None have cleared that bar yet.
-        </p>
+        <h2 id="related-heading">A related-piece story</h2>
+        {featuredStory ? (
+          <>
+            <Link href={`/artwork/${featuredStory.subjectArtwork.slug}`}>
+              {storyImage && (
+                <img
+                  src={storyImage.sourceUrl}
+                  alt={storyImage.altText ?? featuredStory.subjectArtwork.title}
+                  width={320}
+                />
+              )}
+              <p>{featuredStory.subjectArtwork.title}</p>
+            </Link>
+            {featuredStory.subjectArtwork.artist && <p>{featuredStory.subjectArtwork.artist.name}</p>}
+            <p>{featuredStory.explanation}</p>
+            <p>
+              Related to{" "}
+              <Link href={`/artwork/${featuredStory.objectArtwork.slug}`}>{featuredStory.objectArtwork.title}</Link>
+              {" — "}
+              <a href={featuredStory.evidenceSource.url} target="_blank" rel="noopener noreferrer">
+                {featuredStory.evidenceSource.name}
+              </a>
+            </p>
+          </>
+        ) : (
+          <p>
+            Coming soon — each related-piece story on Art Atlas is individually researched
+            and verified before publishing (never inferred from a matching title alone).
+            None have cleared that bar yet.
+          </p>
+        )}
       </section>
 
       <section aria-labelledby="artists-heading">
@@ -108,7 +152,19 @@ export default async function HomePage() {
 
       <section aria-labelledby="styles-heading">
         <h2 id="styles-heading">Explore by style</h2>
-        <p>Coming soon — style and movement pages are still being built.</p>
+        {styles.length === 0 ? (
+          <p>Coming soon — style and movement pages are still being built.</p>
+        ) : (
+          <ul>
+            {styles.map((style) => (
+              <li key={style.id}>
+                <Link href={`/movement/${style.slug}`}>
+                  {style.name} ({style._count.artworks})
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </main>
   );
