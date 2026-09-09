@@ -2,9 +2,9 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getFilterOptions, searchArtworks } from "@/lib/queries/search-artworks";
 
-// Ticket 07 — five real, combinable filters (date range, medium, museum, city, display
-// status) plus text search with basic spelling tolerance, URL-preserved, paginated. A
-// sixth dimension (movement/style) is honestly deferred — see the note in the form below.
+// Ticket 07 — six real, combinable filters (date range, medium, museum, city, display
+// status, movement/style — the last added ticket 17) plus text search with basic
+// spelling tolerance, URL-preserved, paginated.
 
 interface ExploreSearchParams {
   q?: string;
@@ -14,6 +14,7 @@ interface ExploreSearchParams {
   museum?: string;
   city?: string;
   displayStatus?: string;
+  movement?: string;
   page?: string;
 }
 
@@ -36,6 +37,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
     museumSlug: params.museum,
     city: params.city,
     displayStatus: params.displayStatus,
+    movementSlug: params.movement,
     page: params.page ? Number(params.page) : 1,
   };
   const hasAnyFilter = Object.values(params).some(Boolean);
@@ -106,10 +108,15 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
           <option value="unconfirmed">Unconfirmed</option>
         </select>
 
-        <p>
-          Style/movement filter — coming soon (needs ticket 08&apos;s movement data; not shown
-          here rather than faked).
-        </p>
+        <label htmlFor="movement">Movement / style</label>
+        <select id="movement" name="movement" defaultValue={params.movement ?? ""}>
+          <option value="">Any</option>
+          {filterOptions.movements.map((m) => (
+            <option key={m.slug} value={m.slug}>
+              {m.name}
+            </option>
+          ))}
+        </select>
 
         <button type="submit">Search</button>
       </form>

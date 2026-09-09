@@ -64,7 +64,7 @@ stories than it is.
 | `/museum/<slug>`, `/city/<slug>` | Real holdings, official visit link, saved-works tie-in |
 | `/map` | Real Leaflet map (OpenStreetMap tiles) + accessible institution list |
 | `/timeline` | Artworks grouped by century from real creationDate data, undated works in their own honest bucket |
-| `/explore` | Title/artist search with spelling tolerance, 5 combinable filters, pagination |
+| `/explore` | Title/artist search with spelling tolerance, 6 combinable filters, pagination |
 | `/passport` | Local-only saved lists (want to see / seen / want to understand), private notes, filters |
 | `/admin` | Duplicate-flag review, per-artwork assertion approval, image removal — **unauthenticated, see below** |
 
@@ -110,11 +110,6 @@ an oversight, and each is written up in more detail in its ticket file under
   requires these to carry a source and freshness label or be omitted; we have no such
   source, so they're omitted, with an on-page link to each museum's own visit page
   instead. See ticket 10.
-- **`/explore` has 5 of §6's 6 required filters — no movement/style filter.** Date range,
-  medium, museum, city, and display status are all real and combinable; movement/style is
-  left out rather than faked, pending a decision on how to filter by a many-valued
-  per-artwork relation. Was previously only noted in a code comment, not here — found and
-  disclosed during ticket 14's master-prompt comparison pass.
 - **`art_atlas_test` database creation is a manual setup step**, not automated via
   `docker-compose.yml` (which only auto-creates the first DB via `POSTGRES_DB`). See
   Setup above.
@@ -166,10 +161,9 @@ In rough priority order for continuing this backlog:
 4. Add authentication to `/admin` before any public deployment.
 5. Build a general-purpose "Compare and understand" tool (pick any two works, not just
    ones already linked by a verified relationship) — the last unbuilt piece of §5.
-6. Add a movement/style filter to `/explore` — the last of §6's 6 required filters.
-7. Extend ticket 08's movement backfill to Met-sourced works once a suitable Met field
+6. Extend ticket 08's movement backfill to Met-sourced works once a suitable Met field
    or a Getty AAT reconciliation pass is chosen (source register flags Getty AAT as an
    enrichment source not yet integrated).
-8. Phase 2 per the master prompt: deeper provenance / `OwnershipEvent` +
+7. Phase 2 per the master prompt: deeper provenance / `OwnershipEvent` +
    `Exhibition`/`LoanEvent` modeling (the Journey tab), `LocationAssertion` freshness
    policy, more collections beyond the Met and AIC.

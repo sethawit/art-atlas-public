@@ -8,18 +8,17 @@ export interface SearchFilters {
   museumSlug?: string;
   city?: string;
   displayStatus?: string;
+  movementSlug?: string;
   page?: number;
 }
 
 const PAGE_SIZE = 24;
 
 /**
- * Full Explore search (ticket 07): five real, combinable filters (creation date range,
- * medium, museum, city, display status) plus title/artist text search with a basic
- * spelling-tolerance fallback. A sixth dimension, movement/style, is intentionally
- * omitted — MovementStyle has no real data yet (ticket 08 normalizes the styleTitle/
- * subjectTags text already ingested into real entities); see the Explore page for the
- * honest "coming soon" note rather than a fake filter.
+ * Full Explore search (ticket 07, movement/style filter added ticket 17): six real,
+ * combinable filters (creation date range, medium, museum, city, display status,
+ * movement/style) plus title/artist text search with a basic spelling-tolerance
+ * fallback.
  */
 export async function searchArtworks(prisma: PrismaClient, filters: SearchFilters) {
   const page = Math.max(1, filters.page ?? 1);
@@ -61,6 +60,7 @@ export async function searchArtworks(prisma: PrismaClient, filters: SearchFilter
   const where = {
     ...(idFilter ? { id: { in: idFilter } } : {}),
     ...(hasPhysicalObjectFilter ? { physicalObjects: { some: physicalObjectFilter } } : {}),
+    ...(filters.movementSlug ? { movements: { some: { movement: { slug: filters.movementSlug } } } } : {}),
   };
 
   const [results, total] = await Promise.all([
@@ -130,7 +130,7 @@ async function matchingArtworkIdsForDateRange(
 }
 
 export async function getFilterOptions(prisma: PrismaClient) {
-  const [institutions, mediums] = await Promise.all([
+  const [institutions, mediums, movements] = await Promise.all([
     prisma.institution.findMany({ orderBy: { name: "asc" } }),
     prisma.physicalObject.findMany({
       where: { medium: { not: null } },
@@ -138,7 +138,13 @@ export async function getFilterOptions(prisma: PrismaClient) {
       distinct: ["medium"],
       orderBy: { medium: "asc" },
     }),
+    // Only movements with at least one linked artwork — an empty MovementStyle row would
+    // be a dead filter option.
+    prisma.movementStyle.findMany({
+      where: { artworks: { some: {} } },
+      orderBy: { name: "asc" },
+    }),
   ]);
   const cities = Array.from(new Set(institutions.map((i) => i.city).filter((c): c is string => !!c)));
-  return { institutions, cities, mediums: mediums.map((m) => m.medium!).filter(Boolean) };
+  return { institutions, cities, mediums: mediums.map((m) => m.medium!).filter(Boolean), movements };
 }

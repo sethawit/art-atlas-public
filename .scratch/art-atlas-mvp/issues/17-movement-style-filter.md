@@ -6,18 +6,17 @@ display status).
 
 **Blocked by:** none.
 
-**Status:** planned
+**Status:** done
 
-- [ ] Add a `movement` param to `searchArtworks`'s filter set (`src/lib/queries/search-artworks.ts`) —
-      join through `ArtworkMovement`, same shape as the existing `museumSlug`/`city` joins
-- [ ] Add the `<select>` to the Explore form, populated from `getFilterOptions` (real
-      `MovementStyle` rows only, same pattern as the medium/museum/city dropdowns —
-      already real data per ticket 08/14, no longer "coming soon")
-- [ ] Preserve in URL, same as the other 5 filters (`buildQueryString` already handles any
-      param generically — confirm it does before assuming)
-- [ ] Test: a combined date+movement filter, and a movement filter alone, against real
-      seeded fixtures (follow this session's runId-uniqueness discipline — don't use a
-      real movement name in a capped/joined test query without checking for corpus
-      collision first, per ticket 14's postmortem)
-- [ ] Remove the "coming soon" note from the Explore page and the matching line from
-      README's Known limitations
+- [x] Added `movementSlug` to `SearchFilters`, joined through `ArtworkMovement` in the
+      `where` clause (`src/lib/queries/search-artworks.ts`)
+- [x] `getFilterOptions` now also returns real `MovementStyle` rows (only ones with at
+      least one linked artwork — no dead filter options)
+- [x] `<select>` added to the Explore form; `buildQueryString` already handled the new
+      `movement` param generically, no change needed there
+- [x] Tests: movement filter alone, and combined with medium (both a match and a
+      non-match) — used a runId-unique `test-movement-${runId}` fixture rather than a
+      real movement name, per ticket 14's postmortem. 2 new tests, 83 total, stable
+      across 3 consecutive runs
+- [x] Verified live: `/explore?movement=impressionism` returns 38 real results
+- [x] Removed the "coming soon" note from the Explore page and the matching README bullet

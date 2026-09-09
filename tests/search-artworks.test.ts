@@ -20,7 +20,9 @@ afterAll(async () => {
   await prisma.assertion.deleteMany({ where: { subjectId: { in: artworkIds } } });
   await prisma.imageAsset.deleteMany({ where: { physicalObject: { artworkId: { in: artworkIds } } } });
   await prisma.physicalObject.deleteMany({ where: { artworkId: { in: artworkIds } } });
+  await prisma.artworkMovement.deleteMany({ where: { artworkId: { in: artworkIds } } });
   await prisma.artwork.deleteMany({ where: { id: { in: artworkIds } } });
+  await prisma.movementStyle.deleteMany({ where: { slug: { endsWith: runId } } });
   await prisma.institution.deleteMany({ where: { slug: { endsWith: runId } } });
   await prisma.artist.deleteMany({ where: { slug: { endsWith: runId } } });
   await prisma.source.deleteMany({ where: { name: { endsWith: runId } } });
@@ -87,7 +89,7 @@ beforeAll(async () => {
   const source = await seedSource();
   sourceId = source.id;
 
-  await seedArtwork({
+  const sunrise = await seedArtwork({
     slug: "sunrise",
     title: `Sunrise ${runId}`,
     artistName: `Test Painter A ${runId}`,
@@ -97,6 +99,10 @@ beforeAll(async () => {
     year: 1880,
     sourceId,
   });
+  const movement = await prisma.movementStyle.create({
+    data: { slug: `test-movement-${runId}`, name: `Test Movement ${runId}`, kind: "movement" },
+  });
+  await prisma.artworkMovement.create({ data: { artworkId: sunrise.id, movementId: movement.id } });
   await seedArtwork({
     slug: "sunset",
     title: `Sunset ${runId}`,
@@ -193,6 +199,24 @@ describe("searchArtworks — filters", () => {
       museumSlug: `gallery-b-${runId}`, // gallery-b is in Townburg, not Cityville
     });
     expect(results).toEqual([]);
+  });
+
+  it("filters by movement/style", async () => {
+    const { results } = await searchArtworks(prisma, { movementSlug: `test-movement-${runId}` });
+    expect(results.map((a) => a.title)).toEqual([`Sunrise ${runId}`]);
+  });
+
+  it("combines movement with another filter", async () => {
+    const { results } = await searchArtworks(prisma, {
+      movementSlug: `test-movement-${runId}`,
+      medium: "Oil on canvas",
+    });
+    expect(results.map((a) => a.title)).toEqual([`Sunrise ${runId}`]);
+    const { results: none } = await searchArtworks(prisma, {
+      movementSlug: `test-movement-${runId}`,
+      medium: "Watercolor",
+    });
+    expect(none).toEqual([]);
   });
 
   it("paginates results", async () => {
