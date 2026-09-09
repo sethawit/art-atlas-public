@@ -1,4 +1,5 @@
 import { afterAll, describe, expect, it } from "vitest";
+import { newRunId } from "./helpers/run-id";
 import { prisma } from "@/lib/prisma";
 import { writeNormalizedArtwork } from "@/lib/ingest/write-normalized-artwork";
 import type { NormalizedArtwork } from "@/lib/ingest/normalize-met";
@@ -7,7 +8,7 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-const runId = Date.now().toString(36);
+const runId = newRunId();
 const SOURCE_A = { name: `Source A ${runId}`, url: "https://a.example.org" };
 const SOURCE_B = { name: `Source B ${runId}`, url: "https://b.example.org" };
 
@@ -15,6 +16,7 @@ function normalizedFixture(overrides: Partial<NormalizedArtwork> = {}): Normaliz
   return {
     slug: `self-portrait-${runId}`,
     title: `Self-Portrait ${runId}`,
+    placeOrCulture: null,
     artist: { slug: `test-artist-${runId}`, name: "Test Artist" },
     institution: { slug: `institution-a-${runId}`, name: "Institution A", city: "City A" },
     physicalObject: { accessionNumber: "A.1", medium: "Oil on canvas", dimensions: "10 x 10 cm" },

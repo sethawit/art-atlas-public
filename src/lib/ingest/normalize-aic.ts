@@ -59,6 +59,10 @@ export function normalizeAicArtwork(obj: AicArtwork): NormalizedArtwork {
   return {
     slug: slugify(obj.title),
     title: obj.title,
+    // AIC gives a specific place ("Saint-Rémy-de-Provence"), not a culture label — a
+    // different granularity from the Met's culture field, stored as-is (see
+    // Artwork.placeOrCulture in schema.prisma).
+    placeOrCulture: obj.place_of_origin?.trim() || null,
     artist,
     institution: { slug: "art-institute-of-chicago", name: "The Art Institute of Chicago", city: "Chicago" },
     physicalObject: {

@@ -15,7 +15,8 @@
     "ingest:aic": "tsx scripts/ingest-aic-artwork.ts",
     "ingest:bulk": "tsx scripts/bulk-ingest.ts",
     "relationships:publish": "tsx scripts/publish-relationships.ts",
-    "movements:normalize": "tsx scripts/normalize-movements.ts"
+    "movements:normalize": "tsx scripts/normalize-movements.ts",
+    "backfill:place-or-culture": "tsx scripts/backfill-place-or-culture.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",

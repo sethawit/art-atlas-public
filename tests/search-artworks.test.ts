@@ -1,8 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { newRunId } from "./helpers/run-id";
 import { prisma } from "@/lib/prisma";
 import { searchArtworks } from "@/lib/queries/search-artworks";
 
-const runId = Date.now().toString(36);
+const runId = newRunId();
 
 afterAll(async () => {
   // The shared test DB isn't transactional per-test-file — clean up this run's own rows
@@ -176,7 +177,12 @@ describe("searchArtworks — filters", () => {
   });
 
   it("returns zero results for a query with no plausible match, not an error", async () => {
-    const { results, total } = await searchArtworks(prisma, { q: `Xyzzyqqqzzz${runId}nomatch` });
+    // Deliberately doesn't embed runId — a query containing this run's own random tag
+    // would share real trigram overlap with this run's own fixture titles (found live:
+    // making runId longer, for collision-resistance, pushed word_similarity's fuzzy
+    // fallback over threshold against "Sunset <runId>"), which isn't what "no plausible
+    // match at all" is supposed to test.
+    const { results, total } = await searchArtworks(prisma, { q: "zzzznonexistentqueryxyzzzzz" });
     expect(results).toEqual([]);
     expect(total).toBe(0);
   });

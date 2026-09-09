@@ -20,6 +20,17 @@ describe("normalizeAicArtwork", () => {
     expect(result.sourceUrl).toBe("https://www.artic.edu/artworks/28560");
   });
 
+  it("captures placeOrCulture from AIC's place_of_origin field", () => {
+    const result = normalizeAicArtwork(aicArtwork);
+    expect(result.placeOrCulture).toBe("Saint-Rémy-de-Provence");
+  });
+
+  it("has no placeOrCulture when place_of_origin is absent", () => {
+    const noOrigin: AicArtwork = { ...aicArtwork, place_of_origin: null };
+    const result = normalizeAicArtwork(noOrigin);
+    expect(result.placeOrCulture).toBeNull();
+  });
+
   it("renders an image when is_public_domain is true and image_id is populated", () => {
     const result = normalizeAicArtwork(aicArtwork);
     expect(result.image).not.toBeNull();

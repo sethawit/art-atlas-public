@@ -20,12 +20,19 @@ datasource db {
 }
 
 model Artwork {
-  id        String   @id @default(cuid())
-  slug      String   @unique
-  title     String
-  artistId  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  title          String
+  artistId       String?
+  // Free text, honestly null when the source gives nothing — Met's `culture` field
+  // (populated mainly for anonymous/non-Western objects, empty for most named-artist
+  // European paintings) and AIC's `place_of_origin` (a specific place, not a culture
+  // label) aren't the same granularity; stored as whichever the source actually gave,
+  // not normalized into a shared vocabulary — that would need Getty TGN reconciliation
+  // (§8), not attempted here. Powers "What else was happening then?" (§5).
+  placeOrCulture String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   artist                 Artist?           @relation(fields: [artistId], references: [id])
   physicalObjects        PhysicalObject[]

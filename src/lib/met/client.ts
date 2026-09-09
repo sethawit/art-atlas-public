@@ -20,6 +20,7 @@ export interface MetObject {
   department: string;
   objectName: string;
   title: string;
+  culture: string;
   artistDisplayName: string;
   artistDisplayBio: string;
   artistNationality: string;

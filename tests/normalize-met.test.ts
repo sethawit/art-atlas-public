@@ -23,6 +23,23 @@ describe("normalizeMetObject", () => {
     expect(result.sourceUrl).toBe("https://www.metmuseum.org/art/collection/search/436535");
   });
 
+  it("falls back to department when the Met's culture field is empty (its normal state for named-artist European paintings)", () => {
+    const result = normalizeMetObject(metObject);
+    expect(result.placeOrCulture).toBe("European Paintings");
+  });
+
+  it("prefers culture over department when both are present", () => {
+    const withCulture: MetObject = { ...metObject, culture: "Netherlandish" };
+    const result = normalizeMetObject(withCulture);
+    expect(result.placeOrCulture).toBe("Netherlandish");
+  });
+
+  it("has no placeOrCulture when both culture and department are empty", () => {
+    const neither: MetObject = { ...metObject, culture: "", department: "" };
+    const result = normalizeMetObject(neither);
+    expect(result.placeOrCulture).toBeNull();
+  });
+
   it("renders an image when isPublicDomain is true and primaryImage is populated", () => {
     const result = normalizeMetObject(metObject);
     expect(result.image).not.toBeNull();

@@ -11,6 +11,8 @@ export interface NormalizedAssertion {
 export interface NormalizedArtwork {
   slug: string;
   title: string;
+  /** Free text, honestly null when the source gives nothing — see Artwork.placeOrCulture in schema.prisma. */
+  placeOrCulture: string | null;
   artist: { slug: string; name: string } | null;
   institution: { slug: string; name: string; city: string | null };
   physicalObject: {
@@ -110,6 +112,12 @@ export function normalizeMetObject(obj: MetObject): NormalizedArtwork {
   return {
     slug: slugify(obj.title),
     title: obj.title,
+    // culture alone under-captures real signal: confirmed live that even Islamic Art and
+    // Ancient West Asian Art department objects can have culture: "" (the Met evidently
+    // doesn't populate it consistently). department is always present and still a real,
+    // source-provided classification — falls back to it rather than leaving these
+    // objects with no regional/cultural context at all when culture is blank.
+    placeOrCulture: obj.culture?.trim() || obj.department?.trim() || null,
     artist,
     institution: { slug: "the-metropolitan-museum-of-art", name: "The Metropolitan Museum of Art", city: "New York" },
     physicalObject: {

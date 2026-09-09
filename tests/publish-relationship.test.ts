@@ -1,4 +1,5 @@
 import { afterAll, describe, expect, it } from "vitest";
+import { newRunId } from "./helpers/run-id";
 import { prisma } from "@/lib/prisma";
 import { publishRelationship } from "@/lib/relationships/publish-relationship";
 
@@ -6,7 +7,7 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-const runId = Date.now().toString(36);
+const runId = newRunId();
 
 async function seedArtwork(slug: string, title: string) {
   return prisma.artwork.create({ data: { slug: `${slug}-${runId}`, title } });

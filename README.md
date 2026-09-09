@@ -40,7 +40,7 @@ npm run relationships:publish       # publish the hand-verified Family Explorer 
 ```
 
 ```bash
-npm test           # vitest — 64 tests, run against .env.test's DB
+npm test           # vitest — 81 tests, run against .env.test's DB
 npx tsc --noEmit    # typecheck
 ```
 
@@ -53,7 +53,7 @@ dev DB: **69 artworks**, 18 artists, 2 institutions, 4 movements, 22 verified re
 | Page | What it does |
 |---|---|
 | `/` | Hero (real credited artwork), functional search, artist/museum discovery cards |
-| `/artwork/<slug>` | Overview, Understand, Related pieces (Family Explorer — grid/comparison/map), Where to see it, Sources, My Art Passport controls |
+| `/artwork/<slug>` | Overview, Understand, Related pieces (Family Explorer — grid/comparison/map), Why does this look familiar? (subject/technique/movement/documented-influence pattern matches), What else was happening then? (contemporaneous works, favoring a different place/culture), Where to see it, Sources, My Art Passport controls |
 | `/artist/<slug>` | Parsed bio (nationality/lifespan) where the source gives one, per-work style labels, works list |
 | `/movement/<slug>` | Kind (period vs. movement, distinguished), geography/characteristics, associated artists, representative works |
 | `/museum/<slug>`, `/city/<slug>` | Real holdings, official visit link, saved-works tie-in |
@@ -106,10 +106,16 @@ an oversight, and each is written up in more detail in its ticket file under
 - **No photo identification, semantic search, or accounts.** Explicitly Phase 2/3 in the
   master prompt, not attempted here. (Timeline exists — see the feature table above;
   added in ticket 13 after a fresh master-prompt-vs-implementation pass found it missing.)
-- **No "Why does this look familiar?" or "What else was happening then?"** (§5) — two of
-  the master prompt's three "memorable experiences." "Compare and understand" exists but
-  only inside the Family Explorer (tied to verified relationships, capped at 3 works),
-  not as a general-purpose "pick any works and compare" tool. Not yet attempted.
+- **"Compare and understand" only exists inside the Family Explorer** (tied to verified
+  relationships, capped at 3 works), not as a general-purpose "pick any works and
+  compare" tool. The other two §5 "memorable experiences" — "Why does this look
+  familiar?" (subject/technique/movement/documented-influence, each labeled a pattern
+  match, not a documented connection) and "What else was happening then?" (a ±25-year
+  window over creationDate, favoring a different `placeOrCulture` than the anchor) — are
+  now built, on every artwork page. "Visual similarity" (image-embedding resemblance) is
+  the one sub-case of "looks familiar" deliberately not attempted — real ML
+  infrastructure the master prompt itself gates to Phase 3 (§3), not a query over
+  existing data the way the other four categories are.
 - **No per-page SEO metadata.** Every page shares the root layout's static title/
   description — §13 asks for "meaningful metadata" per detail page (dynamic Next.js
   `generateMetadata`), not implemented.
@@ -137,18 +143,16 @@ artwork page falls back to an explicit "unavailable" state instead.
 
 In rough priority order for continuing this backlog:
 
-1. Build §5's remaining two "memorable experiences" — "Why does this look familiar?"
-   (grouped by subject/technique/movement/influence/visual similarity, each explained)
-   and "What else was happening then?" (contemporaneous works across regions/traditions,
-   explicit about a movement label's geographic scope). Both are read-only queries over
-   data already in the database, same shape as ticket 13's timeline.
-2. Add per-page `generateMetadata` (title/description/OG per artwork, artist, movement)
+1. Add per-page `generateMetadata` (title/description/OG per artwork, artist, movement)
    — §13's SEO requirement, currently only a static site-wide title exists.
-3. Run `npm run ingest:bulk` with a larger target to grow the corpus toward 200–500 —
+2. Run `npm run ingest:bulk` with a larger target to grow the corpus toward 200–500 —
    the pipeline is proven, this is purely a longer run (respecting AIC's rate limit). As
    the corpus grows, watch for more known series/companion pieces the way ticket 09's
-   Stacks of Wheat expansion did, and publish them the same way.
-4. Add authentication to `/admin` before any public deployment.
+   Stacks of Wheat expansion did, and publish them the same way. A bigger corpus also
+   sharpens "What else was happening then?" — more `placeOrCulture` diversity per era.
+3. Add authentication to `/admin` before any public deployment.
+4. Build a general-purpose "Compare and understand" tool (pick any two works, not just
+   ones already linked by a verified relationship) — the last unbuilt piece of §5.
 5. Extend ticket 08's movement backfill to Met-sourced works once a suitable Met field
    or a Getty AAT reconciliation pass is chosen (source register flags Getty AAT as an
    enrichment source not yet integrated).

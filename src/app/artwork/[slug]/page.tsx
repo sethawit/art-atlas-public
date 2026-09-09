@@ -3,6 +3,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getArtworkBySlug } from "@/lib/queries/get-artwork-by-slug";
 import { getRelatedPieces } from "@/lib/queries/get-related-pieces";
+import { getLooksFamiliar, type FamiliarEntry } from "@/lib/queries/get-looks-familiar";
+import { getWhatElseWasHappening } from "@/lib/queries/get-what-else-was-happening";
 import PassportControls from "@/components/PassportControls";
 import { INSTITUTION_REFERENCE } from "@/lib/institutions/reference";
 import { slugify } from "@/lib/ingest/normalize-met";
@@ -37,6 +39,14 @@ export default async function ArtworkPage({
   const tagsAssertion = fields.get("subjectTags");
   const recordUrlAssertion = fields.get("sourceRecordUrl");
   const relatedPieces = await getRelatedPieces(prisma, artwork.id);
+  const looksFamiliar = await getLooksFamiliar(prisma, artwork.id);
+  const familiarGroups: { heading: string; entries: FamiliarEntry[] }[] = [
+    { heading: "Shares a subject", entries: looksFamiliar.subject },
+    { heading: "Shares a technique or medium", entries: looksFamiliar.technique },
+    { heading: "Shares a movement", entries: looksFamiliar.movement },
+    { heading: "A documented influence", entries: looksFamiliar.documentedInfluence },
+  ].filter((g) => g.entries.length > 0);
+  const whatElse = await getWhatElseWasHappening(prisma, artwork.id);
 
   // Map view: this work plus every related piece, grouped by holding institution.
   const mapEntries = [
@@ -269,6 +279,72 @@ export default async function ArtworkPage({
                   </ul>
                 </>
               )}
+            </>
+          )}
+        </section>
+
+        <section aria-labelledby="familiar-heading">
+          <h2 id="familiar-heading">Why does this look familiar?</h2>
+          <p>
+            Pattern matches over data already in our catalogue — a resemblance, not a claim of
+            historical connection the way a documented related piece is.
+          </p>
+          {familiarGroups.length === 0 ? (
+            <p>No pattern matches found for this piece yet.</p>
+          ) : (
+            familiarGroups.map((group) => (
+              <div key={group.heading}>
+                <h3>{group.heading}</h3>
+                <ul>
+                  {group.entries.map((entry) => (
+                    <li key={entry.slug}>
+                      <Link href={`/artwork/${entry.slug}`}>
+                        {entry.imageUrl && <img src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={120} />}
+                        <p>{entry.title}</p>
+                      </Link>
+                      {entry.artistName && <p>{entry.artistName}</p>}
+                      <p>{entry.explanation}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          )}
+        </section>
+
+        <section aria-labelledby="contemporaries-heading">
+          <h2 id="contemporaries-heading">What else was happening then?</h2>
+          {whatElse.entries.length === 0 ? (
+            <p>
+              We don&apos;t have a confident date for this piece, so we can&apos;t place it against
+              its contemporaries yet.
+            </p>
+          ) : (
+            <>
+              <p>
+                Other works in our catalogue made within about {whatElse.windowYears} years —
+                dates are often themselves approximate, and a shared era isn&apos;t evidence of any
+                connection between the pieces.
+              </p>
+              <ul>
+                {whatElse.entries.map((entry) => (
+                  <li key={entry.slug}>
+                    <Link href={`/artwork/${entry.slug}`}>
+                      {entry.imageUrl && (
+                        <img src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={120} />
+                      )}
+                      <p>{entry.title}</p>
+                    </Link>
+                    {entry.artistName && <p>{entry.artistName}</p>}
+                    <p>{entry.dateDisplay}</p>
+                    {entry.placeOrCulture ? (
+                      <p>{entry.placeOrCulture}</p>
+                    ) : (
+                      <p>Place/culture not recorded</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
             </>
           )}
         </section>

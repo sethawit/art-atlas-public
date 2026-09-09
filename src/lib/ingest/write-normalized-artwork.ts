@@ -101,7 +101,7 @@ async function resolveArtworkAndPhysicalObject(
   if (existingByExternalUrl) {
     const artwork = await prisma.artwork.update({
       where: { id: existingByExternalUrl.artworkId },
-      data: { title: normalized.title, artistId },
+      data: { title: normalized.title, artistId, placeOrCulture: normalized.placeOrCulture },
     });
     const physicalObject = await prisma.physicalObject.update({
       where: { id: existingByExternalUrl.id },
@@ -113,7 +113,7 @@ async function resolveArtworkAndPhysicalObject(
   const existingBySlug = await prisma.artwork.findUnique({ where: { slug: normalized.slug } });
   if (!existingBySlug) {
     const artwork = await prisma.artwork.create({
-      data: { slug: normalized.slug, title: normalized.title, artistId },
+      data: { slug: normalized.slug, title: normalized.title, artistId, placeOrCulture: normalized.placeOrCulture },
     });
     const physicalObject = await prisma.physicalObject.create({
       data: {
@@ -130,7 +130,7 @@ async function resolveArtworkAndPhysicalObject(
   // Artwork and flag the pair for human review.
   const disambiguatedSlug = await nextAvailableSlug(prisma, normalized.slug, normalized.institution.slug);
   const artwork = await prisma.artwork.create({
-    data: { slug: disambiguatedSlug, title: normalized.title, artistId },
+    data: { slug: disambiguatedSlug, title: normalized.title, artistId, placeOrCulture: normalized.placeOrCulture },
   });
   const physicalObject = await prisma.physicalObject.create({
     data: {

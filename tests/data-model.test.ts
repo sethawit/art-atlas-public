@@ -1,4 +1,5 @@
 import { afterAll, describe, expect, it } from "vitest";
+import { newRunId } from "./helpers/run-id";
 import { prisma } from "@/lib/prisma";
 
 // Ticket 02 acceptance: "Seed-and-read round-trip test passes for each entity."
@@ -7,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 
 // Unique per test run so repeated `vitest run` against a persistent dev database
 // doesn't collide on slug/accessionNumber uniqueness constraints.
-const runId = Date.now().toString(36);
+const runId = newRunId();
 
 afterAll(async () => {
   await prisma.$disconnect();
