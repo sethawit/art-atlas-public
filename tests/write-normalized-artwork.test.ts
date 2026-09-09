@@ -26,6 +26,7 @@ function normalizedFixture(overrides: Partial<NormalizedArtwork> = {}): Normaliz
     assertions: [],
     sourceUrl: `https://a.example.org/objects/1-${runId}`,
     rawRecord: { fixture: true },
+    galleryLocation: null,
     ...overrides,
   };
 }
@@ -80,12 +81,42 @@ describe("writeNormalizedArtwork — identity and re-ingest", () => {
     expect(displayRow?.value).toBe("unconfirmed");
     expect(displayRow?.verificationStatus).toBe("unconfirmed");
     expect(displayRow?.source.name).toBe(SOURCE_A.name);
-    expect(displayRow?.sourceStatement).toContain("no live display-status feed");
+    expect(displayRow?.sourceStatement).toContain("no gallery location");
 
     const accessRow = rows.find((r) => r.field === "publicAccess");
     expect(accessRow?.value).toBe("museum_access");
     expect(accessRow?.verificationStatus).toBe("verified");
     expect(accessRow?.sourceStatement).toContain("Institution A");
+  });
+
+  it("derives a real on_display status and galleryLocation from a real gallery location — ticket 29", async () => {
+    const fixture = normalizedFixture({
+      slug: `on-display-${runId}`,
+      sourceUrl: `https://a.example.org/objects/on-display-${runId}`,
+      galleryLocation: "Gallery 822",
+    });
+    const result = await writeNormalizedArtwork(prisma, fixture, SOURCE_A);
+
+    expect(result.physicalObject.displayStatus).toBe("on_display");
+    expect(result.physicalObject.galleryLocation).toBe("Gallery 822");
+
+    const displayRow = await prisma.locationAssertion.findFirstOrThrow({
+      where: { physicalObjectId: result.physicalObject.id, field: "displayStatus" },
+    });
+    expect(displayRow.value).toBe("on_display");
+    expect(displayRow.verificationStatus).toBe("verified");
+    expect(displayRow.sourceStatement).toContain("Gallery 822");
+  });
+
+  it("never infers not_on_display from a missing gallery location — stays unconfirmed", async () => {
+    const fixture = normalizedFixture({
+      slug: `no-gallery-${runId}`,
+      sourceUrl: `https://a.example.org/objects/no-gallery-${runId}`,
+      galleryLocation: null,
+    });
+    const result = await writeNormalizedArtwork(prisma, fixture, SOURCE_A);
+    expect(result.physicalObject.displayStatus).toBe("unconfirmed");
+    expect(result.physicalObject.galleryLocation).toBeNull();
   });
 
   it("updates LocationAssertion.retrievedAt on re-ingest rather than duplicating rows", async () => {

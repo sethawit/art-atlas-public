@@ -30,6 +30,8 @@ const ARTWORK_FIELDS = [
   // record has this research done) — see ticket 25's file.
   "provenance_text",
   "exhibition_history",
+  // Ticket 29 — real, current gallery location when the piece is on view.
+  "gallery_title",
 ].join(",");
 
 export interface AicThumbnail {
@@ -56,6 +58,7 @@ export interface AicArtwork {
   image_id: string | null;
   provenance_text: string | null;
   exhibition_history: string | null;
+  gallery_title: string | null;
 }
 
 export class AicApiError extends Error {
@@ -86,6 +89,23 @@ export async function fetchAicArtwork(id: number): Promise<AicArtwork> {
   }
   const body = (await res.json()) as { data: AicArtwork };
   return body.data;
+}
+
+/**
+ * Ticket 29 — §9 item 9: "Refresh changeable data separately from relatively stable
+ * art-history metadata." A minimal request (`fields=id,gallery_title`, confirmed live to
+ * return just those two keys) for the one field that actually changes — avoids
+ * re-fetching medium/dimensions/provenance/images just to check display location, per
+ * §13's "avoid fetching entire external catalogues during page loads" spirit applied to
+ * refresh jobs too.
+ */
+export async function fetchAicGalleryLocation(id: number): Promise<string | null> {
+  const res = await fetch(`${BASE_URL}/artworks/${id}?fields=id,gallery_title`, { headers: headers() });
+  if (!res.ok) {
+    throw new AicApiError(`AIC API returned ${res.status} for artwork ${id}`, res.status);
+  }
+  const body = (await res.json()) as { data: { gallery_title: string | null } };
+  return body.data.gallery_title?.trim() || null;
 }
 
 export interface AicSearchResult {

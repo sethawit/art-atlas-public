@@ -1,9 +1,25 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getInstitutionBySlug } from "@/lib/queries/get-institution-by-slug";
 import { INSTITUTION_REFERENCE } from "@/lib/institutions/reference";
 import { slugify } from "@/lib/ingest/normalize-met";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const institution = await getInstitutionBySlug(prisma, slug);
+  if (!institution) return {};
+
+  const count = institution.physicalObjects.length;
+  return {
+    title: institution.name,
+    description: [
+      institution.city ? `${institution.name}, ${institution.city}` : institution.name,
+      `${count} work${count === 1 ? "" : "s"} in our catalogue`,
+    ].join(" — "),
+  };
+}
 
 export default async function MuseumPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -50,6 +66,7 @@ export default async function MuseumPage({ params }: { params: Promise<{ slug: s
                   {po.artwork.title}
                   {po.artwork.artist && <> — {po.artwork.artist.name}</>}
                 </Link>
+                {po.galleryLocation && <> — {po.galleryLocation}</>}
               </li>
             );
           })}

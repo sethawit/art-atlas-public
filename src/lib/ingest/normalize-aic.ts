@@ -74,5 +74,6 @@ export function normalizeAicArtwork(obj: AicArtwork): NormalizedArtwork {
     assertions,
     sourceUrl: aicArtworkPageUrl(obj.id),
     rawRecord: obj,
+    galleryLocation: obj.gallery_title?.trim() || null,
   };
 }

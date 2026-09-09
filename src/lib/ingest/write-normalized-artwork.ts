@@ -21,6 +21,11 @@ export async function writeNormalizedArtwork(
   source: { name: string; url: string }
 ) {
   const retrievedAt = new Date();
+  // Ticket 29: "on_display" only on real positive evidence (a gallery location the
+  // source actually gives) — never inferred from its absence, which could just as
+  // easily mean "off view" or "unreported." §7: "do not turn uncertainty into exact
+  // values just to fill the interface."
+  const displayStatus = normalized.galleryLocation ? "on_display" : "unconfirmed";
 
   const sourceRow =
     (await prisma.source.findFirst({ where: { name: source.name } })) ??
@@ -44,7 +49,8 @@ export async function writeNormalizedArtwork(
     prisma,
     normalized,
     institution.id,
-    artist?.id
+    artist?.id,
+    displayStatus
   );
 
   if (normalized.image) {
@@ -58,22 +64,32 @@ export async function writeNormalizedArtwork(
     }
   }
 
-  // §7/§10 LocationAssertion (ticket 27 follow-up): the real sourced record behind
+  // §7/§10 LocationAssertion (ticket 27/29 follow-ups): the real sourced record behind
   // displayStatus/publicAccess, written on every ingest/re-ingest so retrievedAt always
-  // reflects the last real sync. Same for both sources — neither Met nor AIC gives a
-  // live display-status feed, and both are verified public museums (source register) —
-  // so this lives in the shared path rather than duplicated per-adapter.
+  // reflects the last real sync. displayStatus now has real per-object evidence when the
+  // source gives a gallery location (ticket 29) — both fields live in the shared path
+  // since both sources are treated identically (verified public museums; a gallery
+  // location, when given, is equally real evidence from either one).
+  const displayStatusStatement = normalized.galleryLocation
+    ? `${source.name} lists this object's current location as "${normalized.galleryLocation}".`
+    : `${source.name} gives no gallery location for this object; defaults to "unconfirmed" rather than guessing whether that means off view or simply unreported.`;
   await prisma.locationAssertion.upsert({
     where: { physicalObjectId_field: { physicalObjectId: physicalObject.id, field: "displayStatus" } },
-    update: { value: physicalObject.displayStatus, sourceId: sourceRow.id, retrievedAt },
+    update: {
+      value: displayStatus,
+      sourceStatement: displayStatusStatement,
+      sourceId: sourceRow.id,
+      retrievedAt,
+      verificationStatus: normalized.galleryLocation ? "verified" : "unconfirmed",
+    },
     create: {
       physicalObjectId: physicalObject.id,
       field: "displayStatus",
-      value: physicalObject.displayStatus,
-      sourceStatement: `${source.name} provides no live display-status feed for this object; defaults to "unconfirmed" rather than guessing.`,
+      value: displayStatus,
+      sourceStatement: displayStatusStatement,
       sourceId: sourceRow.id,
       retrievedAt,
-      verificationStatus: "unconfirmed",
+      verificationStatus: normalized.galleryLocation ? "verified" : "unconfirmed",
     },
   });
   await prisma.locationAssertion.upsert({
@@ -123,7 +139,8 @@ async function resolveArtworkAndPhysicalObject(
   prisma: PrismaClient,
   normalized: NormalizedArtwork,
   institutionId: string,
-  artistId: string | undefined
+  artistId: string | undefined,
+  displayStatus: string
 ) {
   // Seen this exact source record before? Re-ingest: update in place, same Artwork.
   const existingByExternalUrl = await prisma.physicalObject.findUnique({
@@ -137,7 +154,13 @@ async function resolveArtworkAndPhysicalObject(
     });
     const physicalObject = await prisma.physicalObject.update({
       where: { id: existingByExternalUrl.id },
-      data: { institutionId, ...normalized.physicalObject, rawRecord: normalized.rawRecord as Prisma.InputJsonValue },
+      data: {
+        institutionId,
+        ...normalized.physicalObject,
+        rawRecord: normalized.rawRecord as Prisma.InputJsonValue,
+        galleryLocation: normalized.galleryLocation,
+        displayStatus,
+      },
     });
     return { artwork, physicalObject, duplicateFlagged: false };
   }
@@ -154,6 +177,8 @@ async function resolveArtworkAndPhysicalObject(
         externalRecordUrl: normalized.sourceUrl,
         ...normalized.physicalObject,
         rawRecord: normalized.rawRecord as Prisma.InputJsonValue,
+        galleryLocation: normalized.galleryLocation,
+        displayStatus,
       },
     });
     return { artwork, physicalObject, duplicateFlagged: false };
@@ -172,6 +197,8 @@ async function resolveArtworkAndPhysicalObject(
       externalRecordUrl: normalized.sourceUrl,
       ...normalized.physicalObject,
       rawRecord: normalized.rawRecord as Prisma.InputJsonValue,
+      galleryLocation: normalized.galleryLocation,
+      displayStatus,
     },
   });
   await prisma.duplicateFlag.create({

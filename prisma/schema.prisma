@@ -58,12 +58,22 @@ model PhysicalObject {
   // paintings); slug alone must never decide whether they're the same physical object.
   externalRecordUrl String?  @unique
   // "on_display" | "not_on_display" | "unconfirmed" — plain string, same rationale as
-  // MovementStyle.kind. Defaults honestly to unconfirmed: §7's rule is that an
-  // institution owning a work never by itself establishes it's on display, and none of
-  // our sources give us a live display feed yet (that's location-freshness work, §3
-  // Phase 2). Filterable (ticket 07) and shown on Family Explorer cards (ticket 09)
-  // regardless — an honest "unconfirmed" is still real, functioning data.
+  // MovementStyle.kind. §7's rule: an institution owning a work never by itself
+  // establishes it's on display. Ticket 29 found this wasn't fully true that neither
+  // source gives display evidence at all — the Met's real `GalleryNumber` field (76%
+  // populated on our corpus) is real, current evidence a piece is on view; set to
+  // "on_display" only when a gallery location is actually given, never inferred from its
+  // absence (a blank gallery number could mean off view, or just unreported — §7: "do
+  // not turn uncertainty into exact values"). Filterable (ticket 07) and shown on Family
+  // Explorer cards (ticket 09) regardless — an honest "unconfirmed" is still real data.
   displayStatus     String   @default("unconfirmed")
+  // The gallery/room location as given directly by the source (Met's `GalleryNumber`,
+  // AIC's `gallery_title`) — real, current evidence, not derived or guessed. Null when
+  // the source gives nothing (most AIC objects in our corpus currently, since none of
+  // our ingested AIC works happen to be on view right now — confirmed live, not a code
+  // gap). §6: museum/city pages should show gallery numbers "from an appropriate
+  // current source" — this is that source, verbatim.
+  galleryLocation   String?
   // "museum_access" | "appointment" | "private_no_access" | "unknown" — §7's public-access
   // concept, distinct from displayStatus (an institution can hold a work with full public
   // museum access even while that specific piece is off view). Defaults to museum_access,

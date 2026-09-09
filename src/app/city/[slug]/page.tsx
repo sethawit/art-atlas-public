@@ -1,8 +1,21 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCity } from "@/lib/queries/get-city";
 import CitySavedWorks from "@/components/CitySavedWorks";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const data = await getCity(prisma, slug);
+  if (!data) return {};
+
+  const workCount = data.institutions.reduce((sum, i) => sum + i.physicalObjects.length, 0);
+  return {
+    title: data.cityName,
+    description: `${data.institutions.length} institution${data.institutions.length === 1 ? "" : "s"}, ${workCount} catalogued works in ${data.cityName}.`,
+  };
+}
 
 export default async function CityPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -32,6 +45,7 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
                     {po.artwork.title}
                     {po.artwork.artist && <> — {po.artwork.artist.name}</>}
                   </Link>
+                  {po.galleryLocation && <> — {po.galleryLocation}</>}
                 </li>
               );
             })}

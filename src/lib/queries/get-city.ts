@@ -1,7 +1,10 @@
 import type { PrismaClient } from "@prisma/client";
+import { cache } from "react";
 import { slugify } from "@/lib/ingest/normalize-met";
 
-export async function getCity(prisma: PrismaClient, citySlug: string) {
+// Wrapped in React's `cache()` (ticket 29) — generateMetadata and the page component
+// both call this for the same request, same reasoning as ticket 20.
+export const getCity = cache(async function getCity(prisma: PrismaClient, citySlug: string) {
   const institutions = await prisma.institution.findMany({
     include: {
       physicalObjects: {
@@ -16,4 +19,4 @@ export async function getCity(prisma: PrismaClient, citySlug: string) {
   if (matching.length === 0) return null;
 
   return { cityName: matching[0].city!, institutions: matching };
-}
+});

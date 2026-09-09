@@ -14,14 +14,10 @@ Met and AIC APIs are both public/keyless.
 
 ```bash
 npm install
-docker compose up -d                        # starts Postgres 16 on localhost:5432
+docker compose up -d                        # starts Postgres 16, creates both DBs (ticket 29)
 cp .env.example .env
 cp .env.test.example .env.test               # separate DB so tests never touch dev data
 # set ADMIN_PASSWORD in .env — /admin is unreachable without it (ticket 19)
-
-# create the two databases inside the container (docker-compose only auto-creates the
-# first; this is a one-time manual step, not automated — see Known limitations)
-docker compose exec postgres psql -U art_atlas -d postgres -c "CREATE DATABASE art_atlas_test OWNER art_atlas;"
 
 npx prisma migrate deploy                                                        # dev DB
 DATABASE_URL="$(grep DATABASE_URL .env.test | cut -d= -f2- | tr -d '"')" \
@@ -38,10 +34,11 @@ npm run ingest:aic -- 28560         # one real AIC artwork by id
 npm run ingest:bulk -- 30           # bulk pull, ~30 per source across curated search terms
 npm run movements:normalize         # backfill MovementStyle from ingested style text
 npm run relationships:publish       # publish the hand-verified Family Explorer relationships
+npm run refresh:location            # refresh display status/gallery location only (ticket 29, §9 item 9)
 ```
 
 ```bash
-npm test           # vitest — 123 tests, run against .env.test's DB
+npm test           # vitest — 130 tests, run against .env.test's DB
 npx tsc --noEmit    # typecheck
 ```
 
@@ -58,7 +55,9 @@ for connections not visible in titles at all); disclosed here per the master pro
 instruction to report a shortfall honestly rather than let the relationship-row count
 read as more stories than it is. 884 real `OwnershipEvent` + 1,772 real `ExhibitionEvent`
 rows (ticket 25) across 208/264 AIC-sourced physical objects. 668 real `LocationAssertion`
-rows (ticket 28) — 100% coverage, every physical object.
+rows (ticket 28) — 100% coverage, every physical object. **154/334 physical objects
+(46%) now have a real, evidence-based `on_display` status** (ticket 29) from a real
+gallery location — up from every object defaulting to `"unconfirmed"`.
 
 | Page | What it does |
 |---|---|
@@ -66,7 +65,7 @@ rows (ticket 28) — 100% coverage, every physical object.
 | `/artwork/<slug>` | Overview, Understand, Related pieces (Family Explorer — grid/comparison/map), Why does this look familiar? (subject/technique/movement/documented-influence pattern matches), What else was happening then? (contemporaneous works, favoring a different place/culture), Where to see it (real sourced statement + verification status per field, freshness note when stale), Journey (real ownership/exhibition history where documented), Sources, My Art Passport controls |
 | `/artist/<slug>` | Parsed bio (nationality/lifespan) where the source gives one, per-work style labels, works list |
 | `/movement/<slug>` | Kind (period vs. movement, distinguished), geography/characteristics, associated artists, representative works |
-| `/museum/<slug>`, `/city/<slug>` | Real holdings, official visit link, saved-works tie-in |
+| `/museum/<slug>`, `/city/<slug>` | Real holdings with real gallery location where the source gives one (ticket 29), official visit link, saved-works tie-in |
 | `/map` | Real Leaflet map (OpenStreetMap tiles) + accessible institution list |
 | `/timeline` | Artworks grouped by century from real creationDate data, undated works in their own honest bucket, filterable by real place/culture and medium |
 | `/explore` | Title/artist/subject search with spelling tolerance, 6 combinable filters, pagination, select works to compare |
@@ -122,9 +121,6 @@ an oversight, and each is written up in more detail in its ticket file under
   requires these to carry a source and freshness label or be omitted; we have no such
   source, so they're omitted, with an on-page link to each museum's own visit page
   instead. See ticket 10.
-- **`art_atlas_test` database creation is a manual setup step**, not automated via
-  `docker-compose.yml` (which only auto-creates the first DB via `POSTGRES_DB`). See
-  Setup above.
 - **No photo identification, semantic search, or accounts.** Explicitly Phase 2/3 in the
   master prompt, not attempted here. (Timeline exists — see the feature table above;
   added in ticket 13 after a fresh master-prompt-vs-implementation pass found it missing.)

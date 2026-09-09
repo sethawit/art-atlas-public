@@ -26,6 +26,8 @@ export interface NormalizedArtwork {
   sourceUrl: string;
   /** The whole raw source API response, unmodified — §9 item 2's raw-record retention. */
   rawRecord: unknown;
+  /** Real gallery/room location as the source gives it, or null — see PhysicalObject.galleryLocation. */
+  galleryLocation: string | null;
 }
 
 export function slugify(input: string): string {
@@ -131,5 +133,6 @@ export function normalizeMetObject(obj: MetObject): NormalizedArtwork {
     assertions,
     sourceUrl: obj.objectURL,
     rawRecord: obj,
+    galleryLocation: obj.GalleryNumber?.trim() || null,
   };
 }
