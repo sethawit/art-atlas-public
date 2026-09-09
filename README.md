@@ -17,6 +17,7 @@ npm install
 docker compose up -d                        # starts Postgres 16 on localhost:5432
 cp .env.example .env
 cp .env.test.example .env.test               # separate DB so tests never touch dev data
+# set ADMIN_PASSWORD in .env — /admin is unreachable without it (ticket 19)
 
 # create the two databases inside the container (docker-compose only auto-creates the
 # first; this is a one-time manual step, not automated — see Known limitations)
@@ -40,7 +41,7 @@ npm run relationships:publish       # publish the hand-verified Family Explorer 
 ```
 
 ```bash
-npm test           # vitest — 81 tests, run against .env.test's DB
+npm test           # vitest — 83 tests, run against .env.test's DB
 npx tsc --noEmit    # typecheck
 ```
 
@@ -66,7 +67,7 @@ stories than it is.
 | `/timeline` | Artworks grouped by century from real creationDate data, undated works in their own honest bucket |
 | `/explore` | Title/artist search with spelling tolerance, 6 combinable filters, pagination |
 | `/passport` | Local-only saved lists (want to see / seen / want to understand), private notes, filters |
-| `/admin` | Duplicate-flag review, per-artwork assertion approval, image removal — **unauthenticated, see below** |
+| `/admin` | Duplicate-flag review, per-artwork assertion approval, image removal — HTTP Basic Auth protected (`ADMIN_PASSWORD`, ticket 19) |
 
 Ingestion: adapters for the Met Collection API and AIC API, source-register-verified
 (`docs/sources/source-register.md`), idempotent bulk pipeline with retry and rate-limit
@@ -85,9 +86,6 @@ Recorded honestly rather than hidden — each of these is a deliberate scope dec
 an oversight, and each is written up in more detail in its ticket file under
 `.scratch/art-atlas-mvp/issues/`.
 
-- **`/admin` has no authentication.** Anyone who can reach it can approve assertions,
-  remove images, or resolve duplicate flags. A visible banner says so on every admin
-  page. Do not deploy publicly without adding access control first.
 - **Corpus is now 334 artworks, within §3's 200–500 target** (ticket 18) — up from the
   original 69 via a larger `ingest:bulk` run across more search terms. 82 Met-side
   ingests failed with `403` during the run (logged in `IngestLog`, not silently dropped)
@@ -157,12 +155,11 @@ In rough priority order for continuing this backlog:
 1. Research and publish more related-piece stories toward §3's "at least 10" target —
    currently 7 (see Known limitations). Same research-then-publish process as ticket 09/16.
 2. Review the 26 pending `DuplicateFlag`s from the ticket 18 growth run via `/admin`.
-3. Add authentication to `/admin` before any public deployment.
-4. Build a general-purpose "Compare and understand" tool (pick any two works, not just
+3. Build a general-purpose "Compare and understand" tool (pick any two works, not just
    ones already linked by a verified relationship) — the last unbuilt piece of §5.
-5. Extend ticket 08's movement backfill to Met-sourced works once a suitable Met field
+4. Extend ticket 08's movement backfill to Met-sourced works once a suitable Met field
    or a Getty AAT reconciliation pass is chosen (source register flags Getty AAT as an
    enrichment source not yet integrated).
-6. Phase 2 per the master prompt: deeper provenance / `OwnershipEvent` +
+5. Phase 2 per the master prompt: deeper provenance / `OwnershipEvent` +
    `Exhibition`/`LoanEvent` modeling (the Journey tab), `LocationAssertion` freshness
    policy, more collections beyond the Met and AIC.
