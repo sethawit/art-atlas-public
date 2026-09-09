@@ -17,7 +17,9 @@ export const getArtworkBySlug = cache(async function getArtworkBySlug(prisma: Pr
     where: { slug },
     include: {
       artist: true,
-      physicalObjects: { include: { institution: true, images: { where: { removedAt: null } } } },
+      physicalObjects: {
+        include: { institution: true, images: { where: { removedAt: null } }, locationAssertions: true },
+      },
       movements: { include: { movement: true } },
     },
   });

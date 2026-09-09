@@ -78,6 +78,9 @@ export default async function ArtworkPage({
   ].filter((g) => g.entries.length > 0);
   const whatElse = await getWhatElseWasHappening(prisma, artwork.id);
   const journey = physicalObject ? await getJourney(prisma, physicalObject.id) : { ownership: [], exhibitions: [] };
+  const displayStatusAssertion = physicalObject?.locationAssertions.find((a) => a.field === "displayStatus") ?? null;
+  const publicAccessAssertion = physicalObject?.locationAssertions.find((a) => a.field === "publicAccess") ?? null;
+  const locationRetrievedAt = displayStatusAssertion?.retrievedAt ?? publicAccessAssertion?.retrievedAt ?? null;
 
   // Map view: this work plus every related piece, grouped by holding institution.
   const mapEntries = [
@@ -409,11 +412,26 @@ export default async function ArtworkPage({
                 <dt>Public access</dt>
                 <dd>{(physicalObject.publicAccess ?? "unknown").replace(/_/g, " ")}</dd>
               </dl>
-              {isDisplayStatusStale(physicalObject.updatedAt) && (
+              {(displayStatusAssertion || publicAccessAssertion) && (
+                <p>
+                  {displayStatusAssertion && (
+                    <>
+                      {displayStatusAssertion.sourceStatement} ({displayStatusAssertion.verificationStatus})
+                    </>
+                  )}
+                  {displayStatusAssertion && publicAccessAssertion && " "}
+                  {publicAccessAssertion && (
+                    <>
+                      {publicAccessAssertion.sourceStatement} ({publicAccessAssertion.verificationStatus})
+                    </>
+                  )}
+                </p>
+              )}
+              {locationRetrievedAt && isDisplayStatusStale(locationRetrievedAt) && (
                 <p role="status">
                   We haven&apos;t reverified this display status and public access against
                   the source in over {DISPLAY_STATUS_FRESHNESS_DAYS} days (last checked{" "}
-                  {physicalObject.updatedAt.toISOString().slice(0, 10)}) — treat it as
+                  {locationRetrievedAt.toISOString().slice(0, 10)}) — treat it as
                   possibly out of date.
                 </p>
               )}

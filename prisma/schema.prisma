@@ -82,14 +82,54 @@ model PhysicalObject {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  artwork          Artwork           @relation(fields: [artworkId], references: [id])
-  institution      Institution?      @relation(fields: [institutionId], references: [id])
-  images           ImageAsset[]
-  ownershipEvents  OwnershipEvent[]
-  exhibitionEvents ExhibitionEvent[]
+  artwork            Artwork             @relation(fields: [artworkId], references: [id])
+  institution        Institution?        @relation(fields: [institutionId], references: [id])
+  images             ImageAsset[]
+  ownershipEvents    OwnershipEvent[]
+  exhibitionEvents   ExhibitionEvent[]
+  locationAssertions LocationAssertion[]
 
   @@index([artworkId])
   @@index([institutionId])
+}
+
+// §10 names LocationAssertion as its own entity, distinct from generic Assertion —
+// added in the ticket 27 follow-up. `displayStatus`/`publicAccess` above stay plain
+// PhysicalObject columns (the fast, denormalized "current value" every filter/read site
+// already uses — same pattern as every other PhysicalObject field, none of which route
+// through generic Assertion either); this model is the real sourced record §7 requires
+// alongside them: "Store the original source statement, source URL, retrieval time,
+// relevant effective date range, and verification status." One row per (physicalObject,
+// field) — displayStatus and publicAccess currently have no competing-values UI (unlike
+// Artwork-level Assertion), so this mirrors what actually exists rather than building
+// unused multi-value history.
+model LocationAssertion {
+  id                 String    @id @default(cuid())
+  physicalObjectId   String
+  // "displayStatus" | "publicAccess" — which PhysicalObject column this asserts.
+  field              String
+  value              String
+  // The original source statement in plain words — not always a literal quote (neither
+  // source gives a live display-status feed), but an honest account of what's actually
+  // known, e.g. "No live display-status feed from this source; defaults to unconfirmed"
+  // vs. "The Metropolitan Museum of Art is a verified public museum with public access."
+  sourceStatement    String
+  sourceId           String
+  retrievedAt        DateTime
+  effectiveFrom      DateTime?
+  effectiveTo        DateTime?
+  // "verified" | "unconfirmed" — whether this specific claim was ever checked against a
+  // real source, distinct from the dynamic staleness check (ticket 23's
+  // isDisplayStatusStale) that asks whether a verified claim is now old, not whether it
+  // was ever verified at all.
+  verificationStatus String
+  createdAt          DateTime  @default(now())
+
+  physicalObject PhysicalObject @relation(fields: [physicalObjectId], references: [id])
+  source         Source         @relation(fields: [sourceId], references: [id])
+
+  @@unique([physicalObjectId, field])
+  @@index([physicalObjectId])
 }
 
 // §6 "Ownership journey" / §10 OwnershipEvent, Exhibition/LoanEvent (ticket 25, Phase 2).
@@ -225,10 +265,11 @@ model Source {
   url       String
   createdAt DateTime @default(now())
 
-  assertions       Assertion[]
-  relationships    Relationship[]
-  ownershipEvents  OwnershipEvent[]
-  exhibitionEvents ExhibitionEvent[]
+  assertions         Assertion[]
+  relationships      Relationship[]
+  ownershipEvents    OwnershipEvent[]
+  exhibitionEvents   ExhibitionEvent[]
+  locationAssertions LocationAssertion[]
 }
 
 // Polymorphic fact table: one row per (subject, field, competing value). subjectType +

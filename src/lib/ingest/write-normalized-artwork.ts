@@ -58,6 +58,38 @@ export async function writeNormalizedArtwork(
     }
   }
 
+  // §7/§10 LocationAssertion (ticket 27 follow-up): the real sourced record behind
+  // displayStatus/publicAccess, written on every ingest/re-ingest so retrievedAt always
+  // reflects the last real sync. Same for both sources — neither Met nor AIC gives a
+  // live display-status feed, and both are verified public museums (source register) —
+  // so this lives in the shared path rather than duplicated per-adapter.
+  await prisma.locationAssertion.upsert({
+    where: { physicalObjectId_field: { physicalObjectId: physicalObject.id, field: "displayStatus" } },
+    update: { value: physicalObject.displayStatus, sourceId: sourceRow.id, retrievedAt },
+    create: {
+      physicalObjectId: physicalObject.id,
+      field: "displayStatus",
+      value: physicalObject.displayStatus,
+      sourceStatement: `${source.name} provides no live display-status feed for this object; defaults to "unconfirmed" rather than guessing.`,
+      sourceId: sourceRow.id,
+      retrievedAt,
+      verificationStatus: "unconfirmed",
+    },
+  });
+  await prisma.locationAssertion.upsert({
+    where: { physicalObjectId_field: { physicalObjectId: physicalObject.id, field: "publicAccess" } },
+    update: { value: physicalObject.publicAccess, sourceId: sourceRow.id, retrievedAt },
+    create: {
+      physicalObjectId: physicalObject.id,
+      field: "publicAccess",
+      value: physicalObject.publicAccess,
+      sourceStatement: `${institution.name} is a verified public museum offering public access (source register: ${source.url}).`,
+      sourceId: sourceRow.id,
+      retrievedAt,
+      verificationStatus: "verified",
+    },
+  });
+
   for (const assertion of normalized.assertions) {
     const mostRecent = await prisma.assertion.findFirst({
       where: { subjectType: "Artwork", subjectId: artwork.id, field: assertion.field },

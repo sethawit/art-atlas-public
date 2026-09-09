@@ -41,7 +41,7 @@ npm run relationships:publish       # publish the hand-verified Family Explorer 
 ```
 
 ```bash
-npm test           # vitest — 121 tests, run against .env.test's DB
+npm test           # vitest — 123 tests, run against .env.test's DB
 npx tsc --noEmit    # typecheck
 ```
 
@@ -57,12 +57,13 @@ patterns beyond series membership, plus reading actual AIC curatorial descriptio
 for connections not visible in titles at all); disclosed here per the master prompt's own
 instruction to report a shortfall honestly rather than let the relationship-row count
 read as more stories than it is. 884 real `OwnershipEvent` + 1,772 real `ExhibitionEvent`
-rows (ticket 25) across 208/264 AIC-sourced physical objects.
+rows (ticket 25) across 208/264 AIC-sourced physical objects. 668 real `LocationAssertion`
+rows (ticket 28) — 100% coverage, every physical object.
 
 | Page | What it does |
 |---|---|
 | `/` | Hero (real credited artwork), functional search, a real featured related-piece story, artist/museum/style discovery cards |
-| `/artwork/<slug>` | Overview, Understand, Related pieces (Family Explorer — grid/comparison/map), Why does this look familiar? (subject/technique/movement/documented-influence pattern matches), What else was happening then? (contemporaneous works, favoring a different place/culture), Where to see it (with a freshness note when stale), Journey (real ownership/exhibition history where documented), Sources, My Art Passport controls |
+| `/artwork/<slug>` | Overview, Understand, Related pieces (Family Explorer — grid/comparison/map), Why does this look familiar? (subject/technique/movement/documented-influence pattern matches), What else was happening then? (contemporaneous works, favoring a different place/culture), Where to see it (real sourced statement + verification status per field, freshness note when stale), Journey (real ownership/exhibition history where documented), Sources, My Art Passport controls |
 | `/artist/<slug>` | Parsed bio (nationality/lifespan) where the source gives one, per-work style labels, works list |
 | `/movement/<slug>` | Kind (period vs. movement, distinguished), geography/characteristics, associated artists, representative works |
 | `/museum/<slug>`, `/city/<slug>` | Real holdings, official visit link, saved-works tie-in |

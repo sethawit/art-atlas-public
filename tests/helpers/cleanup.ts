@@ -29,6 +29,7 @@ export async function cleanupByRunId(prisma: PrismaClient, runId: string) {
   await prisma.imageAsset.deleteMany({ where: { physicalObject: { artworkId: { in: artworkIds } } } });
   await prisma.ownershipEvent.deleteMany({ where: { physicalObject: { artworkId: { in: artworkIds } } } });
   await prisma.exhibitionEvent.deleteMany({ where: { physicalObject: { artworkId: { in: artworkIds } } } });
+  await prisma.locationAssertion.deleteMany({ where: { physicalObject: { artworkId: { in: artworkIds } } } });
   await prisma.physicalObject.deleteMany({ where: { artworkId: { in: artworkIds } } });
   await prisma.artworkMovement.deleteMany({ where: { artworkId: { in: artworkIds } } });
   await prisma.artwork.deleteMany({ where: { id: { in: artworkIds } } });

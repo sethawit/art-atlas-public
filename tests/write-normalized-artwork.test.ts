@@ -62,6 +62,51 @@ describe("writeNormalizedArtwork — identity and re-ingest", () => {
     const r2 = await writeNormalizedArtwork(prisma, reFetched, SOURCE_A);
     expect(r2.physicalObject.rawRecord).toEqual({ objectID: 1, title: "Re-fetched" });
   });
+
+  it("writes real LocationAssertion rows for displayStatus and publicAccess — §7/§10", async () => {
+    const fixture = normalizedFixture({
+      slug: `location-${runId}`,
+      sourceUrl: `https://a.example.org/objects/location-${runId}`,
+    });
+    const result = await writeNormalizedArtwork(prisma, fixture, SOURCE_A);
+
+    const rows = await prisma.locationAssertion.findMany({
+      where: { physicalObjectId: result.physicalObject.id },
+      include: { source: true },
+    });
+    expect(rows).toHaveLength(2);
+
+    const displayRow = rows.find((r) => r.field === "displayStatus");
+    expect(displayRow?.value).toBe("unconfirmed");
+    expect(displayRow?.verificationStatus).toBe("unconfirmed");
+    expect(displayRow?.source.name).toBe(SOURCE_A.name);
+    expect(displayRow?.sourceStatement).toContain("no live display-status feed");
+
+    const accessRow = rows.find((r) => r.field === "publicAccess");
+    expect(accessRow?.value).toBe("museum_access");
+    expect(accessRow?.verificationStatus).toBe("verified");
+    expect(accessRow?.sourceStatement).toContain("Institution A");
+  });
+
+  it("updates LocationAssertion.retrievedAt on re-ingest rather than duplicating rows", async () => {
+    const fixture = normalizedFixture({
+      slug: `location-reingest-${runId}`,
+      sourceUrl: `https://a.example.org/objects/location-reingest-${runId}`,
+    });
+    const r1 = await writeNormalizedArtwork(prisma, fixture, SOURCE_A);
+    const first = await prisma.locationAssertion.findFirstOrThrow({
+      where: { physicalObjectId: r1.physicalObject.id, field: "displayStatus" },
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    await writeNormalizedArtwork(prisma, fixture, SOURCE_A);
+
+    const rows = await prisma.locationAssertion.findMany({
+      where: { physicalObjectId: r1.physicalObject.id, field: "displayStatus" },
+    });
+    expect(rows).toHaveLength(1);
+    expect(rows[0].retrievedAt.getTime()).toBeGreaterThan(first.retrievedAt.getTime());
+  });
 });
 
 describe("writeNormalizedArtwork — slug collision safety", () => {
