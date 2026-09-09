@@ -12,6 +12,7 @@ export async function getArtworkBySlug(prisma: PrismaClient, slug: string) {
     include: {
       artist: true,
       physicalObjects: { include: { institution: true, images: { where: { removedAt: null } } } },
+      movements: { include: { movement: true } },
     },
   });
   if (!artwork) return null;

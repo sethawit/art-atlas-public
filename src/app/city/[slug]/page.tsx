@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCity } from "@/lib/queries/get-city";
+import CitySavedWorks from "@/components/CitySavedWorks";
 
 export default async function CityPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -14,7 +15,7 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
     <main>
       <h1>{cityName}</h1>
 
-      <p>Saved works — coming soon (Art Passport, ticket 11, doesn&apos;t exist yet).</p>
+      <CitySavedWorks cityName={cityName} />
 
       {institutions.map((institution) => (
         <section key={institution.id} aria-labelledby={`institution-${institution.slug}`}>

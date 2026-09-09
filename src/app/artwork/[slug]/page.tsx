@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getArtworkBySlug } from "@/lib/queries/get-artwork-by-slug";
 import { getRelatedPieces } from "@/lib/queries/get-related-pieces";
+import PassportControls from "@/components/PassportControls";
 
 // Ticket 03 scope: Overview, Understand, and Sources. Ticket 09 adds Related pieces.
 // Where to see it (ticket 10) and Journey (Phase 2, §5) extend this same page later —
@@ -48,6 +49,19 @@ export default async function ArtworkPage({
     ).values()
   );
 
+  const passportSnapshot = {
+    artworkSlug: artwork.slug,
+    title: artwork.title,
+    artistName: artwork.artist?.name ?? null,
+    artistSlug: artwork.artist?.slug ?? null,
+    imageUrl: image?.sourceUrl ?? null,
+    imageAlt: image?.altText ?? artwork.title,
+    institutionName: physicalObject?.institution?.name ?? null,
+    institutionSlug: physicalObject?.institution?.slug ?? null,
+    city: physicalObject?.institution?.city ?? null,
+    styles: artwork.movements.map((am) => am.movement.name),
+  };
+
   return (
     <main>
       <article>
@@ -72,6 +86,8 @@ export default async function ArtworkPage({
         ) : (
           <p role="status">Image unavailable — this piece is not cleared for open-access display.</p>
         )}
+
+        <PassportControls snapshot={passportSnapshot} />
 
         <section aria-labelledby="overview-heading">
           <h2 id="overview-heading">Overview</h2>
