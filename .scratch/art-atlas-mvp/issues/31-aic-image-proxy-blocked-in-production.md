@@ -56,3 +56,31 @@ legitimate.
 Nothing in this ticket was reverted — the proxy code stays (it's correct, tested, and a
 real prerequisite for option 2 if that's chosen; it's also not actively harmful, just not
 currently effective). No infra spend or new resource was provisioned without asking.
+
+## Root cause confirmed (systematic-debugging pass, resumed later)
+
+The "most likely IP/ASN reputation" hedge above is now confirmed, not guessed. Added
+temporary diagnostic instrumentation to the proxy (returned the upstream response's own
+headers/body instead of swallowing them), deployed once, hit it live:
+
+```
+status: 403
+headers: { "server": "cloudflare", "cf-ray": "a38fb90b0d1e72f2-IAD", ... }
+bodySnippet: "<title>Attention Required! | Cloudflare</title>" ...
+```
+
+This is Cloudflare's static WAF block page (no `cf-mitigated`/JS-challenge header, unlike
+a bot-score heuristic) — a **network/ASN-level firewall rule**, not something satisfiable
+by any request header. The identical request, byte-for-byte same headers, returns 200
+from a residential/dev-sandbox IP and 403 from Vercel's own compute (any region — Hobby
+tier ignores `preferredRegion` anyway, and every Vercel region is still a cloud-hosting
+ASN). Diagnostic code removed after confirming; this comment plus the route's own header
+comment carry the finding forward.
+
+**This rules out option 1 (Vercel Pro + region) as worth testing** — the block is at the
+ASN layer, not the region, so paying for region selection has no plausible path to
+success. The only architecturally sound fix is **option 2**: fetch each AIC image once
+from a network AIC doesn't block (this session's dev sandbox already does — ingestion
+already runs from there) and serve our own stored copy, never live-proxying through
+Vercel's compute again. Option 3 (disclose and stop) remains the zero-effort fallback.
+Still not picked unilaterally — needs the user's call given the storage/scope cost.

@@ -1,31 +1,29 @@
-// Proxies AIC (Art Institute of Chicago) IIIF images. AIC's image CDN sits behind
-// Cloudflare bot mitigation that returns 403 for requests with no Referer, a localhost
-// Referer, or our own domain as Referer — but allows almost any other Referer (confirmed
-// live: AIC's own homepage passes, an unrelated domain passes; the block is Referer-text
-// based, not IP-based). Browsers can't fabricate a cross-origin image's Referer, so this
-// server-side proxy is the only real fix: we fetch the image ourselves (with a Referer
-// that passes) and stream it to the browser.
+// Proxies AIC (Art Institute of Chicago) IIIF images.
+//
+// CONFIRMED ROOT CAUSE (ticket 31 — do not re-diagnose, evidence trail is there):
+// AIC's image CDN sits behind Cloudflare, which serves a static "Attention Required"
+// WAF block page (cf-ray present, server: cloudflare, no cf-mitigated/JS-challenge
+// header — a network/ASN-level firewall rule, not a bot-score heuristic) to requests
+// originating from Vercel's serverless compute — confirmed live via this route's own
+// upstream response body. The identical request, with identical headers, succeeds from
+// a residential/dev-sandbox IP. The determining factor is the source IP's ASN (a
+// cloud/hosting-provider range), not the Referer or User-Agent below — no header this
+// route sends can pass a network-level firewall rule.
+//
+// This means **this proxy does not currently fix the live broken-image bug** for any
+// request it serves from Vercel's own compute, in any region — `preferredRegion` doesn't
+// help, since every Vercel region is still a cloud-hosting ASN. The code stays: it's a
+// correct, legitimate building block (see ticket 31's "Option 2" — fetching once from a
+// non-blocked network at ingestion time and serving our own cached copy is the actual
+// fix, a separate and larger change, not done here), and the Referer/allowlist below
+// document a legitimate request even though it doesn't currently clear the block.
 //
 // AIC publishes this IIIF endpoint specifically for third-party embedding (that's what
 // IIIF is for), and its images are CC0/open access, already rights-cleared in this
-// project's source register. Using AIC's own homepage as our outbound Referer documents
-// that this is legitimate use of their published public API, not evasion of a real
-// access boundary — and it reduces AIC's origin load versus every visitor's browser
-// hitting (and failing against) AIC directly, since Vercel's edge can cache our response.
+// project's source register.
 //
 // Strict allowlist below (protocol + hostname + path prefix, checked after URL parsing,
 // not a naive string prefix match) keeps this from becoming an open SSRF proxy.
-
-// Known limitation, confirmed live in production (not reproducible from a residential/
-// dev-sandbox IP, which is why this wasn't caught before deploying): AIC's Cloudflare
-// protection still 403s this proxy's outbound fetch from Vercel's iad1 (us-east-1)
-// function IP range even with a Referer that passes reliably from a non-datacenter IP —
-// most likely an IP/ASN reputation rule layered on top of the Referer check, not
-// something a header alone can satisfy. `preferredRegion` is set here as a documented
-// intent, but Vercel's Hobby tier pins functions to iad1 regardless (confirmed via
-// x-vercel-id on a live response) — this has no effect without a paid plan that supports
-// region selection, and is not confirmed to fix it even then. See the ticket file for the
-// full trail and remaining options.
 export const preferredRegion = ["fra1", "lhr1", "sin1", "hnd1"];
 
 const ALLOWED_HOSTNAME = "www.artic.edu";
