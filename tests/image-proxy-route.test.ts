@@ -1,9 +1,22 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { GET } from "@/app/api/image-proxy/route";
 import { aicImageUrl } from "@/lib/aic/client";
+
+// The route checks Vercel Blob before ever fetching AIC live (ticket 31's cache-first
+// fix) — mock the module so tests control whether a given pathname is "cached" without
+// hitting the real Blob store. Default: every head() call rejects as not-found, so
+// existing fetch-path tests exercise the live-fetch fallback exactly as before.
+vi.mock("@vercel/blob", () => {
+  class BlobNotFoundError extends Error {}
+  return { head: vi.fn(), BlobNotFoundError };
+});
+
+const { head, BlobNotFoundError } = await import("@vercel/blob");
+const { GET, blobPathnameFor } = await import("@/app/api/image-proxy/route");
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.mocked(head).mockReset();
+  vi.mocked(head).mockRejectedValue(new BlobNotFoundError());
 });
 
 function requestFor(url: string | null) {
@@ -13,7 +26,20 @@ function requestFor(url: string | null) {
 }
 
 describe("GET /api/image-proxy", () => {
-  it("proxies a valid AIC IIIF URL, forwarding content-type and setting cache-control", async () => {
+  it("redirects to the cached Blob URL when the image is already backfilled, without calling fetch", async () => {
+    const source = aicImageUrl("abc-123");
+    vi.mocked(head).mockResolvedValueOnce({ url: "https://blob.vercel-storage.com/aic-images/abc-123-843.jpg" } as never);
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const res = await GET(requestFor(source));
+    expect(res.status).toBe(302);
+    expect(res.headers.get("location")).toBe("https://blob.vercel-storage.com/aic-images/abc-123-843.jpg");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("falls back to a live AIC fetch when the image isn't cached yet (BlobNotFoundError)", async () => {
+    vi.mocked(head).mockRejectedValueOnce(new BlobNotFoundError());
     const source = aicImageUrl("abc-123");
     const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
       expect(url).toBe(source);
@@ -29,31 +55,34 @@ describe("GET /api/image-proxy", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("rejects a missing url parameter without calling fetch", async () => {
+  it("rejects a missing url parameter without calling fetch or head", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
     const res = await GET(requestFor(null));
     expect(res.status).toBe(400);
     expect(fetchMock).not.toHaveBeenCalled();
+    expect(head).not.toHaveBeenCalled();
   });
 
-  it("rejects a non-artic.edu host without calling fetch", async () => {
+  it("rejects a non-artic.edu host without calling fetch or head", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
     const res = await GET(requestFor("https://evil.com/iiif/2/abc-123/full/843,/0/default.jpg"));
     expect(res.status).toBe(400);
     expect(fetchMock).not.toHaveBeenCalled();
+    expect(head).not.toHaveBeenCalled();
   });
 
-  it("rejects an artic.edu URL outside the iiif/2 path without calling fetch", async () => {
+  it("rejects an artic.edu URL outside the iiif/2 path without calling fetch or head", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
     const res = await GET(requestFor("https://www.artic.edu/artworks/28560"));
     expect(res.status).toBe(400);
     expect(fetchMock).not.toHaveBeenCalled();
+    expect(head).not.toHaveBeenCalled();
   });
 
   it("rejects a userinfo-spoofed URL (hostname parses to something else) without calling fetch", async () => {
@@ -89,5 +118,11 @@ describe("GET /api/image-proxy", () => {
 
     const res = await GET(requestFor(aicImageUrl("abc-123")));
     expect(res.status).toBe(502);
+  });
+});
+
+describe("blobPathnameFor", () => {
+  it("builds a deterministic pathname from image id and width — scripts/cache-aic-images.ts must match this exactly", () => {
+    expect(blobPathnameFor("abc-123", "843")).toBe("aic-images/abc-123-843.jpg");
   });
 });
