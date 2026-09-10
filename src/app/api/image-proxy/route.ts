@@ -1,3 +1,5 @@
+import { IIIF_FETCH_REFERER, IIIF_FETCH_USER_AGENT } from "@/lib/aic/client";
+
 // Proxies AIC (Art Institute of Chicago) IIIF images. AIC's image CDN sits behind
 // Cloudflare bot mitigation that returns 403 for requests with no Referer, a localhost
 // Referer, or our own domain as Referer — but allows almost any other Referer (confirmed
@@ -30,8 +32,6 @@ export const preferredRegion = ["fra1", "lhr1", "sin1", "hnd1"];
 
 const ALLOWED_HOSTNAME = "www.artic.edu";
 const ALLOWED_PATH_PREFIX = "/iiif/2/";
-const OUTBOUND_REFERER = "https://www.artic.edu/";
-const OUTBOUND_USER_AGENT = "ArtAtlasImageProxy/1.0 (contact via repo)";
 
 export async function GET(request: Request): Promise<Response> {
   const rawUrl = new URL(request.url).searchParams.get("url");
@@ -57,7 +57,7 @@ export async function GET(request: Request): Promise<Response> {
   let upstream: Response;
   try {
     upstream = await fetch(target.toString(), {
-      headers: { referer: OUTBOUND_REFERER, "user-agent": OUTBOUND_USER_AGENT },
+      headers: { referer: IIIF_FETCH_REFERER, "user-agent": IIIF_FETCH_USER_AGENT },
     });
   } catch {
     return Response.json({ error: "upstream fetch failed" }, { status: 502 });

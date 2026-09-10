@@ -21,7 +21,16 @@ export interface NormalizedArtwork {
     dimensions: string | null;
   };
   /** null when the object isn't eligible for reuse — the page must render "unavailable", not a broken image. */
-  image: { sourceUrl: string; credit: string | null; rightsUrl: string | null; altText: string } | null;
+  image: {
+    sourceUrl: string;
+    credit: string | null;
+    rightsUrl: string | null;
+    altText: string;
+    // Ticket 31 follow-up: our own stored copy, filled in after normalization (I/O, so it
+    // can't happen in these pure normalizers) for sources that need it — see
+    // ingest-aic-artwork.ts. Met images never need this; always null from this normalizer.
+    cachedUrl: string | null;
+  } | null;
   assertions: NormalizedAssertion[];
   sourceUrl: string;
   /** The whole raw source API response, unmodified — §9 item 2's raw-record retention. */
@@ -74,6 +83,7 @@ export function normalizeMetObject(obj: MetObject): NormalizedArtwork {
           credit: obj.creditLine || null,
           rightsUrl: MET_OPEN_ACCESS_POLICY_URL,
           altText: `${obj.title}, ${obj.artistDisplayName || "artist unknown"}`,
+          cachedUrl: null,
         }
       : null;
 

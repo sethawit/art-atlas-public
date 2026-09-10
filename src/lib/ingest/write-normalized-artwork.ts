@@ -58,7 +58,13 @@ export async function writeNormalizedArtwork(
       where: { physicalObjectId: physicalObject.id, removedAt: null },
     });
     if (existingImage) {
-      await prisma.imageAsset.update({ where: { id: existingImage.id }, data: normalized.image });
+      // A re-ingest's normalized.image.cachedUrl is only ever set when this run itself
+      // just cached the image (ticket 31 follow-up) — never carry a null over one already
+      // cached by a prior run/backfill.
+      await prisma.imageAsset.update({
+        where: { id: existingImage.id },
+        data: { ...normalized.image, cachedUrl: normalized.image.cachedUrl ?? existingImage.cachedUrl },
+      });
     } else {
       await prisma.imageAsset.create({ data: { physicalObjectId: physicalObject.id, ...normalized.image } });
     }

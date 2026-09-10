@@ -11,6 +11,13 @@ const USER_AGENT = "ArtAtlas (Phase 1 ingestion; contact via repo)";
 // recognize AIC-hosted image URLs without duplicating the hostname literal.
 export const IIIF_HOSTNAME = "www.artic.edu";
 
+// AIC's IIIF image CDN 403s a request with no Referer, a localhost Referer, or our own
+// domain as Referer (ticket 31) — but allows AIC's own homepage as Referer. Shared by
+// both live-request paths that fetch an IIIF image server-side: the image proxy
+// (src/app/api/image-proxy) and the one-time image cache (src/lib/images/cache-aic-image.ts).
+export const IIIF_FETCH_REFERER = "https://www.artic.edu/";
+export const IIIF_FETCH_USER_AGENT = "ArtAtlas (Phase 1 ingestion; contact via repo)";
+
 const ARTWORK_FIELDS = [
   "id",
   "title",

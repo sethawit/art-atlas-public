@@ -41,3 +41,22 @@ export function proxiedImageUrl(sourceUrl: string | null | undefined): string | 
 
   return `/api/image-proxy?url=${encodeURIComponent(sourceUrl)}`;
 }
+
+/**
+ * Ticket 31 follow-up: the actual render-path entry point. An ImageAsset with a
+ * `cachedUrl` (our own stored copy — see src/lib/images/cache-aic-image.ts) is served
+ * from there directly, bypassing the live proxy entirely — the proxy's outbound fetch is
+ * confirmed blocked from Vercel's own IP range (ticket 31), so a cached copy is the only
+ * reliable fix, not just a faster path. Falls back to proxiedImageUrl (proxy for AIC,
+ * pass-through for everyone else) for images that haven't been cached yet.
+ */
+export function resolveImageUrl(image: { sourceUrl: string; cachedUrl?: string | null }): string;
+export function resolveImageUrl(
+  image: { sourceUrl: string; cachedUrl?: string | null } | null | undefined
+): string | null | undefined;
+export function resolveImageUrl(
+  image: { sourceUrl: string; cachedUrl?: string | null } | null | undefined
+): string | null | undefined {
+  if (!image) return image;
+  return image.cachedUrl ?? proxiedImageUrl(image.sourceUrl);
+}

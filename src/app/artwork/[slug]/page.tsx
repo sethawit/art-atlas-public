@@ -11,7 +11,7 @@ import { INSTITUTION_REFERENCE } from "@/lib/institutions/reference";
 import { isDisplayStatusStale, DISPLAY_STATUS_FRESHNESS_DAYS } from "@/lib/institutions/freshness";
 import { getJourney } from "@/lib/queries/get-journey";
 import { slugify } from "@/lib/ingest/normalize-met";
-import { proxiedImageUrl } from "@/lib/images/proxied-image-url";
+import { resolveImageUrl } from "@/lib/images/proxied-image-url";
 
 // Ticket 03 scope: Overview, Understand, and Sources. Ticket 09 adds Related pieces.
 // Ticket 13 adds Where to see it as its own tab (§6 lists six: Overview, Understand,
@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title,
     description,
     openGraph: image
-      ? { title, description, images: [{ url: proxiedImageUrl(image.sourceUrl) ?? image.sourceUrl, alt: image.altText ?? artwork.title }] }
+      ? { title, description, images: [{ url: resolveImageUrl(image) ?? image.sourceUrl, alt: image.altText ?? artwork.title }] }
       : { title, description },
   };
 }
@@ -103,7 +103,7 @@ export default async function ArtworkPage({
     title: artwork.title,
     artistName: artwork.artist?.name ?? null,
     artistSlug: artwork.artist?.slug ?? null,
-    imageUrl: proxiedImageUrl(image?.sourceUrl) ?? null,
+    imageUrl: resolveImageUrl(image) ?? null,
     imageAlt: image?.altText ?? artwork.title,
     institutionName: physicalObject?.institution?.name ?? null,
     institutionSlug: physicalObject?.institution?.slug ?? null,
@@ -136,7 +136,7 @@ export default async function ArtworkPage({
         {image ? (
           <figure className="plate">
             {/* Full artwork view, not a cropped preview — §12. */}
-            <img src={proxiedImageUrl(image.sourceUrl)} alt={image.altText ?? artwork.title} />
+            <img src={resolveImageUrl(image)} alt={image.altText ?? artwork.title} />
             {image.credit && <figcaption>{image.credit}</figcaption>}
           </figure>
         ) : (
@@ -216,7 +216,7 @@ export default async function ArtworkPage({
                       <li key={rp.relationship.id}>
                         <Link href={`/artwork/${rp.artwork.slug}`}>
                           {rpImage && (
-                            <img src={proxiedImageUrl(rpImage.sourceUrl)} alt={rpImage.altText ?? rp.artwork.title} width={160} loading="lazy" />
+                            <img src={resolveImageUrl(rpImage)} alt={rpImage.altText ?? rp.artwork.title} width={160} loading="lazy" />
                           )}
                           <p>{rp.artwork.title}</p>
                         </Link>
@@ -265,7 +265,7 @@ export default async function ArtworkPage({
                   <tbody>
                     <tr>
                       <td data-label="Image">
-                        {image && <img src={proxiedImageUrl(image.sourceUrl)} alt={image.altText ?? artwork.title} width={100} loading="lazy" />}
+                        {image && <img src={resolveImageUrl(image)} alt={image.altText ?? artwork.title} width={100} loading="lazy" />}
                       </td>
                       <td data-label="Title">{artwork.title} (this work)</td>
                       <td data-label="Artist">{artwork.artist?.name}</td>
@@ -282,7 +282,7 @@ export default async function ArtworkPage({
                         <tr key={rp.relationship.id}>
                           <td data-label="Image">
                             {rpImage && (
-                              <img src={proxiedImageUrl(rpImage.sourceUrl)} alt={rpImage.altText ?? rp.artwork.title} width={100} loading="lazy" />
+                              <img src={resolveImageUrl(rpImage)} alt={rpImage.altText ?? rp.artwork.title} width={100} loading="lazy" />
                             )}
                           </td>
                           <td data-label="Title">

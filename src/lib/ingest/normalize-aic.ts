@@ -22,6 +22,9 @@ export function normalizeAicArtwork(obj: AicArtwork): NormalizedArtwork {
           credit: obj.credit_line || null,
           rightsUrl: "https://www.artic.edu/open-access",
           altText: obj.thumbnail?.alt_text || `${obj.title}, ${artistName || "artist unknown"}`,
+          // Filled in after normalization by ingest-aic-artwork.ts (I/O — this function
+          // stays pure, per its docstring).
+          cachedUrl: null,
         }
       : null;
 

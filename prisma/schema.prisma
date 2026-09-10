@@ -263,6 +263,11 @@ model ImageAsset {
   // Soft-delete: an admin can remove an ineligible image (ticket 05) without deleting the
   // PhysicalObject/Artwork it belongs to. Null = active; set = removed, kept for audit.
   removedAt        DateTime?
+  // Ticket 31 follow-up: our own stored copy of sourceUrl, in object storage, fetched once
+  // from an IP AIC's Cloudflare protection doesn't block (see src/lib/images/cache-aic-image.ts).
+  // Null until cached; render paths (resolveImageUrl) prefer this over the live proxy when
+  // set. Met images never need this (images.metmuseum.org isn't blocked) and are left null.
+  cachedUrl        String?
 
   physicalObject PhysicalObject @relation(fields: [physicalObjectId], references: [id])
 

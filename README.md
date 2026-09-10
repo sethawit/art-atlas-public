@@ -151,6 +151,20 @@ an oversight, and each is written up in more detail in its ticket file under
   segment order, which is what's built) is real additional parsing risk not taken on
   here. Loan-specific events (distinct from exhibitions) also aren't populated — no
   source here gives structured loan data.
+- **AIC-sourced images: caching is built, backfill and provisioning are not run yet.**
+  Ticket 31 found AIC's Cloudflare protection blocks image requests from Vercel's own
+  function IP range regardless of Referer, so the live proxy alone can't fix it in
+  production. Ticket 31's follow-up (`src/lib/images/cache-aic-image.ts`,
+  `scripts/cache-aic-images.ts`) caches each AIC image once into object storage (Vercel
+  Blob) from an unblocked IP and serves the stored copy on every render
+  (`resolveImageUrl`), falling back to the (still-broken-in-prod) live proxy for any image
+  not yet cached. New AIC ingests cache automatically; the ~264 already-ingested AIC
+  images still need the one-off `npm run cache:aic-images` backfill run. Two manual,
+  outward-facing steps this session couldn't do — provisioning storage and running a
+  script against production data are irreversible/infra actions, not something to do
+  without a human: (1) provision a Vercel Blob store and set `BLOB_READ_WRITE_TOKEN`; (2)
+  run `npm run cache:aic-images` from a machine with real network egress (not a Vercel
+  function — same reason the proxy doesn't work there). See ticket 31.
 
 ## Source coverage
 

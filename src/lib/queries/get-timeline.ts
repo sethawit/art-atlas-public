@@ -1,5 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
-import { proxiedImageUrl } from "@/lib/images/proxied-image-url";
+import { resolveImageUrl } from "@/lib/images/proxied-image-url";
 
 export interface TimelineEntry {
   artworkId: string;
@@ -79,7 +79,7 @@ export async function getTimeline(prisma: PrismaClient, filters: TimelineFilters
       precision: assertion.precision,
       placeOrCulture: artwork.placeOrCulture,
       medium: artwork.physicalObjects[0]?.medium ?? null,
-      imageUrl: proxiedImageUrl(image?.sourceUrl) ?? null,
+      imageUrl: resolveImageUrl(image) ?? null,
       imageAlt: image?.altText ?? null,
     };
     const centuryStart = assertion.valueEarliest ? Math.floor(assertion.valueEarliest.getUTCFullYear() / 100) * 100 : null;

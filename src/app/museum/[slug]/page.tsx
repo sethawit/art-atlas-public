@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getInstitutionBySlug } from "@/lib/queries/get-institution-by-slug";
 import { INSTITUTION_REFERENCE } from "@/lib/institutions/reference";
 import { slugify } from "@/lib/ingest/normalize-met";
-import { proxiedImageUrl } from "@/lib/images/proxied-image-url";
+import { resolveImageUrl } from "@/lib/images/proxied-image-url";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -63,7 +63,7 @@ export default async function MuseumPage({ params }: { params: Promise<{ slug: s
             return (
               <li key={po.id}>
                 <Link href={`/artwork/${po.artwork.slug}`}>
-                  {image && <img src={proxiedImageUrl(image.sourceUrl)} alt={image.altText ?? po.artwork.title} width={120} loading="lazy" />}
+                  {image && <img src={resolveImageUrl(image)} alt={image.altText ?? po.artwork.title} width={120} loading="lazy" />}
                   {po.artwork.title}
                   {po.artwork.artist && <> — {po.artwork.artist.name}</>}
                 </Link>

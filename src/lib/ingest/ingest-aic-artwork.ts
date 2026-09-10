@@ -3,6 +3,7 @@ import { fetchAicArtwork } from "@/lib/aic/client";
 import { normalizeAicArtwork } from "@/lib/ingest/normalize-aic";
 import { writeNormalizedArtwork } from "@/lib/ingest/write-normalized-artwork";
 import { writeProvenanceAndExhibitionEvents } from "@/lib/provenance/write-provenance-events";
+import { cacheAicImage } from "@/lib/images/cache-aic-image";
 
 const SOURCE = { name: "Art Institute of Chicago API", url: "https://api.artic.edu/api/v1" };
 
@@ -19,6 +20,20 @@ const SOURCE = { name: "Art Institute of Chicago API", url: "https://api.artic.e
 export async function ingestAicArtwork(prisma: PrismaClient, artworkId: number) {
   const raw = await fetchAicArtwork(artworkId);
   const normalized = normalizeAicArtwork(raw);
+
+  // Ticket 31 follow-up: cache the image now, while ingestion is running from an IP AIC
+  // doesn't block (the same reason live proxying from Vercel doesn't work — see
+  // src/lib/images/cache-aic-image.ts). Never let a caching failure fail the whole
+  // ingest — the render path still falls back to the (currently broken-in-prod) live
+  // proxy via resolveImageUrl, so this is a real regression risk, not a hard requirement.
+  if (normalized.image) {
+    try {
+      normalized.image.cachedUrl = await cacheAicImage(normalized.image.sourceUrl, `aic-images/${artworkId}.jpg`);
+    } catch (err) {
+      console.warn(`[ingest-aic] failed to cache image for artwork ${artworkId}:`, err);
+    }
+  }
+
   const result = await writeNormalizedArtwork(prisma, normalized, SOURCE);
 
   await writeProvenanceAndExhibitionEvents(

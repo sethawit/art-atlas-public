@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { proxiedImageUrl } from "@/lib/images/proxied-image-url";
+import { resolveImageUrl } from "@/lib/images/proxied-image-url";
 
 // Homepage — ticket 06, updated in ticket 14 to stop showing "coming soon" for features
 // tickets 08/09 already shipped: real MovementStyle rows and 22 verified relationships
@@ -81,7 +81,7 @@ export default async function HomePage() {
         {hero && (
           <Link href={`/artwork/${hero.slug}`} aria-labelledby="featured-heading">
             <figure className="plate">
-              {heroImage && <img src={proxiedImageUrl(heroImage.sourceUrl)} alt={heroImage.altText ?? hero.title} width={480} />}
+              {heroImage && <img src={resolveImageUrl(heroImage)} alt={heroImage.altText ?? hero.title} width={480} />}
               <figcaption>
                 <strong id="featured-heading">{hero.title}</strong>
                 {hero.artist && <> — {hero.artist.name}</>}
@@ -99,7 +99,7 @@ export default async function HomePage() {
               <figure className="plate">
                 {storyImage && (
                   <img
-                    src={proxiedImageUrl(storyImage.sourceUrl)}
+                    src={resolveImageUrl(storyImage)}
                     alt={storyImage.altText ?? featuredStory.subjectArtwork.title}
                     width={320}
                   />

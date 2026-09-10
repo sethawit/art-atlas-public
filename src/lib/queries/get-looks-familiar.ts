@@ -1,5 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
-import { proxiedImageUrl } from "@/lib/images/proxied-image-url";
+import { resolveImageUrl } from "@/lib/images/proxied-image-url";
 
 export interface FamiliarEntry {
   slug: string;
@@ -71,7 +71,7 @@ async function toEntries(
       slug: a.slug,
       title: a.title,
       artistName: a.artist?.name ?? null,
-      imageUrl: proxiedImageUrl(image?.sourceUrl) ?? null,
+      imageUrl: resolveImageUrl(image) ?? null,
       imageAlt: image?.altText ?? null,
       explanation: explanation(a.title),
     };
@@ -118,7 +118,7 @@ async function findBySubject(prisma: PrismaClient, artworkId: string, tagsValue:
       slug: a.slug,
       title: a.title,
       artistName: a.artist?.name ?? null,
-      imageUrl: proxiedImageUrl(image?.sourceUrl) ?? null,
+      imageUrl: resolveImageUrl(image) ?? null,
       imageAlt: image?.altText ?? null,
       explanation: `Shares the subject tag "${sharedTerm}" — a pattern match, not a documented connection.`,
     };
