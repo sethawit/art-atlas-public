@@ -45,15 +45,14 @@ npx tsc --noEmit    # typecheck
 ## What's implemented
 
 Real data throughout — nothing in the running app is placeholder or fabricated. Current
-dev DB: **334 artworks**, 177 artists, 2 institutions, 33 movements, 38 verified relationships
-across **8 distinct related-piece stories** — a full Monet "Stacks of Wheat" clique (7
-works), one documented-influence pair, five real Hokusai/Hiroshige ukiyo-e print series,
-and one Met-held pendant pair (ticket 16, after ticket 18's corpus growth) — still short
-of §3's "at least 10" Phase 1 launch target despite a real, thorough search (title-text
-patterns beyond series membership, plus reading actual AIC curatorial description text
-for connections not visible in titles at all); disclosed here per the master prompt's own
-instruction to report a shortfall honestly rather than let the relationship-row count
-read as more stories than it is. 884 real `OwnershipEvent` + 1,772 real `ExhibitionEvent`
+dev DB: **334 artworks**, 177 artists, 2 institutions, 33 movements, 51 verified relationships
+across **12 distinct related-piece stories** — a full Monet "Stacks of Wheat" clique (7
+works), one documented-influence pair, eight real Hokusai/Hiroshige ukiyo-e print series,
+one Salvator Rosa etching series ("Figurine"), and one Met-held pendant pair (ticket 16) —
+past §3's "at least 10" Phase 1 launch target. Every story rests on the museum's own
+record stating the connection (series membership in the AIC title, a numbered AIC
+scholarly-catalogue entry, or the Met's own "(one of a pair)" cataloguing), never on
+matching titles alone. 884 real `OwnershipEvent` + 1,772 real `ExhibitionEvent`
 rows (ticket 25) across 208/264 AIC-sourced physical objects. 668 real `LocationAssertion`
 rows (ticket 28) — 100% coverage, every physical object. **154/334 physical objects
 (46%) now have a real, evidence-based `on_display` status** (ticket 29) from a real
@@ -166,11 +165,10 @@ artwork page falls back to an explicit "unavailable" state instead.
 
 In rough priority order for continuing this backlog:
 
-1. Research and publish more related-piece stories toward §3's "at least 10" target —
-   currently 8 (see Known limitations). Same research-then-publish process as ticket 09/16
-   — a thorough pass already ran (title patterns + AIC description text); the remaining 2
-   likely need either real corpus growth toward a known series/pair not yet ingested, or
-   research into other artists' documented connections beyond Monet/Hokusai/Hiroshige.
+1. Keep growing related-piece stories past §3's "at least 10" (now 12 — see ticket 16).
+   Same research-then-publish process as ticket 09/16; the pattern that worked last was
+   pairing a single, already-ingested member of a series AIC's own title names with a
+   second AIC-held member via `npm run ingest:aic -- <id>`.
 2. Phase 2 per the master prompt (started — see below): deeper provenance /
    `OwnershipEvent` + `Exhibition`/`LoanEvent` modeling (the Journey tab), more
    collections beyond the Met and AIC, and a Getty AAT reconciliation pass (the confirmed

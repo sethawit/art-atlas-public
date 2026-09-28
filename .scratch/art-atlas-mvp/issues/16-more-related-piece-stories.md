@@ -98,3 +98,46 @@ description-field passes:
       not stale, and no honest path to 10 found without either a new source (outside §8's
       Met/AIC/Europeana list already exhausted for these leads) or a specific new
       acquisition ingest, the way ticket 09's grainstack expansion did.
+
+## Resumed again — 8 → 12, §3's "at least 10" met
+
+The corpus had grown past 334 works since the last pass (576 in the local dev DB at the
+time), so the series-title survey was re-run against it first.
+
+- [x] Re-ran the `"series"` title survey and listed every match with its current
+      relationship count. Found nine never-linked works whose AIC title states series
+      membership. Each candidate was re-checked live against `api.artic.edu` before
+      anything was published.
+- [x] **Salvator Rosa, "Figurine" series** (AIC 86, 87): both etchings were already in
+      the corpus and unlinked. Each AIC title ends "from Figurine series". Published as a
+      `same_series` pair, so no ingest was needed. This is the first non-Japanese series
+      story.
+- [x] **Hokusai, "One Hundred Ghost Tales (Hyaku monogatari)"**: Kohada Koheiji (47398)
+      was already in the corpus. A live AIC search for the series returned five AIC-held
+      prints, all titled "from the series ...", all 1831-32. Ingested Oiwa (47403) to
+      form the pair.
+- [x] **Hokusai, "Unusual Views of Famous Bridges in Various Provinces (Shokoku meikyo
+      kiran)"**: Togetsu Bridge (3652) was already in the corpus. Ingested Kintai Bridge
+      in Suo Province (25175), which has the same series title, c. 1833/34 date and oban
+      format.
+- [x] **Hiroshige, "Fifty-three Stations of the Tokaido ... also known as the Hoeido
+      Tokaido"**: Mishima: Morning Mist (10926) was already in the corpus. Ingested
+      Kanbara: Evening Snow (25613), whose AIC title also names the Hoeido Tokaido. It is
+      kept separate from the already-published "Tokaido with Poem" clique because AIC
+      gives it a different edition and a different series title. It was not merged on
+      the strength of a similar name.
+- [x] Enrichment, not a new story: Hara (2914), Hokusai's c. 1806 chuban Tokaido print,
+      was added to the existing Hokusai Tokaido clique (4 new edges). It shares the
+      series title, date and format with Odawara, Sakanoshita, Shinagawa and Fuchu.
+- [x] Not published: Utamaro's "Elegant Comparison of Little Treasures" (Goldfish),
+      Harunobu's untitled "Thirty-six Immortal Poets" (Ise) and Hokusai's untitled
+      "Large Flowers" series (Chrysanthemum and Horsefly) are each still single members.
+      They are left for a later pass. Four new stories was already past the target.
+- [x] Net: 43 → 51 edges, **8 → 12 distinct stories** (counted as connected components
+      of the relationship graph in the local dev DB).
+- [x] Verified live on a local `next dev` pointed at the local docker DB. Note that `next
+      dev` otherwise loads `.env.local`, which points at the Neon database, not the
+      docker one the scripts write to. The Rosa, Oiwa, Kintai Bridge and Mishima pages
+      each show 1 documented related piece with the right series text and an AIC source
+      link. Hara shows 4.
+- [x] 145 tests passing, typecheck clean. README story count updated (8 → 12).
