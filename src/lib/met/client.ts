@@ -2,6 +2,8 @@
 // Base URL and endpoint shapes per that register; re-verify there before changing this file.
 
 const BASE_URL = "https://collectionapi.metmuseum.org/public/collection/v1";
+// v1 /search retires 2026-10-01; v1.1 is the paginated replacement with the same response shape.
+const SEARCH_URL = "https://collectionapi.metmuseum.org/public/collection/v1.1/search";
 
 export interface MetConstituent {
   constituentID: number;
@@ -72,7 +74,7 @@ export async function searchMetObjectIds(
   query: string,
   { offset = 0, limit = 100, hasImages = true }: { offset?: number; limit?: number; hasImages?: boolean } = {}
 ): Promise<MetSearchResult> {
-  const url = new URL(`${BASE_URL}/search`);
+  const url = new URL(SEARCH_URL);
   url.searchParams.set("q", query);
   if (hasImages) url.searchParams.set("hasImages", "true");
   url.searchParams.set("offset", String(offset));
