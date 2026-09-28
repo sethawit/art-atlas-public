@@ -34,7 +34,7 @@ describe("searchMetObjectIds", () => {
   it("sends offset/limit/hasImages as query params", async () => {
     const fetchMock = vi.fn(async (url: string) => {
       const parsed = new URL(url);
-      expect(parsed.pathname).toBe("/public/collection/v1/search");
+      expect(parsed.pathname).toBe("/public/collection/v1.1/search");
       expect(parsed.searchParams.get("q")).toBe("van gogh");
       expect(parsed.searchParams.get("offset")).toBe("100");
       expect(parsed.searchParams.get("limit")).toBe("50");
