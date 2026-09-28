@@ -118,3 +118,19 @@ Still not picked unilaterally — needs the user's call given the storage/scope 
 - [x] Live-verified on production after deploy: `/compare?slug=wheat-field-with-cypresses&slug=water-lilies`
       (the exact page this session's original AIC-image bug was found on) — the
       previously-broken AIC image now renders for real.
+
+## Follow-up: caching is part of AIC ingest; placeholder for images that still fail
+
+- [x] New AIC works no longer stay broken until someone reruns the backfill:
+      `ingestAicArtwork` (used by `ingest:aic`, `ingest:bulk` and
+      `backfill:place-or-culture`) caches the work's image in Blob right after writing it.
+      Shared logic lives in `src/lib/images/aic-blob-cache.ts` (pathname scheme, curl
+      fetch, `cacheAicImage`), used by ingest, the backfill script and the proxy route.
+      A caching failure never fails the ingest; it's reported per work, and bulk ingest
+      prints how many weren't cached. Without `BLOB_READ_WRITE_TOKEN` it skips caching
+      (so tests and token-less dev machines still ingest), and `npm run cache:aic-images`
+      remains the catch-up path.
+- [x] The 5 images AIC itself refuses (and any other image that fails to load) now
+      render an "Image unavailable" placeholder in the same footprint via
+      `src/components/ArtworkImage.tsx`, instead of the browser's broken-image icon.
+      Screen readers get the artwork's alt text plus "(image unavailable)".

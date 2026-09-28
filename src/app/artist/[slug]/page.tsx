@@ -4,6 +4,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getArtistBySlug } from "@/lib/queries/get-artist-by-slug";
 import { proxiedImageUrl } from "@/lib/images/proxied-image-url";
+import ArtworkImage from "@/components/ArtworkImage";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -73,7 +74,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
             return (
               <li key={artwork.id}>
                 <Link href={`/artwork/${artwork.slug}`}>
-                  {image && <img src={proxiedImageUrl(image.sourceUrl)} alt={image.altText ?? artwork.title} width={120} loading="lazy" />}
+                  {image && <ArtworkImage src={proxiedImageUrl(image.sourceUrl)} alt={image.altText ?? artwork.title} width={120} loading="lazy" />}
                   {artwork.title}
                 </Link>
                 {/* Per-work style, not one blanket label for the whole artist — ticket 08. */}

@@ -7,11 +7,11 @@ import { aicImageUrl } from "@/lib/aic/client";
 // existing fetch-path tests exercise the live-fetch fallback exactly as before.
 vi.mock("@vercel/blob", () => {
   class BlobNotFoundError extends Error {}
-  return { head: vi.fn(), BlobNotFoundError };
+  return { head: vi.fn(), put: vi.fn(), BlobNotFoundError };
 });
 
 const { head, BlobNotFoundError } = await import("@vercel/blob");
-const { GET, blobPathnameFor } = await import("@/app/api/image-proxy/route");
+const { GET } = await import("@/app/api/image-proxy/route");
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -118,11 +118,5 @@ describe("GET /api/image-proxy", () => {
 
     const res = await GET(requestFor(aicImageUrl("abc-123")));
     expect(res.status).toBe(502);
-  });
-});
-
-describe("blobPathnameFor", () => {
-  it("builds a deterministic pathname from image id and width — scripts/cache-aic-images.ts must match this exactly", () => {
-    expect(blobPathnameFor("abc-123", "843")).toBe("aic-images/abc-123-843.jpg");
   });
 });

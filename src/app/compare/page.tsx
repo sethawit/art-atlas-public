@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getArtworksForComparison, getPairwiseComparisonInsights } from "@/lib/queries/get-artworks-for-comparison";
+import ArtworkImage from "@/components/ArtworkImage";
 
 // §5 "Compare and understand" (ticket 22) — a general-purpose compare tool, unlike the
 // artwork page's comparison view which only shows an artwork's own verified related
@@ -73,7 +74,7 @@ export default async function ComparePage({
               {entries.map((entry) => (
                 <tr key={entry.slug}>
                   <td data-label="Image">
-                    {entry.imageUrl && <img src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={120} loading="lazy" />}
+                    {entry.imageUrl && <ArtworkImage src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={120} loading="lazy" />}
                   </td>
                   <td data-label="Title">
                     <Link href={`/artwork/${entry.slug}`}>{entry.title}</Link>

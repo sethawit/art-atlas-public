@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { PassportEntry, PassportStatus } from "@/lib/passport/storage";
 import { getAllEntries, removeEntry, setNote } from "@/lib/passport/storage";
+import ArtworkImage from "@/components/ArtworkImage";
 
 const STATUS_LABELS: Record<PassportStatus, string> = {
   want_to_see: "Want to see",
@@ -111,7 +112,7 @@ export default function PassportPage() {
                   {inList.map((entry) => (
                     <li key={entry.artworkSlug}>
                       <Link href={`/artwork/${entry.artworkSlug}`}>
-                        {entry.imageUrl && <img src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={100} loading="lazy" />}
+                        {entry.imageUrl && <ArtworkImage src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={100} loading="lazy" />}
                         {entry.title}
                       </Link>
                       {entry.artistName && <span> — {entry.artistName}</span>}

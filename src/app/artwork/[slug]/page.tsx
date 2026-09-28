@@ -12,6 +12,7 @@ import { isDisplayStatusStale, DISPLAY_STATUS_FRESHNESS_DAYS } from "@/lib/insti
 import { getJourney } from "@/lib/queries/get-journey";
 import { slugify } from "@/lib/ingest/normalize-met";
 import { proxiedImageUrl } from "@/lib/images/proxied-image-url";
+import ArtworkImage from "@/components/ArtworkImage";
 
 // Ticket 03 scope: Overview, Understand, and Sources. Ticket 09 adds Related pieces.
 // Ticket 13 adds Where to see it as its own tab (§6 lists six: Overview, Understand,
@@ -136,7 +137,7 @@ export default async function ArtworkPage({
         {image ? (
           <figure className="plate">
             {/* Full artwork view, not a cropped preview — §12. */}
-            <img src={proxiedImageUrl(image.sourceUrl)} alt={image.altText ?? artwork.title} />
+            <ArtworkImage src={proxiedImageUrl(image.sourceUrl)} alt={image.altText ?? artwork.title} />
             {image.credit && <figcaption>{image.credit}</figcaption>}
           </figure>
         ) : (
@@ -216,7 +217,7 @@ export default async function ArtworkPage({
                       <li key={rp.relationship.id}>
                         <Link href={`/artwork/${rp.artwork.slug}`}>
                           {rpImage && (
-                            <img src={proxiedImageUrl(rpImage.sourceUrl)} alt={rpImage.altText ?? rp.artwork.title} width={160} loading="lazy" />
+                            <ArtworkImage src={proxiedImageUrl(rpImage.sourceUrl)} alt={rpImage.altText ?? rp.artwork.title} width={160} loading="lazy" />
                           )}
                           <p>{rp.artwork.title}</p>
                         </Link>
@@ -265,7 +266,7 @@ export default async function ArtworkPage({
                   <tbody>
                     <tr>
                       <td data-label="Image">
-                        {image && <img src={proxiedImageUrl(image.sourceUrl)} alt={image.altText ?? artwork.title} width={100} loading="lazy" />}
+                        {image && <ArtworkImage src={proxiedImageUrl(image.sourceUrl)} alt={image.altText ?? artwork.title} width={100} loading="lazy" />}
                       </td>
                       <td data-label="Title">{artwork.title} (this work)</td>
                       <td data-label="Artist">{artwork.artist?.name}</td>
@@ -282,7 +283,7 @@ export default async function ArtworkPage({
                         <tr key={rp.relationship.id}>
                           <td data-label="Image">
                             {rpImage && (
-                              <img src={proxiedImageUrl(rpImage.sourceUrl)} alt={rpImage.altText ?? rp.artwork.title} width={100} loading="lazy" />
+                              <ArtworkImage src={proxiedImageUrl(rpImage.sourceUrl)} alt={rpImage.altText ?? rp.artwork.title} width={100} loading="lazy" />
                             )}
                           </td>
                           <td data-label="Title">
@@ -352,7 +353,7 @@ export default async function ArtworkPage({
                   {group.entries.map((entry) => (
                     <li key={entry.slug}>
                       <Link href={`/artwork/${entry.slug}`}>
-                        {entry.imageUrl && <img src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={120} loading="lazy" />}
+                        {entry.imageUrl && <ArtworkImage src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={120} loading="lazy" />}
                         <p>{entry.title}</p>
                       </Link>
                       {entry.artistName && <p>{entry.artistName}</p>}
@@ -384,7 +385,7 @@ export default async function ArtworkPage({
                   <li key={entry.slug}>
                     <Link href={`/artwork/${entry.slug}`}>
                       {entry.imageUrl && (
-                        <img src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={120} loading="lazy" />
+                        <ArtworkImage src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={120} loading="lazy" />
                       )}
                       <p>{entry.title}</p>
                     </Link>

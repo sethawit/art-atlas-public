@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getArtworkAssertionsForReview, getArtworkRelationshipsForReview } from "@/lib/admin/queries";
 import { approveAssertion, removeImage, reviewRelationship } from "@/lib/admin/actions";
 import { proxiedImageUrl } from "@/lib/images/proxied-image-url";
+import ArtworkImage from "@/components/ArtworkImage";
 
 export default async function AdminArtworkReviewPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -24,7 +25,7 @@ export default async function AdminArtworkReviewPage({ params }: { params: Promi
         <h2 id="image-heading">Image</h2>
         {activeImage ? (
           <>
-            <img src={proxiedImageUrl(activeImage.sourceUrl)} alt={activeImage.altText ?? artwork.title} width={200} />
+            <ArtworkImage src={proxiedImageUrl(activeImage.sourceUrl)} alt={activeImage.altText ?? artwork.title} width={200} />
             <form
               action={async () => {
                 "use server";

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getCity } from "@/lib/queries/get-city";
 import CitySavedWorks from "@/components/CitySavedWorks";
 import { proxiedImageUrl } from "@/lib/images/proxied-image-url";
+import ArtworkImage from "@/components/ArtworkImage";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -42,7 +43,7 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
               return (
                 <li key={po.id}>
                   <Link href={`/artwork/${po.artwork.slug}`}>
-                    {image && <img src={proxiedImageUrl(image.sourceUrl)} alt={image.altText ?? po.artwork.title} width={120} loading="lazy" />}
+                    {image && <ArtworkImage src={proxiedImageUrl(image.sourceUrl)} alt={image.altText ?? po.artwork.title} width={120} loading="lazy" />}
                     {po.artwork.title}
                     {po.artwork.artist && <> — {po.artwork.artist.name}</>}
                   </Link>

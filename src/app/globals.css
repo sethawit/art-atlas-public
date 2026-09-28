@@ -432,6 +432,25 @@ main {
   width: 100%;
 }
 
+/* Stand-in for an artwork image that failed to load (src/components/ArtworkImage.tsx):
+   an empty ruled plate with a quiet label, the same footprint as the image it replaces. */
+.image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--placeholder-width, 100%);
+  max-width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--paper-sunken);
+  border: 1px dashed var(--line-strong);
+  color: var(--ink-muted);
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: var(--space-2);
+}
+
 .plate figcaption {
   font-family: var(--font-body);
   font-style: italic;
@@ -475,11 +494,13 @@ main {
   gap: var(--space-1);
 }
 
-.card-grid > li:has(img) {
+.card-grid > li:has(img),
+.card-grid > li:has(.image-placeholder) {
   padding-top: 0;
 }
 
-.card-grid img {
+.card-grid img,
+.card-grid .image-placeholder {
   width: calc(100% + 2 * var(--space-3));
   margin: 0 calc(-1 * var(--space-3)) var(--space-3);
   aspect-ratio: 4 / 3;

@@ -216,9 +216,12 @@ location freshness management"). Plan: `docs/superpowers/specs/2026-09-09-art-at
   protection blocks image requests from Vercel's serverless compute at the network/ASN
   and TLS-fingerprint level (confirmed live: Cloudflare's own "Attention Required" block
   page, and separately that Node's `fetch` is flagged where `curl` isn't, from the same
-  IP) — no request header fixes that from inside Vercel. `npm run cache:aic-images`
-  fetches each AIC image once from a non-blocked network (a dev machine) and stores it in
-  Vercel Blob; `/api/image-proxy` serves from there. 259/264 AIC-sourced images cached;
+  IP) — no request header fixes that from inside Vercel. AIC ingest (`ingest:aic`,
+  `ingest:bulk`) fetches each new work's image once from a non-blocked network (a dev
+  machine) and stores it in Vercel Blob as part of the ingest, when
+  `BLOB_READ_WRITE_TOKEN` is set; `npm run cache:aic-images` backfills anything ingested
+  without it. `/api/image-proxy` serves from Blob. 259/264 AIC-sourced images cached;
   the other 5 are genuine per-object failures on AIC's own side (1 real 404, 4 a
   different, non-Cloudflare 403 straight from AIC's IIIF server) — not this project's
-  bug, and not worse than before. See ticket 31 for the full diagnostic trail.
+  bug. Any image that fails to load shows an "Image unavailable" placeholder rather than
+  a broken-image icon. See ticket 31 for the full diagnostic trail.
