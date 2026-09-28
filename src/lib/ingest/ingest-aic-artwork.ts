@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import { fetchAicArtwork } from "@/lib/aic/client";
+import { cacheAicImage, type CacheAicImageDeps, type CacheAicImageResult } from "@/lib/images/aic-blob-cache";
 import { normalizeAicArtwork } from "@/lib/ingest/normalize-aic";
 import { writeNormalizedArtwork } from "@/lib/ingest/write-normalized-artwork";
 import { writeProvenanceAndExhibitionEvents } from "@/lib/provenance/write-provenance-events";
@@ -15,8 +16,16 @@ const SOURCE = { name: "Art Institute of Chicago API", url: "https://api.artic.e
  * path — they're AIC-only real fields, not part of the generic NormalizedArtwork shape
  * both sources produce, and they key off physicalObject.id which only exists once the
  * shared write has run.
+ *
+ * The image is cached in Vercel Blob last (ticket 31): production can't fetch AIC images
+ * itself, so caching here means a new work's image is served from the moment it's
+ * published. A caching failure never fails the ingest — it's reported in `imageCache`.
  */
-export async function ingestAicArtwork(prisma: PrismaClient, artworkId: number) {
+export async function ingestAicArtwork(
+  prisma: PrismaClient,
+  artworkId: number,
+  imageCacheDeps?: CacheAicImageDeps
+): Promise<Awaited<ReturnType<typeof writeNormalizedArtwork>> & { imageCache: CacheAicImageResult | null }> {
   const raw = await fetchAicArtwork(artworkId);
   const normalized = normalizeAicArtwork(raw);
   const result = await writeNormalizedArtwork(prisma, normalized, SOURCE);
@@ -28,5 +37,7 @@ export async function ingestAicArtwork(prisma: PrismaClient, artworkId: number) 
     SOURCE
   );
 
-  return result;
+  const imageCache = normalized.image ? await cacheAicImage(normalized.image.sourceUrl, imageCacheDeps) : null;
+
+  return { ...result, imageCache };
 }

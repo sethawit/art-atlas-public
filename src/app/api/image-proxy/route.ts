@@ -1,4 +1,5 @@
 import { head, BlobNotFoundError } from "@vercel/blob";
+import { blobPathnameForSourceUrl } from "@/lib/images/aic-blob-cache";
 
 // Proxies AIC (Art Institute of Chicago) IIIF images.
 //
@@ -11,12 +12,14 @@ import { head, BlobNotFoundError } from "@vercel/blob";
 // a residential/dev-sandbox IP. No request header can satisfy a network-level block.
 //
 // THE FIX (ticket 31's "Option 2"): fetch each AIC image once from a network AIC
-// doesn't block — `scripts/cache-aic-images.ts`, run from a dev machine, not Vercel —
-// and store it in Vercel Blob under a deterministic pathname derived from the image's
-// own IIIF id/width. This route now checks Blob first and redirects there when present;
-// it only falls back to a live AIC fetch (which will still 403 from Vercel's compute)
-// for an image that hasn't been backfilled yet — e.g. one from a very recent ingest run
-// that hasn't had `npm run cache:aic-images` run against it. The live-fetch fallback and
+// doesn't block — during AIC ingest, or `scripts/cache-aic-images.ts` for older works,
+// both run from a dev machine, not Vercel — and store it in Vercel Blob under a
+// deterministic pathname derived from the image's own IIIF id/width
+// (src/lib/images/aic-blob-cache.ts). This route checks Blob first and redirects there
+// when present; it only falls back to a live AIC fetch (which will still 403 from
+// Vercel's compute) for an image that isn't cached — e.g. one ingested without
+// BLOB_READ_WRITE_TOKEN set, or one AIC itself 403s/404s. The page renders a placeholder
+// for those (src/components/ArtworkImage.tsx). The live-fetch fallback and
 // its Referer/allowlist stay for that reason, and because they document a legitimate
 // request even where it doesn't clear the network block.
 //
@@ -32,16 +35,6 @@ const ALLOWED_HOSTNAME = "www.artic.edu";
 const ALLOWED_PATH_PREFIX = "/iiif/2/";
 const OUTBOUND_REFERER = "https://www.artic.edu/";
 const OUTBOUND_USER_AGENT = "ArtAtlasImageProxy/1.0 (contact via repo)";
-
-// Matches e.g. /iiif/2/20692004-784b-.../full/843,/0/default.jpg — captures the image id
-// and requested width, the same two values scripts/cache-aic-images.ts keys its Blob
-// pathnames by. Exported so that script stays byte-for-byte in sync with this route
-// instead of two independently-maintained copies of the same regex/pathname scheme.
-const IIIF_PATH_PATTERN = /^\/iiif\/2\/([^/]+)\/full\/([^,/]+),\/0\/default\.jpg$/;
-
-export function blobPathnameFor(imageId: string, width: string): string {
-  return `aic-images/${imageId}-${width}.jpg`;
-}
 
 export async function GET(request: Request): Promise<Response> {
   const rawUrl = new URL(request.url).searchParams.get("url");
@@ -64,14 +57,13 @@ export async function GET(request: Request): Promise<Response> {
     return Response.json({ error: "unsupported image URL" }, { status: 400 });
   }
 
-  const match = target.pathname.match(IIIF_PATH_PATTERN);
-  if (match) {
-    const [, imageId, width] = match;
+  const pathname = blobPathnameForSourceUrl(target.toString());
+  if (pathname) {
     try {
-      const blob = await head(blobPathnameFor(imageId, width));
+      const blob = await head(pathname);
       return Response.redirect(blob.url, 302);
     } catch (err) {
-      // Not backfilled yet (or a transient Blob-side issue) — fall through to the live
+      // Not cached yet (or a transient Blob-side issue) — fall through to the live
       // AIC fetch below rather than failing the request outright.
       if (!(err instanceof BlobNotFoundError)) {
         console.error("image-proxy: Blob head() failed unexpectedly", err);

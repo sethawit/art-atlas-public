@@ -4,6 +4,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getMovementBySlug } from "@/lib/queries/get-movement-by-slug";
 import { proxiedImageUrl } from "@/lib/images/proxied-image-url";
+import ArtworkImage from "@/components/ArtworkImage";
 
 const KIND_EXPLANATION: Record<string, string> = {
   period: "A period marks a span of time, not a shared visual approach — works from a period can look very different from one another.",
@@ -69,7 +70,7 @@ export default async function MovementPage({ params }: { params: Promise<{ slug:
             return (
               <li key={artwork.id}>
                 <Link href={`/artwork/${artwork.slug}`}>
-                  {image && <img src={proxiedImageUrl(image.sourceUrl)} alt={image.altText ?? artwork.title} width={120} loading="lazy" />}
+                  {image && <ArtworkImage src={proxiedImageUrl(image.sourceUrl)} alt={image.altText ?? artwork.title} width={120} loading="lazy" />}
                   {artwork.title}
                 </Link>
                 {artwork.artist && <> — {artwork.artist.name}</>}

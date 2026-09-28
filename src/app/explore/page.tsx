@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getFilterOptions, searchArtworks } from "@/lib/queries/search-artworks";
 import { proxiedImageUrl } from "@/lib/images/proxied-image-url";
+import ArtworkImage from "@/components/ArtworkImage";
 
 // Ticket 07 — six real, combinable filters (date range, medium, museum, city, display
 // status, movement/style — the last added ticket 17) plus text search with basic
@@ -156,7 +157,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
                     <label>
                       <input type="checkbox" name="slug" value={artwork.slug} /> Select to compare
                       <Link href={`/artwork/${artwork.slug}`}>
-                        {image && <img src={proxiedImageUrl(image.sourceUrl)} alt={image.altText ?? artwork.title} width={120} loading="lazy" />}
+                        {image && <ArtworkImage src={proxiedImageUrl(image.sourceUrl)} alt={image.altText ?? artwork.title} width={120} loading="lazy" />}
                         <p>
                           {artwork.title}
                           {artwork.artist && <> — {artwork.artist.name}</>}

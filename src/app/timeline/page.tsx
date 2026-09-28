@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getTimeline, getTimelineFilterOptions } from "@/lib/queries/get-timeline";
+import ArtworkImage from "@/components/ArtworkImage";
 
 // Ticket 13 — §3's Phase 1 allowance: "establish a useful initial timeline in Phase 1 if
 // verified metadata makes it inexpensive." It is: this reads creationDate Assertions
@@ -73,7 +74,7 @@ export default async function TimelinePage({
               {century.entries.map((entry) => (
                 <li key={entry.artworkId}>
                   <Link href={`/artwork/${entry.slug}`}>
-                    {entry.imageUrl && <img src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={120} loading="lazy" />}
+                    {entry.imageUrl && <ArtworkImage src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={120} loading="lazy" />}
                     {entry.title}
                   </Link>
                   {entry.artistName && <> — {entry.artistName}</>}

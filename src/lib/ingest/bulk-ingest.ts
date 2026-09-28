@@ -30,6 +30,8 @@ export interface BulkIngestSummary {
   failed: number;
   duplicatesFlagged: number;
   withoutEligibleImage: number;
+  /** AIC images that couldn't be cached in Blob during ingest (failed, or no token set). */
+  aicImagesNotCached: number;
 }
 
 /**
@@ -51,6 +53,7 @@ export async function bulkIngest(
     failed: 0,
     duplicatesFlagged: 0,
     withoutEligibleImage: 0,
+    aicImagesNotCached: 0,
   };
 
   const metIds = await collectMetIds(searchTerms, targetPerSource);
@@ -85,6 +88,9 @@ export async function bulkIngest(
     try {
       const result = await withRetry(() => ingestAicArtwork(prisma, artworkId));
       summary.succeeded++;
+      if (result.imageCache?.status === "failed" || result.imageCache?.status === "skipped-no-token") {
+        summary.aicImagesNotCached++;
+      }
       if (result.duplicateFlagged) summary.duplicatesFlagged++;
       await logIngest(prisma, {
         sourceName: AIC_SOURCE_NAME,
