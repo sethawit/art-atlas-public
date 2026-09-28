@@ -100,6 +100,19 @@ const AIC_URL_BY_SLUG: Record<string, string> = {
   "no-37-miyanokoshi-from-the-series-sixty-nine-stations-of-the-kisokaido-kisokaido-rokujukyu-tsugi-no-uchi":
     "/artworks/11050",
   "no-32-seba-from-the-series-sixty-nine-stations-of-the-kisokaido-kisokaido-rokujukyu-tsugi-no-uchi": "/artworks/11054",
+  "hara-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi": "/artworks/2914",
+  "two-warriors-one-seated-asleep-on-a-foreground-rock-from-figurine-series": "/artworks/86",
+  "a-warrior-sits-on-a-block-and-gestures-two-figure-are-behind-him-from-figurine-series": "/artworks/87",
+  "kohada-koheiji-from-the-series-one-hundred-ghost-tales-hyaku-monogatari": "/artworks/47398",
+  "oiwa-oiwa-san-from-the-series-one-hundred-ghost-tales-hyaku-monogatari": "/artworks/47403",
+  "togetsu-bridge-at-arashiyama-in-yamashiro-province-yamashiro-arashiyama-no-togetsukyo-from-the-series-unusual-views-of-famous-bridges-in-various-provinces-shokoku-meikyo-kiran":
+    "/artworks/3652",
+  "kintai-bridge-in-suo-province-suo-no-kuni-kintaibashi-from-the-series-unusual-views-of-famous-bridges-in-various-provinces-shokoku-meikyo-kiran":
+    "/artworks/25175",
+  "mishima-morning-mist-mishima-asagiri-from-the-series-fifty-three-stations-of-the-tokaido-road-tokaido-gojusan-tsugi-no-uchi-also-known-as-the-hoeido-tokaido":
+    "/artworks/10926",
+  "kanbara-evening-snow-kanbara-yoru-no-yuki-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi-no-uchi-also-known-as-the-hoeido-tokaido":
+    "/artworks/25613",
 };
 
 // Session-later addition: a Wikidata cross-check (P4610 ARTIC artwork ID) surfaced two
@@ -166,6 +179,9 @@ const hokusaiTokaidoClique = sameSeriesClique(
     "sakanoshita-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi",
     "shinagawa-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi",
     "fuchu-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi",
+    // Added after the corpus grew past ticket 16's 334 works: AIC 2914, same series,
+    // date (c. 1806) and format (chuban) as the other four, confirmed live.
+    "hara-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi",
   ],
   "Fifty-three Stations of the Tokaido (Tokaido gojusan tsugi)",
   "Katsushika Hokusai"
@@ -200,6 +216,51 @@ const kisokaidoPair = sameSeriesClique(
   "Utagawa Hiroshige"
 );
 
+// Ticket 16, second resumption — four more stories. The corpus had grown past 334 works
+// (573 at the time), which surfaced three single, never-linked members of documented
+// series plus one already-complete pair. Each title below states series membership in
+// AIC's own record, confirmed live against api.artic.edu before publishing. Where AIC
+// held only one member in our corpus, a second AIC-held member of the same series was
+// ingested specifically to form the pair (`npm run ingest:aic -- <id>`): 47403 (Oiwa),
+// 25175 (Kintai Bridge), 25613 (Kanbara). The Hoeido Tokaido is kept distinct from
+// Hiroshige's "Tokaido with Poem" above: a different edition with a different AIC series
+// title, not merged into that clique on the strength of a similar name.
+const rosaFigurinePair = sameSeriesClique(
+  [
+    "two-warriors-one-seated-asleep-on-a-foreground-rock-from-figurine-series",
+    "a-warrior-sits-on-a-block-and-gestures-two-figure-are-behind-him-from-figurine-series",
+  ],
+  "Figurine",
+  "Salvator Rosa"
+);
+
+const ghostTalesPair = sameSeriesClique(
+  [
+    "kohada-koheiji-from-the-series-one-hundred-ghost-tales-hyaku-monogatari",
+    "oiwa-oiwa-san-from-the-series-one-hundred-ghost-tales-hyaku-monogatari",
+  ],
+  "One Hundred Ghost Tales (Hyaku monogatari)",
+  "Katsushika Hokusai"
+);
+
+const famousBridgesPair = sameSeriesClique(
+  [
+    "togetsu-bridge-at-arashiyama-in-yamashiro-province-yamashiro-arashiyama-no-togetsukyo-from-the-series-unusual-views-of-famous-bridges-in-various-provinces-shokoku-meikyo-kiran",
+    "kintai-bridge-in-suo-province-suo-no-kuni-kintaibashi-from-the-series-unusual-views-of-famous-bridges-in-various-provinces-shokoku-meikyo-kiran",
+  ],
+  "Unusual Views of Famous Bridges in Various Provinces (Shokoku meikyo kiran)",
+  "Katsushika Hokusai"
+);
+
+const hoeidoTokaidoPair = sameSeriesClique(
+  [
+    "mishima-morning-mist-mishima-asagiri-from-the-series-fifty-three-stations-of-the-tokaido-road-tokaido-gojusan-tsugi-no-uchi-also-known-as-the-hoeido-tokaido",
+    "kanbara-evening-snow-kanbara-yoru-no-yuki-from-the-series-fifty-three-stations-of-the-tokaido-tokaido-gojusan-tsugi-no-uchi-also-known-as-the-hoeido-tokaido",
+  ],
+  'Fifty-three Stations of the Tokaido (Tokaido gojusan tsugi no uchi), also known as the "Hoeido Tokaido"',
+  "Utagawa Hiroshige"
+);
+
 // Ticket 16 resumption — a real Met-held pendant pair, found by title text ("(one of a
 // pair)", the Met's own cataloguing) and confirmed live against the Met API: both
 // objects (189709, 189708) carry the identical title, date ("18th century"), and
@@ -227,6 +288,10 @@ const relationships: VerifiedRelationship[] = [
   ...hiroshigeTokaidoClique,
   ...kisokaidoPair,
   ...pendantPair,
+  ...rosaFigurinePair,
+  ...ghostTalesPair,
+  ...famousBridgesPair,
+  ...hoeidoTokaidoPair,
   {
     subjectSlug: "water-lily-pond",
     objectSlug: "water-lilies",
