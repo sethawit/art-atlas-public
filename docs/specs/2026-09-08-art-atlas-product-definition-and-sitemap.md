@@ -1,6 +1,6 @@
 # Art Atlas — Product Definition and Sitemap
 
-Source: `art-atlas-master-prompt.md` (repo root). This document covers deliverables 1 and 3 from that prompt's §16: product definition and sitemap. Deliverable 2 (MVP backlog) is tracked separately as tickets under `.scratch/art-atlas-mvp/issues/`.
+Source: `docs/master-prompt.md`. This document covers deliverables 1 and 3 from that prompt's §16: product definition and sitemap. Deliverable 2 (MVP backlog) is tracked separately as tickets under `.scratch/art-atlas-mvp/issues/`.
 
 ## 1. Product Definition
 

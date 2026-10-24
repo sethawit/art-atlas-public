@@ -1,6 +1,6 @@
 # Art Atlas — Next MVP Plan
 
-Source: `art-atlas-master-prompt.md` + the honest-disclosure gaps recorded in `README.md`'s
+Source: `docs/master-prompt.md` + the honest-disclosure gaps recorded in `README.md`'s
 Known limitations and Next actions as of ticket 15. Two tracks, in order: finish what
 Phase 1 promised before calling it done, then scope Phase 2 ("Deeper discovery", §3) as
 its own backlog.

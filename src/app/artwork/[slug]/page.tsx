@@ -18,7 +18,7 @@ import ArtImage, { ArtFrame } from "@/components/ArtImage";
 // Ticket 13 adds Where to see it as its own tab (§6 lists six: Overview, Understand,
 // Related pieces, Where to see it, Journey, Sources — it had been folded into Overview).
 // Journey (provenance) stays deferred to Phase 2 (§3) —
-// see docs/superpowers/specs/2026-09-08-art-atlas-product-definition-and-sitemap.md.
+// see docs/specs/2026-09-08-art-atlas-product-definition-and-sitemap.md.
 
 type RelatedView = "grid" | "comparison" | "map";
 
