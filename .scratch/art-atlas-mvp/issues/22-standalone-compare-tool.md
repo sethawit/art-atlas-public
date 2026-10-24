@@ -6,7 +6,7 @@ verified related pieces, capped at 3. §5 asks for a general-purpose tool: pick 
 (any works, not just linked ones) and compare on desktop, 2 comfortably on mobile.
 
 **Blocked by:** none — the sitemap doc already reserves the route
-(`/compare?a=<slug>&b=<slug>&...`, `docs/superpowers/specs/2026-09-08-...sitemap.md`).
+(`/compare?a=<slug>&b=<slug>&...`, `docs/specs/2026-09-08-...sitemap.md`).
 
 **Status:** done
 

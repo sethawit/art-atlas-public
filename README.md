@@ -2,15 +2,15 @@
 
 Discover an artwork. Understand its connections. Find where to see it.
 
-A Phase 1 MVP built against the master prompt at `art-atlas-master-prompt.md`. Product
-definition, sitemap, and the full backlog live in `docs/superpowers/specs/` and
+A Phase 1 MVP built against the master prompt at `docs/master-prompt.md`. Product
+definition, sitemap, and the full backlog live in `docs/specs/` and
 `.scratch/art-atlas-mvp/issues/`; this file is the handoff (§16 item 10 of the master
 prompt): setup, what's implemented, what's known-incomplete, and what's next.
 
 ## Setup
 
-Requires Node 24+, Docker (for local Postgres), and no other accounts or API keys — the
-Met and AIC APIs are both public/keyless.
+Requires Node 24+, Docker (for local Postgres), and no other accounts or API keys. The
+Met, AIC, and Cleveland Museum of Art APIs are all public and keyless.
 
 ```bash
 npm install
@@ -23,7 +23,7 @@ npx prisma migrate deploy                                                       
 DATABASE_URL="$(grep DATABASE_URL .env.test | cut -d= -f2- | tr -d '"')" \
   npx prisma migrate deploy                                                      # test DB
 
-npm run dev                                  # http://localhost:3001 (3000 often taken)
+npm run dev                                  # http://localhost:3000
 ```
 
 Seed real data (all idempotent — safe to re-run):
@@ -41,6 +41,19 @@ npm run refresh:location            # refresh display status/gallery location on
 npm test           # vitest — 130 tests, run against .env.test's DB
 npx tsc --noEmit    # typecheck
 ```
+
+## Project layout
+
+| Path | What lives there |
+|---|---|
+| `src/app/` | Next.js App Router pages and API routes (`/api/image-proxy`), plus `/admin` |
+| `src/components/` | Shared UI components |
+| `src/lib/` | Domain logic. One folder per source client (`met/`, `aic/`, `cleveland/`), the ingest pipeline (`ingest/`), and query modules per feature |
+| `prisma/` | Schema and migrations |
+| `scripts/` | Ingest, backfill, and maintenance CLIs run through `npm run` |
+| `tests/` | Vitest suites, fixtures, and DB helpers |
+| `docs/` | Master prompt, product specs (`specs/`), ADRs (`adr/`), source register (`sources/`) |
+| `.scratch/` | Issue tracker: one markdown file per ticket |
 
 ## What's implemented
 
@@ -178,7 +191,7 @@ In rough priority order for continuing this backlog:
 
 Phase 2 per the master prompt's own scope (§3: "Add interactive historical timelines,
 richer relationship exploration, publicly documented provenance, more collections, and
-location freshness management"). Plan: `docs/superpowers/specs/2026-09-09-art-atlas-phase2-plan.md`.
+location freshness management"). Plan: `docs/specs/2026-09-09-art-atlas-phase2-plan.md`.
 
 - **Location freshness policy** (ticket 23) — done. `displayStatus`/`publicAccess` are the
   fields most likely to go stale (no live feed from either source); a visible note now
@@ -223,3 +236,8 @@ location freshness management"). Plan: `docs/superpowers/specs/2026-09-09-art-at
   different, non-Cloudflare 403 straight from AIC's IIIF server) — not this project's
   bug. Any image that fails to load shows an "Image unavailable" placeholder rather than
   a broken-image icon. See ticket 31 for the full diagnostic trail.
+
+## License
+
+[MIT](LICENSE). Artwork metadata and images come from each museum's open-access program
+and keep their own terms; see `docs/sources/source-register.md`.

@@ -1,8 +1,5 @@
 .DS_Store
 node_modules/
-.env
-.env.local
-.env.test
 .next/
 next-env.d.ts
 dist/
@@ -10,6 +7,7 @@ coverage/
 *.tsbuildinfo
 .vercel
 .env*
+!.env*.example
 .agents/
 .claude/
 skills-lock.json
