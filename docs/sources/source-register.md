@@ -1,4 +1,4 @@
-# Source Register — Met Collection API & Art Institute of Chicago API
+# Source Register: Met Collection API, Art Institute of Chicago API & Cleveland Museum of Art API
 
 Verified against current official documentation and live sample requests. All claims below trace to a specific doc URL or a direct API response captured on the retrieval date. Retrieval date for every claim in this document: **2026-09-08**.
 
@@ -66,6 +66,34 @@ Method note: `www.metmuseum.org` and `www.artic.edu` (the museum marketing sites
   - The 10,000-record cap on a single search query (same shape as the Met's 10,000-offset+limit cap) means true full-collection harvesting requires either the documented bulk data dump (linked from the docs site but not fetched/verified in this pass) or a filtered/sharded set of queries, not a single paginated crawl.
 
 **Integration priority**: Phase 1 (primary ingestion source, alongside the Met — per Art Atlas product definition, Met + AIC are the only two Phase 1 collection sources).
+
+---
+
+## Cleveland Museum of Art Open Access API
+
+- **Access method**: No API key, no authentication, no requested headers. Base URL `https://openaccess-api.clevelandart.org/api/`. Single record: `GET /artworks/{id}`. Search: `GET /artworks/?q=...`. (verified live 2026-10-24, `artworks/135382`).
+
+- **Fields used**: `id, accession_number, url, title, creation_date, creation_date_earliest, creation_date_latest, creators[].description, creators[].role, culture[], technique, measurements, credit_line, current_location, share_license_status, images.web.url`. All confirmed live on `artworks/135382`. The full record also carries structured `provenance[]`, `exhibitions`, `description`, and per-creator `biography`; these are kept in `rawRecord` but not yet mapped.
+
+- **Artist name**: there is no separate name field. `creators[].description` reads `"Claude Monet (French, 1840–1926)"`, so the adapter splits the name from the parenthesised bio. The bio becomes an `artistBio` assertion, the same field the Met fills.
+
+- **Open-access image eligibility rule**: `share_license_status` is `"CC0"`, `"Copyrighted"`, or `"Other"`. The docs state that only CC0 records provide access to CC0 images. The adapter gates the image on `share_license_status === "CC0"` and a present `images.web.url`. Search can filter server-side with `cc0=1&has_image=1`. Images come in `web` (~900px, ~240KB), `print` (~3400px, several MB) and `full` (TIFF) renditions; the adapter uses `web`. The CDN (`openaccess-cdn.clevelandart.org`) served images to a request with a localhost Referer (verified live), so no proxy is needed, unlike AIC.
+
+- **On-view evidence**: `current_location` holds a gallery such as `"222 Impressionism & Post-Impressionism"` and is `null` for works not on view (verified live across a 40-record sample). It maps to `galleryLocation`.
+
+- **Pagination**: `skip` and `limit` query params.
+
+- **Rate limits**: none documented. Bulk ingest still spaces calls 500ms apart, per the Met lesson in ticket 32 that an undocumented limit is not the same as no limit.
+
+**Integration priority**: Phase 2, third collection source after the Met and AIC.
+
+---
+
+## SMK (Statens Museum for Kunst) API (evaluated, not integrated)
+
+- **Access method**: No key. Search `GET https://api.smk.dk/api/v1/art/search/?keys=...&filters=[public_domain:true],[has_image:true]` returned real records (verified live 2026-10-24). Records carry `public_domain`, a `rights` URL, `image_thumbnail`, `frontend_url`, `production[]` and `current_location_name`.
+- **Blocker**: both image hosts (`iip-thumb.smk.dk` and the `api.smk.dk/api/v1/download/...` URLs) accepted the TCP connection and then sent nothing for 30 seconds, on most attempts. One later request for a 400px rendition answered after 9 seconds (verified live 2026-10-24). An image-led site cannot hot-link at that speed. Integrating SMK needs its images cached once into Vercel Blob, the way `scripts/cache-aic-images.ts` handles AIC.
+- **Other notes**: many titles are Danish only (`titles[].language: "dansk"`); prefer an `"engelsk"` title when present. `keys=` search is fuzzy (`monet` matches "Møn"), so search by artist through filters instead.
 
 ---
 
