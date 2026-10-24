@@ -14,13 +14,13 @@ const MOVEMENT_CONTEXT: Record<string, { geography: string; characteristics: str
     characteristics:
       "Visible brushwork, an emphasis on capturing changing light and everyday scenes, and painting outdoors (en plein air) rather than composing entirely in the studio.",
     context:
-      "Named (initially dismissively) after Monet's 1872 painting Impression, Sunrise. A specifically French movement of its period — not a universal stage every tradition passed through.",
+      "Named (initially dismissively) after Monet's 1872 painting Impression, Sunrise. A specifically French movement of its period, not a universal stage every tradition passed through.",
   },
   "post-impressionism": {
     geography: "Also centered in France, roughly the 1880s–1900s.",
     characteristics:
       "A loose grouping of artists (including Van Gogh, Cézanne, and others) who kept Impressionism's bright color but pushed toward more structure, symbolism, or expressive distortion than Impressionism's momentary-perception approach.",
-    context: "A direct successor to Impressionism in France, not a single unified style — its artists differed widely from one another.",
+    context: "A direct successor to Impressionism in France, not a single unified style: its artists differed widely from one another.",
   },
   realism: {
     geography: "Mid-19th-century France, with related movements elsewhere in Europe.",

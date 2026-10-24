@@ -120,7 +120,7 @@ async function findBySubject(prisma: PrismaClient, artworkId: string, tagsValue:
       artistName: a.artist?.name ?? null,
       imageUrl: proxiedImageUrl(image?.sourceUrl) ?? null,
       imageAlt: image?.altText ?? null,
-      explanation: `Shares the subject tag "${sharedTerm}" — a pattern match, not a documented connection.`,
+      explanation: `Shares the subject tag "${sharedTerm}": a pattern match, not a documented connection.`,
     };
   });
 }
@@ -161,6 +161,6 @@ async function findByDocumentedInfluence(prisma: PrismaClient, artworkId: string
   return toEntries(
     prisma,
     others.map((a) => a.id),
-    () => "A documented influence or response — verified, see Related pieces for the full citation."
+    () => "A documented influence or response, verified; see Related pieces for the full citation."
   );
 }

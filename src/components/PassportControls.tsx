@@ -46,8 +46,7 @@ export default function PassportControls({ snapshot }: { snapshot: ArtworkSnapsh
   return (
     <section aria-labelledby="passport-heading">
       <h2 id="passport-heading">My Art Passport</h2>
-      <p role="note">Saved on this device only — no account, no sync yet.</p>
-      <div role="group" aria-label="Save to Art Passport">
+      <div role="group" aria-label="Save to Art Passport" className="passport-toggle">
         {(Object.keys(STATUS_LABELS) as PassportStatus[]).map((status) => (
           <label key={status}>
             <input
@@ -69,6 +68,9 @@ export default function PassportControls({ snapshot }: { snapshot: ArtworkSnapsh
           />
         </div>
       )}
+      <p role="note" className="fine-print">
+        Saved on this device only. No account, no sync yet.
+      </p>
     </section>
   );
 }

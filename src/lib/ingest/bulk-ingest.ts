@@ -1,21 +1,72 @@
 import type { PrismaClient } from "@prisma/client";
 import { searchMetObjectIds } from "@/lib/met/client";
 import { searchAicArtworkIds } from "@/lib/aic/client";
+import { searchClevelandArtworkIds } from "@/lib/cleveland/client";
 import { ingestMetArtwork } from "@/lib/ingest/ingest-met-artwork";
 import { ingestAicArtwork } from "@/lib/ingest/ingest-aic-artwork";
+import { CLEVELAND_SOURCE, ingestClevelandArtwork } from "@/lib/ingest/ingest-cleveland-artwork";
 
-const MET_SOURCE_NAME = "Met Collection API";
-const AIC_SOURCE_NAME = "Art Institute of Chicago API";
+export const MET_SOURCE_NAME = "Met Collection API";
 
 // AIC's documented ceiling is 60 req/min (source register) — space calls comfortably
-// under that. The Met has no enforced limit (80 req/s advisory), so no delay there.
+// under that.
 const AIC_REQUEST_SPACING_MS = 1100;
+
+// Ticket 18's second growth run hit 82 real Met 403s with zero spacing on the
+// assumption that the Met's 80 req/s ceiling is advisory-only and unenforced — that
+// assumption was wrong in practice: something (an undocumented WAF/burst guard, not the
+// published 80 req/s figure itself) throttled the burst. 200ms is ~16x under the
+// advisory ceiling — still fast, but a deliberate non-zero gap this time. See ticket 32
+// and scripts/retry-met-failures.ts, which recovers exactly those 82 objects.
+export const MET_REQUEST_SPACING_MS = 200;
+
+// Cleveland documents no rate limit; the Met's lesson above says not to read that as
+// "unlimited", so it gets a deliberate gap too.
+const CLEVELAND_REQUEST_SPACING_MS = 500;
+
+/** One collection source: how to find candidate ids for a term, and how to ingest one. */
+interface BulkSource {
+  key: string;
+  name: string;
+  spacingMs: number;
+  search(term: string): Promise<number[]>;
+  ingest(
+    prisma: PrismaClient,
+    id: number
+  ): Promise<{ artwork: { id: string }; duplicateFlagged: boolean; imageCache?: { status: string } | null }>;
+}
+
+export const SOURCES: BulkSource[] = [
+  {
+    key: "met",
+    name: MET_SOURCE_NAME,
+    spacingMs: MET_REQUEST_SPACING_MS,
+    search: async (term) => (await searchMetObjectIds(term, { limit: 25 })).objectIDs ?? [],
+    ingest: ingestMetArtwork,
+  },
+  {
+    key: "aic",
+    name: "Art Institute of Chicago API",
+    spacingMs: AIC_REQUEST_SPACING_MS,
+    // 100 is AIC's documented per-page max (source register) — more candidates per
+    // spaced call, not a change to call frequency/rate-limit exposure.
+    search: async (term) => (await searchAicArtworkIds(term, { limit: 100 })).data.map(({ id }) => id),
+    ingest: ingestAicArtwork,
+  },
+  {
+    key: "cleveland",
+    name: CLEVELAND_SOURCE.name,
+    spacingMs: CLEVELAND_REQUEST_SPACING_MS,
+    search: (term) => searchClevelandArtworkIds(term, { limit: 50 }),
+    ingest: ingestClevelandArtwork,
+  },
+];
 
 async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
+export async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
   } catch {
@@ -35,7 +86,7 @@ export interface BulkIngestSummary {
 }
 
 /**
- * Gather candidate public-domain object ids from both sources across a curated set of
+ * Gather candidate public-domain object ids from every source in SOURCES across a curated set of
  * search terms, then ingest each through the existing single-object adapters (tickets 03,
  * 04) — this function adds volume, retry, rate-limit spacing, and IngestLog rows; it
  * doesn't duplicate the fetch/normalize/write logic itself.
@@ -45,7 +96,8 @@ export async function bulkIngest(
   {
     searchTerms,
     targetPerSource,
-  }: { searchTerms: string[]; targetPerSource: number }
+    sourceKeys,
+  }: { searchTerms: string[]; targetPerSource: number; sourceKeys?: string[] }
 ): Promise<BulkIngestSummary> {
   const summary: BulkIngestSummary = {
     attempted: 0,
@@ -56,57 +108,36 @@ export async function bulkIngest(
     aicImagesNotCached: 0,
   };
 
-  const metIds = await collectMetIds(searchTerms, targetPerSource);
-  for (const objectId of metIds) {
-    summary.attempted++;
-    try {
-      const result = await withRetry(() => ingestMetArtwork(prisma, objectId));
-      summary.succeeded++;
-      if (result.duplicateFlagged) summary.duplicatesFlagged++;
-      await logIngest(prisma, {
-        sourceName: MET_SOURCE_NAME,
-        externalId: String(objectId),
-        status: result.duplicateFlagged ? "flagged_duplicate" : "success",
-        message: result.duplicateFlagged ? "Slug collision — see DuplicateFlag" : undefined,
-        artworkId: result.artwork.id,
-      });
-    } catch (err) {
-      summary.failed++;
-      await logIngest(prisma, {
-        sourceName: MET_SOURCE_NAME,
-        externalId: String(objectId),
-        status: "failure",
-        message: err instanceof Error ? err.message : String(err),
-      });
-    }
-  }
-
-  const aicIds = await collectAicIds(searchTerms, targetPerSource);
-  for (const artworkId of aicIds) {
-    summary.attempted++;
-    await sleep(AIC_REQUEST_SPACING_MS);
-    try {
-      const result = await withRetry(() => ingestAicArtwork(prisma, artworkId));
-      summary.succeeded++;
-      if (result.imageCache?.status === "failed" || result.imageCache?.status === "skipped-no-token") {
-        summary.aicImagesNotCached++;
+  // Re-ingesting a source appends a fresh round of assertions, so a run can be limited to
+  // the sources that actually need it (say, only a newly added museum).
+  const sources = sourceKeys ? SOURCES.filter((s) => sourceKeys.includes(s.key)) : SOURCES;
+  for (const source of sources) {
+    const ids = await collectIds(source, searchTerms, targetPerSource);
+    for (const id of ids) {
+      summary.attempted++;
+      await sleep(source.spacingMs);
+      try {
+        const result = await withRetry(() => source.ingest(prisma, id));
+        summary.succeeded++;
+        const cacheStatus = result.imageCache?.status;
+        if (cacheStatus === "failed" || cacheStatus === "skipped-no-token") summary.aicImagesNotCached++;
+        if (result.duplicateFlagged) summary.duplicatesFlagged++;
+        await logIngest(prisma, {
+          sourceName: source.name,
+          externalId: String(id),
+          status: result.duplicateFlagged ? "flagged_duplicate" : "success",
+          message: result.duplicateFlagged ? "Slug collision — see DuplicateFlag" : undefined,
+          artworkId: result.artwork.id,
+        });
+      } catch (err) {
+        summary.failed++;
+        await logIngest(prisma, {
+          sourceName: source.name,
+          externalId: String(id),
+          status: "failure",
+          message: err instanceof Error ? err.message : String(err),
+        });
       }
-      if (result.duplicateFlagged) summary.duplicatesFlagged++;
-      await logIngest(prisma, {
-        sourceName: AIC_SOURCE_NAME,
-        externalId: String(artworkId),
-        status: result.duplicateFlagged ? "flagged_duplicate" : "success",
-        message: result.duplicateFlagged ? "Slug collision — see DuplicateFlag" : undefined,
-        artworkId: result.artwork.id,
-      });
-    } catch (err) {
-      summary.failed++;
-      await logIngest(prisma, {
-        sourceName: AIC_SOURCE_NAME,
-        externalId: String(artworkId),
-        status: "failure",
-        message: err instanceof Error ? err.message : String(err),
-      });
     }
   }
 
@@ -114,12 +145,12 @@ export async function bulkIngest(
   return summary;
 }
 
-async function collectMetIds(searchTerms: string[], target: number): Promise<number[]> {
+async function collectIds(source: BulkSource, searchTerms: string[], target: number): Promise<number[]> {
   const ids = new Set<number>();
   for (const term of searchTerms) {
     if (ids.size >= target) break;
-    const { objectIDs } = await searchMetObjectIds(term, { limit: 25 });
-    for (const id of objectIDs ?? []) {
+    await sleep(source.spacingMs);
+    for (const id of await source.search(term)) {
       if (ids.size >= target) break;
       ids.add(id);
     }
@@ -127,21 +158,7 @@ async function collectMetIds(searchTerms: string[], target: number): Promise<num
   return Array.from(ids);
 }
 
-async function collectAicIds(searchTerms: string[], target: number): Promise<number[]> {
-  const ids = new Set<number>();
-  for (const term of searchTerms) {
-    if (ids.size >= target) break;
-    await sleep(AIC_REQUEST_SPACING_MS);
-    const { data } = await searchAicArtworkIds(term, { limit: 15 });
-    for (const { id } of data) {
-      if (ids.size >= target) break;
-      ids.add(id);
-    }
-  }
-  return Array.from(ids);
-}
-
-async function logIngest(
+export async function logIngest(
   prisma: PrismaClient,
   entry: { sourceName: string; externalId: string; status: string; message?: string; artworkId?: string }
 ) {

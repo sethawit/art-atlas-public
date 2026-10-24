@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ArtFrame } from "@/components/ArtImage";
 import type { PassportEntry } from "@/lib/passport/storage";
 import { getAllEntries } from "@/lib/passport/storage";
-import ArtworkImage from "@/components/ArtworkImage";
 
 /** Saved works filtered to one city (ticket 11's tie-in to ticket 10's city page). Client-only, same reason as PassportControls. */
 export default function CitySavedWorks({ cityName }: { cityName: string }) {
@@ -22,18 +22,17 @@ export default function CitySavedWorks({ cityName }: { cityName: string }) {
     <section aria-labelledby="saved-heading">
       <h2 id="saved-heading">Your saved works in {cityName}</h2>
       {entries.length === 0 ? (
-        <p>Nothing saved here yet — saved works are stored on this device only.</p>
+        <p className="muted">Nothing saved here yet. Saved works are stored on this device only.</p>
       ) : (
-        <ul>
+        <ul className="card-grid card-grid--compact">
           {entries.map((entry) => (
             <li key={entry.artworkSlug}>
               <Link href={`/artwork/${entry.artworkSlug}`}>
-                {entry.imageUrl && <ArtworkImage src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={100} loading="lazy" />}
-                {entry.title}
+                <ArtFrame src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} />
+                <p>{entry.title}</p>
               </Link>
-              {entry.artistName && <> — {entry.artistName}</>}
-              {" — "}
-              {entry.statuses.join(", ").replace(/_/g, " ")}
+              {entry.artistName && <p>{entry.artistName}</p>}
+              <p>{entry.statuses.join(", ").replace(/_/g, " ")}</p>
             </li>
           ))}
         </ul>

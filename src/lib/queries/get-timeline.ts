@@ -58,9 +58,20 @@ export async function getTimeline(prisma: PrismaClient, filters: TimelineFilters
       ...(filters.placeOrCulture ? { placeOrCulture: filters.placeOrCulture } : {}),
       ...(filters.medium ? { physicalObjects: { some: { medium: { contains: filters.medium, mode: "insensitive" } } } } : {}),
     },
-    include: {
-      artist: true,
-      physicalObjects: { include: { images: { where: { removedAt: null }, take: 1 } } },
+    // Only the columns the timeline renders: this reads every dated artwork, so full rows
+    // (and full image records) made it the slowest page on the site.
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      placeOrCulture: true,
+      artist: { select: { name: true } },
+      physicalObjects: {
+        select: {
+          medium: true,
+          images: { where: { removedAt: null }, take: 1, select: { sourceUrl: true, altText: true } },
+        },
+      },
     },
   });
   const artworkById = new Map(artworks.map((a) => [a.id, a]));

@@ -1,12 +1,22 @@
-// Usage: npx tsx scripts/bulk-ingest.ts [targetPerSource] [searchTerm...]
-// Pulls up to targetPerSource (default 30) public-domain artworks from each of the Met
-// and AIC across a curated set of search terms, ingesting through the same adapters
-// tickets 03/04 built. See .scratch/art-atlas-mvp/issues/05-bulk-ingest-admin-review.md.
+// Usage: npx tsx scripts/bulk-ingest.ts [--source=met,aic,cleveland] [targetPerSource] [searchTerm...]
+// Pulls up to targetPerSource (default 30) public-domain artworks from each source (all
+// of them unless --source narrows it) across a curated set of search terms, ingesting
+// through the same per-source adapters. See .scratch/art-atlas-mvp/issues/05-bulk-ingest-admin-review.md.
 import { prisma } from "@/lib/prisma";
-import { bulkIngest } from "@/lib/ingest/bulk-ingest";
+import { bulkIngest, SOURCES } from "@/lib/ingest/bulk-ingest";
 
-const targetPerSource = Number(process.argv[2]) || 30;
-const customTerms = process.argv.slice(3);
+const args = process.argv.slice(2);
+const sourceFlag = args.find((a) => a.startsWith("--source="));
+const positional = args.filter((a) => a !== sourceFlag);
+const sourceKeys = sourceFlag?.slice("--source=".length).split(",");
+const unknown = sourceKeys?.filter((k) => !SOURCES.some((s) => s.key === k)) ?? [];
+if (unknown.length > 0) {
+  console.error(`Unknown source(s): ${unknown.join(", ")}. Known: ${SOURCES.map((s) => s.key).join(", ")}`);
+  process.exit(1);
+}
+
+const targetPerSource = Number(positional[0]) || 30;
+const customTerms = positional.slice(1);
 
 // Deliberately diverse — spans several artists/subjects/museums so the run naturally
 // exercises the duplicate-flag path (e.g. multiple different "Self-Portrait" works)
@@ -24,7 +34,7 @@ const DEFAULT_SEARCH_TERMS = [
 
 const searchTerms = customTerms.length > 0 ? customTerms : DEFAULT_SEARCH_TERMS;
 
-const summary = await bulkIngest(prisma, { searchTerms, targetPerSource });
+const summary = await bulkIngest(prisma, { searchTerms, targetPerSource, sourceKeys });
 
 console.log("Bulk ingest complete:");
 console.log(`  Attempted: ${summary.attempted}`);

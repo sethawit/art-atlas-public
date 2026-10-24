@@ -12,7 +12,7 @@ import { isDisplayStatusStale, DISPLAY_STATUS_FRESHNESS_DAYS } from "@/lib/insti
 import { getJourney } from "@/lib/queries/get-journey";
 import { slugify } from "@/lib/ingest/normalize-met";
 import { proxiedImageUrl } from "@/lib/images/proxied-image-url";
-import ArtworkImage from "@/components/ArtworkImage";
+import ArtImage, { ArtFrame } from "@/components/ArtImage";
 
 // Ticket 03 scope: Overview, Understand, and Sources. Ticket 09 adds Related pieces.
 // Ticket 13 adds Where to see it as its own tab (§6 lists six: Overview, Understand,
@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     physicalObject?.institution?.name,
   ]
     .filter(Boolean)
-    .join(" — ");
+    .join(" · ");
 
   return {
     title,
@@ -70,16 +70,20 @@ export default async function ArtworkPage({
   const bioAssertion = fields.get("artistBio");
   const tagsAssertion = fields.get("subjectTags");
   const recordUrlAssertion = fields.get("sourceRecordUrl");
-  const relatedPieces = await getRelatedPieces(prisma, artwork.id);
-  const looksFamiliar = await getLooksFamiliar(prisma, artwork.id);
+  // Independent reads, so they run concurrently: awaited one after another they cost a
+  // full database round trip each, which dominated this page's load time.
+  const [relatedPieces, looksFamiliar, whatElse, journey] = await Promise.all([
+    getRelatedPieces(prisma, artwork.id),
+    getLooksFamiliar(prisma, artwork.id),
+    getWhatElseWasHappening(prisma, artwork.id),
+    physicalObject ? getJourney(prisma, physicalObject.id) : { ownership: [], exhibitions: [] },
+  ]);
   const familiarGroups: { heading: string; entries: FamiliarEntry[] }[] = [
     { heading: "Shares a subject", entries: looksFamiliar.subject },
     { heading: "Shares a technique or medium", entries: looksFamiliar.technique },
     { heading: "Shares a movement", entries: looksFamiliar.movement },
     { heading: "A documented influence", entries: looksFamiliar.documentedInfluence },
   ].filter((g) => g.entries.length > 0);
-  const whatElse = await getWhatElseWasHappening(prisma, artwork.id);
-  const journey = physicalObject ? await getJourney(prisma, physicalObject.id) : { ownership: [], exhibitions: [] };
   const displayStatusAssertion = physicalObject?.locationAssertions.find((a) => a.field === "displayStatus") ?? null;
   const publicAccessAssertion = physicalObject?.locationAssertions.find((a) => a.field === "publicAccess") ?? null;
   const locationRetrievedAt = displayStatusAssertion?.retrievedAt ?? publicAccessAssertion?.retrievedAt ?? null;
@@ -115,62 +119,91 @@ export default async function ArtworkPage({
   return (
     <main>
       <article>
-        <header>
-          <h1>{artwork.title}</h1>
-          <p className="entry-meta">
-            {artwork.artist && <span>{artwork.artist.name}</span>}
-            {dateAssertion && (
-              <span>
-                {dateAssertion.value}
-                {dateAssertion.precision === "approximate" && " (approximate)"}
-                {dateAssertion.precision === "disputed" && " (disputed)"}
+        <div className="artwork-top">
+          <div className="artwork-aside">
+            <header>
+              <h1>{artwork.title}</h1>
+              <p className="entry-meta">
+                {artwork.artist && (
+                  <span>
+                    <Link href={`/artist/${artwork.artist.slug}`}>{artwork.artist.name}</Link>
+                  </span>
+                )}
+                {dateAssertion && (
+                  <span>
+                    {dateAssertion.value}
+                    {dateAssertion.precision === "approximate" && " (approximate)"}
+                    {dateAssertion.precision === "disputed" && " (disputed)"}
+                  </span>
+                )}
+                {physicalObject?.institution && (
+                  <span>
+                    <Link href={`/museum/${physicalObject.institution.slug}`}>{physicalObject.institution.name}</Link>
+                  </span>
+                )}
+              </p>
+            </header>
+
+            <PassportControls snapshot={passportSnapshot} />
+
+            <section aria-labelledby="overview-heading">
+              <h2 id="overview-heading">Overview</h2>
+              <dl>
+                {physicalObject?.medium && (
+                  <>
+                    <dt>Medium</dt>
+                    <dd>{physicalObject.medium}</dd>
+                  </>
+                )}
+                {physicalObject?.dimensions && (
+                  <>
+                    <dt>Dimensions</dt>
+                    <dd>{physicalObject.dimensions}</dd>
+                  </>
+                )}
+                {physicalObject?.accessionNumber && (
+                  <>
+                    <dt>Accession number</dt>
+                    <dd>{physicalObject.accessionNumber}</dd>
+                  </>
+                )}
+                {physicalObject?.institution && (
+                  <>
+                    <dt>On view</dt>
+                    <dd>
+                      <span
+                        className={`status-tag ${physicalObject.displayStatus === "on_display" ? "status-tag--verified" : "status-tag--unverified"}`}
+                      >
+                        {(physicalObject.displayStatus ?? "unconfirmed").replace(/_/g, " ")}
+                      </span>{" "}
+                      <a href="#where-heading">Details</a>
+                    </dd>
+                  </>
+                )}
+              </dl>
+            </section>
+          </div>
+
+          {image ? (
+            <figure className="plate">
+              {/* Full artwork view, not a cropped preview — §12. */}
+              <span className="frame">
+                <ArtImage
+                  src={proxiedImageUrl(image.sourceUrl)}
+                  alt={image.altText ?? artwork.title}
+                  sizes="(min-width: 1024px) 60vw, 100vw"
+                  preload
+                  hiRes
+                />
               </span>
-            )}
-            {physicalObject?.institution && (
-              <span>
-                <Link href={`/museum/${physicalObject.institution.slug}`}>{physicalObject.institution.name}</Link>
-              </span>
-            )}
-          </p>
-        </header>
+              {image.credit && <figcaption>{image.credit}</figcaption>}
+            </figure>
+          ) : (
+            <p role="status">Image unavailable. This piece is not cleared for open-access display.</p>
+          )}
+        </div>
 
-        {image ? (
-          <figure className="plate">
-            {/* Full artwork view, not a cropped preview — §12. */}
-            <ArtworkImage src={proxiedImageUrl(image.sourceUrl)} alt={image.altText ?? artwork.title} />
-            {image.credit && <figcaption>{image.credit}</figcaption>}
-          </figure>
-        ) : (
-          <p role="status">Image unavailable — this piece is not cleared for open-access display.</p>
-        )}
-
-        <PassportControls snapshot={passportSnapshot} />
-
-        <section aria-labelledby="overview-heading">
-          <h2 id="overview-heading">Overview</h2>
-          <dl>
-            {physicalObject?.medium && (
-              <>
-                <dt>Medium</dt>
-                <dd>{physicalObject.medium}</dd>
-              </>
-            )}
-            {physicalObject?.dimensions && (
-              <>
-                <dt>Dimensions</dt>
-                <dd>{physicalObject.dimensions}</dd>
-              </>
-            )}
-            {physicalObject?.accessionNumber && (
-              <>
-                <dt>Accession number</dt>
-                <dd>{physicalObject.accessionNumber}</dd>
-              </>
-            )}
-          </dl>
-        </section>
-
-        <section aria-labelledby="understand-heading">
+        <section aria-labelledby="understand-heading" className="entry">
           <h2 id="understand-heading">Understand</h2>
           {bioAssertion && <p>{bioAssertion.value}</p>}
           {tagsAssertion && (
@@ -179,30 +212,31 @@ export default async function ArtworkPage({
               {tagsAssertion.value}
             </p>
           )}
-          {!bioAssertion && !tagsAssertion && <p>No interpretive notes yet for this piece.</p>}
+          {!bioAssertion && !tagsAssertion && <p className="muted">No interpretive notes yet for this piece.</p>}
         </section>
 
-        <section aria-labelledby="related-heading">
+        <section aria-labelledby="related-heading" className="entry">
           <h2 id="related-heading">Related pieces</h2>
           {relatedPieces.length === 0 ? (
-            <p>No documented related pieces yet for this work.</p>
+            <p className="muted">No documented related pieces yet for this work.</p>
           ) : (
-            <>
-              <p>
+            <div>
+              <p className="muted">
                 {relatedPieces.length} documented piece{relatedPieces.length === 1 ? "" : "s"} in our
-                catalogue — coverage is partial, not a claim of completeness.
+                catalogue. Coverage is partial, not a claim of completeness.
               </p>
-              <nav aria-label="Related pieces view">
-                <Link href={`/artwork/${slug}?relatedView=grid`} aria-current={relatedView === "grid" || undefined}>
+              <nav aria-label="Related pieces view" className="segmented">
+                <Link href={`/artwork/${slug}?relatedView=grid`} aria-current={relatedView === "grid" || undefined} scroll={false}>
                   Grid
-                </Link>{" "}
+                </Link>
                 <Link
                   href={`/artwork/${slug}?relatedView=comparison`}
                   aria-current={relatedView === "comparison" || undefined}
+                  scroll={false}
                 >
                   Comparison
-                </Link>{" "}
-                <Link href={`/artwork/${slug}?relatedView=map`} aria-current={relatedView === "map" || undefined}>
+                </Link>
+                <Link href={`/artwork/${slug}?relatedView=map`} aria-current={relatedView === "map" || undefined} scroll={false}>
                   Map
                 </Link>
               </nav>
@@ -216,28 +250,24 @@ export default async function ArtworkPage({
                     return (
                       <li key={rp.relationship.id}>
                         <Link href={`/artwork/${rp.artwork.slug}`}>
-                          {rpImage && (
-                            <ArtworkImage src={proxiedImageUrl(rpImage.sourceUrl)} alt={rpImage.altText ?? rp.artwork.title} width={160} loading="lazy" />
-                          )}
+                          <ArtFrame src={proxiedImageUrl(rpImage?.sourceUrl)} alt={rpImage?.altText ?? rp.artwork.title} />
                           <p>{rp.artwork.title}</p>
                         </Link>
                         {rp.artwork.artist && <p>{rp.artwork.artist.name}</p>}
                         {rp.date && <p>{rp.date}</p>}
                         <p>
-                          <strong>{rp.label}</strong> — {rp.explanation}
+                          <strong>{rp.label}.</strong> {rp.explanation}
                         </p>
                         {rpInstitution && <p>{rpInstitution.name}</p>}
-                        <p>
+                        <p className="card-foot">
                           <span
                             className={`status-tag ${rpDisplayStatus === "on_display" ? "status-tag--verified" : "status-tag--unverified"}`}
                           >
                             {rpDisplayStatus.replace(/_/g, " ")}
                           </span>
-                        </p>
-                        <p>
-                          Source: <a href={rp.evidenceSource.url}>{rp.evidenceSource.name}</a>
-                        </p>
-                        <p>
+                          <span>
+                            Source: <a href={rp.evidenceSource.url}>{rp.evidenceSource.name}</a>
+                          </span>
                           <Link href={`/compare?slug=${artwork.slug}&slug=${rp.artwork.slug}`}>
                             Compare with this work
                           </Link>
@@ -266,7 +296,11 @@ export default async function ArtworkPage({
                   <tbody>
                     <tr>
                       <td data-label="Image">
-                        {image && <ArtworkImage src={proxiedImageUrl(image.sourceUrl)} alt={image.altText ?? artwork.title} width={100} loading="lazy" />}
+                        {image && (
+                          <span className="frame" style={{ width: 96 }}>
+                            <ArtImage src={proxiedImageUrl(image.sourceUrl)} alt={image.altText ?? artwork.title} sizes="96px" />
+                          </span>
+                        )}
                       </td>
                       <td data-label="Title">{artwork.title} (this work)</td>
                       <td data-label="Artist">{artwork.artist?.name}</td>
@@ -274,7 +308,9 @@ export default async function ArtworkPage({
                       <td data-label="Medium">{physicalObject?.medium}</td>
                       <td data-label="Dimensions">{physicalObject?.dimensions}</td>
                       <td data-label="Collection">{physicalObject?.institution?.name}</td>
-                      <td data-label="Relationship">—</td>
+                      <td data-label="Relationship">
+                        <span aria-label="Not applicable">n/a</span>
+                      </td>
                     </tr>
                     {relatedPieces.slice(0, 3).map((rp) => {
                       const rpImage = rp.artwork.physicalObjects.flatMap((po) => po.images)[0];
@@ -283,7 +319,13 @@ export default async function ArtworkPage({
                         <tr key={rp.relationship.id}>
                           <td data-label="Image">
                             {rpImage && (
-                              <ArtworkImage src={proxiedImageUrl(rpImage.sourceUrl)} alt={rpImage.altText ?? rp.artwork.title} width={100} loading="lazy" />
+                              <span className="frame" style={{ width: 96 }}>
+                                <ArtImage
+                                  src={proxiedImageUrl(rpImage.sourceUrl)}
+                                  alt={rpImage.altText ?? rp.artwork.title}
+                                  sizes="96px"
+                                />
+                              </span>
                             )}
                           </td>
                           <td data-label="Title">
@@ -302,19 +344,21 @@ export default async function ArtworkPage({
                 </table>
               )}
               {relatedView === "comparison" && (
-                <p>
-                  Screen size doesn&apos;t reflect physical scale — see the Dimensions column for
+                <p className="fine-print">
+                  Screen size doesn&apos;t reflect physical scale. See the Dimensions column for
                   documented measurements.
                 </p>
               )}
 
               {relatedView === "map" && (
                 <>
-                  <p>Grouped by holding institution (an accessible list — a pinned map is on the roadmap).</p>
-                  <ul>
+                  <p>Grouped by holding institution (an accessible list; a pinned map is on the roadmap).</p>
+                  <ul className="index-list">
                     {mapInstitutions.map((institution) => (
                       <li key={institution.id}>
-                        <Link href={`/museum/${institution.slug}`}>{institution.name}</Link>
+                        <Link href={`/museum/${institution.slug}`}>
+                          <strong>{institution.name}</strong>
+                        </Link>
                         <ul>
                           {mapEntries
                             .filter((entry) => entry.institution?.slug === institution.slug)
@@ -333,27 +377,27 @@ export default async function ArtworkPage({
                   </ul>
                 </>
               )}
-            </>
+            </div>
           )}
         </section>
 
-        <section aria-labelledby="familiar-heading">
+        <section aria-labelledby="familiar-heading" className="entry">
           <h2 id="familiar-heading">Why does this look familiar?</h2>
-          <p>
-            Pattern matches over data already in our catalogue — a resemblance, not a claim of
+          <p className="muted">
+            Pattern matches over data already in our catalogue: a resemblance, not a claim of
             historical connection the way a documented related piece is.
           </p>
           {familiarGroups.length === 0 ? (
-            <p>No pattern matches found for this piece yet.</p>
+            <p className="muted">No pattern matches found for this piece yet.</p>
           ) : (
             familiarGroups.map((group) => (
               <div key={group.heading}>
                 <h3>{group.heading}</h3>
-                <ul className="card-grid">
+                <ul className="card-grid card-grid--compact">
                   {group.entries.map((entry) => (
                     <li key={entry.slug}>
                       <Link href={`/artwork/${entry.slug}`}>
-                        {entry.imageUrl && <ArtworkImage src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={120} loading="lazy" />}
+                        <ArtFrame src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} />
                         <p>{entry.title}</p>
                       </Link>
                       {entry.artistName && <p>{entry.artistName}</p>}
@@ -366,27 +410,25 @@ export default async function ArtworkPage({
           )}
         </section>
 
-        <section aria-labelledby="contemporaries-heading">
+        <section aria-labelledby="contemporaries-heading" className="entry">
           <h2 id="contemporaries-heading">What else was happening then?</h2>
           {whatElse.entries.length === 0 ? (
-            <p>
+            <p className="muted">
               We don&apos;t have a confident date for this piece, so we can&apos;t place it against
               its contemporaries yet.
             </p>
           ) : (
-            <>
-              <p>
-                Other works in our catalogue made within about {whatElse.windowYears} years —
-                dates are often themselves approximate, and a shared era isn&apos;t evidence of any
+            <div>
+              <p className="muted">
+                Other works in our catalogue made within about {whatElse.windowYears} years. Dates
+                are often themselves approximate, and a shared era isn&apos;t evidence of any
                 connection between the pieces.
               </p>
-              <ul className="card-grid">
+              <ul className="card-grid card-grid--compact">
                 {whatElse.entries.map((entry) => (
                   <li key={entry.slug}>
                     <Link href={`/artwork/${entry.slug}`}>
-                      {entry.imageUrl && (
-                        <ArtworkImage src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={120} loading="lazy" />
-                      )}
+                      <ArtFrame src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} />
                       <p>{entry.title}</p>
                     </Link>
                     {entry.artistName && <p>{entry.artistName}</p>}
@@ -399,14 +441,14 @@ export default async function ArtworkPage({
                   </li>
                 ))}
               </ul>
-            </>
+            </div>
           )}
         </section>
 
-        <section aria-labelledby="where-heading">
+        <section aria-labelledby="where-heading" className="entry">
           <h2 id="where-heading">Where to see it</h2>
           {physicalObject?.institution ? (
-            <>
+            <div>
               <dl>
                 <dt>Institution</dt>
                 <dd>
@@ -440,7 +482,7 @@ export default async function ArtworkPage({
                 </dd>
               </dl>
               {(displayStatusAssertion || publicAccessAssertion) && (
-                <p>
+                <p className="muted">
                   {displayStatusAssertion && (
                     <>
                       {displayStatusAssertion.sourceStatement} ({displayStatusAssertion.verificationStatus})
@@ -458,7 +500,7 @@ export default async function ArtworkPage({
                 <p role="status">
                   We haven&apos;t reverified this display status and public access against
                   the source in over {DISPLAY_STATUS_FRESHNESS_DAYS} days (last checked{" "}
-                  {locationRetrievedAt.toISOString().slice(0, 10)}) — treat it as
+                  {locationRetrievedAt.toISOString().slice(0, 10)}). Treat it as
                   possibly out of date.
                 </p>
               )}
@@ -471,32 +513,34 @@ export default async function ArtworkPage({
                   >
                     Official visit information
                   </a>
-                  {" — "}an institution holding a work, or a general museum-access grant,
-                  doesn&apos;t establish that this specific piece is currently on view.
-                  Check before visiting.
+                  <span className="muted">
+                    . An institution holding a work, or a general museum-access grant,
+                    doesn&apos;t establish that this specific piece is currently on view.
+                    Check before visiting.
+                  </span>
                 </p>
               )}
-            </>
+            </div>
           ) : (
             <p role="status">No holding institution on record for this piece.</p>
           )}
         </section>
 
-        <section aria-labelledby="journey-heading">
+        <section aria-labelledby="journey-heading" className="entry">
           <h2 id="journey-heading">Journey</h2>
           {journey.ownership.length === 0 && journey.exhibitions.length === 0 ? (
-            <p>
-              No documented ownership or exhibition history for this piece yet — most of
+            <p className="muted">
+              No documented ownership or exhibition history for this piece yet. Most of
               our catalogue doesn&apos;t have this level of research done. Not the same as
               an unowned or unexhibited work; simply undocumented here.
             </p>
           ) : (
-            <>
+            <div>
               {journey.ownership.length > 0 && (
                 <div>
                   <h3>Ownership</h3>
-                  <p>
-                    In the source&apos;s own order, shown verbatim — not split into
+                  <p className="fine-print">
+                    In the source&apos;s own order, shown verbatim, not split into
                     separate owner/date fields, since doing that reliably from prose risks
                     misattributing an agent as an owner or guessing a date the text
                     doesn&apos;t clearly give.
@@ -506,7 +550,7 @@ export default async function ArtworkPage({
                       <li key={event.sequence}>{event.description}</li>
                     ))}
                   </ol>
-                  <p>
+                  <p className="fine-print">
                     Source:{" "}
                     <a href={journey.ownership[0].sourceUrl} target="_blank" rel="noopener noreferrer">
                       {journey.ownership[0].sourceName}
@@ -522,7 +566,7 @@ export default async function ArtworkPage({
                       <li key={event.sequence}>{event.description}</li>
                     ))}
                   </ol>
-                  <p>
+                  <p className="fine-print">
                     Source:{" "}
                     <a href={journey.exhibitions[0].sourceUrl} target="_blank" rel="noopener noreferrer">
                       {journey.exhibitions[0].sourceName}
@@ -530,18 +574,20 @@ export default async function ArtworkPage({
                   </p>
                 </div>
               )}
-            </>
+            </div>
           )}
         </section>
 
-        <section aria-labelledby="sources-heading">
+        <section aria-labelledby="sources-heading" className="entry">
           <h2 id="sources-heading">Sources</h2>
-          <ul>
+          <ul className="sources-list">
             {Array.from(fields.values())
               .filter((a) => a.field !== "sourceRecordUrl")
               .map((a) => (
                 <li key={a.id}>
-                  <strong>{a.field}:</strong> {a.value} — {a.source.name}
+                  <strong>{a.field}</strong> {a.value}
+                  <span className="sep" />
+                  {a.source.name}
                   {recordUrlAssertion && (
                     <>
                       {", "}

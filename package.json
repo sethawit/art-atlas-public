@@ -19,7 +19,8 @@
     "movements:normalize": "tsx scripts/normalize-movements.ts",
     "backfill:place-or-culture": "tsx scripts/backfill-place-or-culture.ts",
     "refresh:location": "tsx scripts/refresh-location-data.ts",
-    "cache:aic-images": "tsx scripts/cache-aic-images.ts"
+    "cache:aic-images": "tsx scripts/cache-aic-images.ts",
+    "retry:met-failures": "tsx scripts/retry-met-failures.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",

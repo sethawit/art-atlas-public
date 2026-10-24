@@ -1,8 +1,8 @@
-// Static, real, publicly verifiable reference data for Phase 1's two institutions — not
+// Static, real, publicly verifiable reference data for the catalogue's institutions — not
 // "sourced content" needing an Assertion/citation the way ingested object facts do (same
 // category as normalize-met.ts's hardcoded Open Access policy URL): official visit pages
 // and public geographic coordinates, stable facts about the institutions themselves.
-// A slug not listed here (a future third institution) degrades gracefully — see callers.
+// A slug not listed here (a future institution) degrades gracefully — see callers.
 export interface InstitutionReference {
   visitUrl: string;
   lat: number;
@@ -19,5 +19,10 @@ export const INSTITUTION_REFERENCE: Record<string, InstitutionReference> = {
     visitUrl: "https://www.artic.edu/visit",
     lat: 41.8796,
     lng: -87.6237,
+  },
+  "cleveland-museum-of-art": {
+    visitUrl: "https://www.clevelandart.org/visit",
+    lat: 41.5089,
+    lng: -81.6119,
   },
 };

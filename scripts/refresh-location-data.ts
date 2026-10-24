@@ -10,11 +10,15 @@
 import { prisma } from "@/lib/prisma";
 import { fetchMetObject } from "@/lib/met/client";
 import { fetchAicGalleryLocation } from "@/lib/aic/client";
+import { fetchClevelandGalleryLocation } from "@/lib/cleveland/client";
+import { CLEVELAND_SOURCE } from "@/lib/ingest/ingest-cleveland-artwork";
 import { refreshLocationData } from "@/lib/ingest/refresh-location-data";
+import { MET_REQUEST_SPACING_MS } from "@/lib/ingest/bulk-ingest";
 
 const MET_SOURCE = { name: "Met Collection API", url: "https://collectionapi.metmuseum.org/public/collection/v1" };
 const AIC_SOURCE = { name: "Art Institute of Chicago API", url: "https://api.artic.edu/api/v1" };
 const AIC_REQUEST_SPACING_MS = 1100;
+const CLEVELAND_REQUEST_SPACING_MS = 500;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -27,6 +31,7 @@ const physicalObjects = await prisma.physicalObject.findMany({
 
 let metCount = 0;
 let aicCount = 0;
+let clevelandCount = 0;
 let nowOnDisplay = 0;
 let failed = 0;
 
@@ -35,6 +40,9 @@ for (const po of physicalObjects) {
   try {
     if (url.includes("metmuseum.org")) {
       const objectId = Number(url.split("/").pop());
+      // Same real burst-403 issue diagnosed in bulk-ingest.ts (ticket 32) — this script
+      // had zero Met-side spacing before.
+      await sleep(MET_REQUEST_SPACING_MS);
       const raw = await fetchMetObject(objectId);
       const result = await refreshLocationData(prisma, po.id, raw.GalleryNumber?.trim() || null, MET_SOURCE);
       if (result.displayStatus === "on_display") nowOnDisplay++;
@@ -46,6 +54,12 @@ for (const po of physicalObjects) {
       const result = await refreshLocationData(prisma, po.id, galleryLocation, AIC_SOURCE);
       if (result.displayStatus === "on_display") nowOnDisplay++;
       aicCount++;
+    } else if (url.includes("clevelandart.org")) {
+      await sleep(CLEVELAND_REQUEST_SPACING_MS);
+      const galleryLocation = await fetchClevelandGalleryLocation(url.split("/").pop()!);
+      const result = await refreshLocationData(prisma, po.id, galleryLocation, CLEVELAND_SOURCE);
+      if (result.displayStatus === "on_display") nowOnDisplay++;
+      clevelandCount++;
     } else {
       console.warn(`Unrecognized source URL, skipped: ${url}`);
     }
@@ -55,7 +69,9 @@ for (const po of physicalObjects) {
   }
 }
 
-console.log(`Location refresh complete: ${metCount} Met, ${aicCount} AIC, ${failed} failed.`);
-console.log(`Now on_display: ${nowOnDisplay} / ${metCount + aicCount}.`);
+console.log(
+  `Location refresh complete: ${metCount} Met, ${aicCount} AIC, ${clevelandCount} Cleveland, ${failed} failed.`
+);
+console.log(`Now on_display: ${nowOnDisplay} / ${metCount + aicCount + clevelandCount}.`);
 
 await prisma.$disconnect();
