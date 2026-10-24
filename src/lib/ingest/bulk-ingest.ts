@@ -30,7 +30,10 @@ interface BulkSource {
   name: string;
   spacingMs: number;
   search(term: string): Promise<number[]>;
-  ingest(prisma: PrismaClient, id: number): Promise<{ artwork: { id: string }; duplicateFlagged: boolean }>;
+  ingest(
+    prisma: PrismaClient,
+    id: number
+  ): Promise<{ artwork: { id: string }; duplicateFlagged: boolean; imageCache?: { status: string } | null }>;
 }
 
 export const SOURCES: BulkSource[] = [
@@ -78,6 +81,8 @@ export interface BulkIngestSummary {
   failed: number;
   duplicatesFlagged: number;
   withoutEligibleImage: number;
+  /** AIC images that couldn't be cached in Blob during ingest (failed, or no token set). */
+  aicImagesNotCached: number;
 }
 
 /**
@@ -100,6 +105,7 @@ export async function bulkIngest(
     failed: 0,
     duplicatesFlagged: 0,
     withoutEligibleImage: 0,
+    aicImagesNotCached: 0,
   };
 
   // Re-ingesting a source appends a fresh round of assertions, so a run can be limited to
@@ -113,6 +119,8 @@ export async function bulkIngest(
       try {
         const result = await withRetry(() => source.ingest(prisma, id));
         summary.succeeded++;
+        const cacheStatus = result.imageCache?.status;
+        if (cacheStatus === "failed" || cacheStatus === "skipped-no-token") summary.aicImagesNotCached++;
         if (result.duplicateFlagged) summary.duplicatesFlagged++;
         await logIngest(prisma, {
           sourceName: source.name,

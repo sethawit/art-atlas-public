@@ -555,6 +555,20 @@ main {
   transition: transform 0.6s var(--ease);
 }
 
+/* Stand-in for a failed image in the admin view (src/components/ArtworkImage.tsx). */
+.image-placeholder {
+  display: grid;
+  place-items: center;
+  width: var(--placeholder-width, 100%);
+  max-width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--wall);
+  border: 1px dashed var(--line-strong);
+  color: var(--ink-faint);
+  font-size: 0.85rem;
+  padding: var(--space-2);
+}
+
 .frame__empty {
   position: absolute;
   inset: 0;

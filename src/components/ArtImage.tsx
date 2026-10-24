@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
 // Met source images are often multi-megabyte originals (an 8 MB JPEG for a single card
@@ -43,8 +46,31 @@ export default function ArtImage({
   hiRes?: boolean;
 }) {
   const optimizable = isOptimizable(src);
+  // Keyed by src, so a new src (e.g. a client-side navigation) gets a fresh attempt.
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // A server-rendered <img> can fail before React hydrates and attaches onError, so the
+  // event is missed; check once after mount whether it already finished without pixels.
+  useEffect(() => {
+    const img = imgRef.current;
+    if (img && img.complete && img.naturalWidth === 0) setFailedSrc(src);
+  }, [src]);
+
+  // Some sources refuse a handful of their own images (AIC 403s/404s a few, ticket 31),
+  // so a failed load shows a labelled frame instead of the broken-image icon.
+  if (failedSrc === src) {
+    return (
+      <span role="img" aria-label={`${alt} (image unavailable)`} className="frame__empty">
+        <span aria-hidden="true">Image unavailable</span>
+      </span>
+    );
+  }
+
   return (
     <Image
+      ref={imgRef}
+      onError={() => setFailedSrc(src)}
       src={optimizable && !hiRes ? metWebLarge(src) : src}
       alt={alt}
       fill

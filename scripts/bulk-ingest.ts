@@ -42,6 +42,10 @@ console.log(`  Succeeded: ${summary.succeeded}`);
 console.log(`  Failed: ${summary.failed}`);
 console.log(`  Flagged as possible duplicates: ${summary.duplicatesFlagged}`);
 console.log(`  Artworks without an eligible image: ${summary.withoutEligibleImage}`);
+console.log(`  AIC images not cached in Blob: ${summary.aicImagesNotCached}`);
+if (summary.aicImagesNotCached > 0) {
+  console.log("    Run npm run cache:aic-images to retry them (needs BLOB_READ_WRITE_TOKEN).");
+}
 
 const totalArtworks = await prisma.artwork.count();
 console.log(`  Total artworks in catalogue: ${totalArtworks}`);
