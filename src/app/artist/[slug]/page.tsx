@@ -4,6 +4,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getArtistBySlug } from "@/lib/queries/get-artist-by-slug";
 import { proxiedImageUrl } from "@/lib/images/proxied-image-url";
+import { ArtFrame } from "@/components/ArtImage";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -24,19 +25,22 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
 
   return (
     <main>
-      <h1>{artist.name}</h1>
+      <header className="page-head">
+        <p className="label">Artist</p>
+        <h1>{artist.name}</h1>
+      </header>
 
-      <dl>
+      <dl style={{ maxWidth: "40rem" }}>
         <dt>Nationality</dt>
         <dd>{bio?.nationality ?? "Unknown"}</dd>
         <dt>Lifespan</dt>
         <dd>{bio?.lifespanYears ?? "Unknown"}</dd>
         <dt>Places</dt>
-        <dd>Not separately extracted — see biography below, when available.</dd>
+        <dd>Not separately extracted. See biography below, when available.</dd>
       </dl>
 
-      {bio?.raw && <p>{bio.raw}</p>}
-      {!bio && <p>No sourced biography captured for this artist yet.</p>}
+      {bio?.raw && <p className="lede">{bio.raw}</p>}
+      {!bio && <p className="muted">No sourced biography captured for this artist yet.</p>}
 
       {styles.length > 0 && (
         <p>
@@ -62,10 +66,12 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
         </p>
       )}
 
-      <p>Related artists — coming soon (no verified artist-to-artist relationships published yet).</p>
+      <p className="muted">Related artists: coming soon (no verified artist-to-artist relationships published yet).</p>
 
       <section aria-labelledby="works-heading">
-        <h2 id="works-heading">Works in our catalogue ({artist.artworks.length})</h2>
+        <h2 id="works-heading">
+          Works in our catalogue <span className="count">{artist.artworks.length}</span>
+        </h2>
         <ul className="card-grid">
           {artist.artworks.map((artwork) => {
             const image = artwork.physicalObjects.flatMap((po) => po.images)[0];
@@ -73,11 +79,11 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
             return (
               <li key={artwork.id}>
                 <Link href={`/artwork/${artwork.slug}`}>
-                  {image && <img src={proxiedImageUrl(image.sourceUrl)} alt={image.altText ?? artwork.title} width={120} loading="lazy" />}
-                  {artwork.title}
+                  <ArtFrame src={proxiedImageUrl(image?.sourceUrl)} alt={image?.altText ?? artwork.title} />
+                  <p>{artwork.title}</p>
                 </Link>
                 {/* Per-work style, not one blanket label for the whole artist — ticket 08. */}
-                {artworkStyles.length > 0 && <span> — {artworkStyles.join(", ")}</span>}
+                {artworkStyles.length > 0 && <span>{artworkStyles.join(", ")}</span>}
               </li>
             );
           })}

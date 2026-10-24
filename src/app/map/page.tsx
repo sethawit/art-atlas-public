@@ -20,18 +20,34 @@ export default async function MapPage() {
 
   return (
     <main>
-      <h1>Map</h1>
+      <header className="page-head">
+        <h1>Map</h1>
+        <p className="lede">Where the works in our catalogue are held today.</p>
+      </header>
 
-      {mapInstitutions.length > 0 && <InstitutionMap institutions={mapInstitutions} />}
+      {mapInstitutions.length > 0 && (
+        <div className="map-shell">
+          <InstitutionMap institutions={mapInstitutions} />
+        </div>
+      )}
 
       {/* Always rendered — the accessible list-view alternative, not gated behind the map mounting. */}
       <section aria-labelledby="list-heading">
-        <h2 id="list-heading">Institutions ({institutions.length})</h2>
-        <ul>
+        <h2 id="list-heading">
+          Institutions <span className="count">{institutions.length}</span>
+        </h2>
+        <ul className="index-list">
           {institutions.map((institution) => (
             <li key={institution.id}>
               <Link href={`/museum/${institution.slug}`}>{institution.name}</Link>
-              {institution.city && <> — {institution.city}</>} — {institution._count.physicalObjects} artworks
+              {institution.city && (
+                <>
+                  <span className="sep" />
+                  {institution.city}
+                </>
+              )}
+              <span className="sep" />
+              {institution._count.physicalObjects} artworks
             </li>
           ))}
         </ul>

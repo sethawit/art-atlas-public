@@ -69,7 +69,7 @@ export default function InstitutionMap({ institutions }: { institutions: MapInst
   return (
     <div
       ref={containerRef}
-      style={{ height: 400, width: "100%", border: "1px solid var(--line-strong)", marginBottom: "var(--space-6)" }}
+      style={{ height: "min(60dvh, 32rem)", width: "100%" }}
       aria-label="Map of holding institutions"
     />
   );

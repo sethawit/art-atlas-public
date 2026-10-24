@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import ArtImage from "@/components/ArtImage";
 import { getArtworksForComparison, getPairwiseComparisonInsights } from "@/lib/queries/get-artworks-for-comparison";
 
 // §5 "Compare and understand" (ticket 22) — a general-purpose compare tool, unlike the
@@ -20,23 +21,27 @@ export default async function ComparePage({
 
   return (
     <main>
-      <h1>Compare and understand</h1>
-      <p>
-        Compare 2–4 works side by side — images, dates, materials, dimensions, and
-        collections. Screen size doesn&apos;t reflect physical scale; see the Dimensions
-        row for documented measurements.
-      </p>
+      <header className="page-head">
+        <h1>Compare and understand</h1>
+        <p className="lede">
+          Compare 2 to 4 works side by side: images, dates, materials, dimensions, and
+          collections. Screen size doesn&apos;t reflect physical scale; see the Dimensions
+          row for documented measurements.
+        </p>
+      </header>
 
-      <form action="/compare">
-        <label htmlFor="add-slug">Add a work by its Art Atlas URL slug</label>
-        <input id="add-slug" type="text" placeholder="e.g. wheat-field-with-cypresses" name="slug" />
+      <form action="/compare" className="inline-filters">
+        <div>
+          <label htmlFor="add-slug">Add a work by its Art Atlas URL slug</label>
+          <input id="add-slug" type="text" placeholder="e.g. wheat-field-with-cypresses" name="slug" />
+        </div>
         {slugs.map((s) => (
           <input key={s} type="hidden" name="slug" value={s} />
         ))}
         <button type="submit" disabled={slugs.length >= 4}>
           Add to comparison
         </button>
-        {slugs.length >= 4 && <p>Comparison is full — 4 works maximum.</p>}
+        {slugs.length >= 4 && <p className="fine-print">Comparison is full: 4 works maximum.</p>}
       </form>
 
       {entries.length === 0 ? (
@@ -73,7 +78,11 @@ export default async function ComparePage({
               {entries.map((entry) => (
                 <tr key={entry.slug}>
                   <td data-label="Image">
-                    {entry.imageUrl && <img src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={120} loading="lazy" />}
+                    {entry.imageUrl && (
+                      <span className="frame" style={{ width: 140 }}>
+                        <ArtImage src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} sizes="140px" />
+                      </span>
+                    )}
                   </td>
                   <td data-label="Title">
                     <Link href={`/artwork/${entry.slug}`}>{entry.title}</Link>
@@ -104,7 +113,7 @@ export default async function ComparePage({
           {insights.length > 0 && (
             <section aria-labelledby="insights-heading">
               <h2 id="insights-heading">How these works relate and differ</h2>
-              <ul>
+              <ul className="sources-list">
                 {insights.map((insight) => {
                   const titleA = entries.find((e) => e.slug === insight.slugA)?.title ?? insight.slugA;
                   const titleB = entries.find((e) => e.slug === insight.slugB)?.title ?? insight.slugB;

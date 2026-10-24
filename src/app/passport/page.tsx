@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { ArtFrame } from "@/components/ArtImage";
 import type { PassportEntry, PassportStatus } from "@/lib/passport/storage";
 import { getAllEntries, removeEntry, setNote } from "@/lib/passport/storage";
 
@@ -57,46 +58,57 @@ export default function PassportPage() {
 
   return (
     <main>
-      <h1>My Art Passport</h1>
-      <p role="note">
-        Saved on this device only — nothing here is sent anywhere, and it won&apos;t follow
-        you to another device or browser. No account, no sync yet.
-      </p>
+      <header className="page-head">
+        <h1>My Art Passport</h1>
+        <p role="note" className="lede">
+          Saved on this device only. Nothing here is sent anywhere, and it won&apos;t follow
+          you to another device or browser. No account, no sync yet.
+        </p>
+      </header>
 
       {entries.length === 0 ? (
-        <p>Nothing saved yet. Save a work from any artwork page to see it here.</p>
+        <p className="muted">
+          Nothing saved yet. Save a work from any artwork page to see it here, or{" "}
+          <Link href="/explore">start exploring</Link>.
+        </p>
       ) : (
         <>
-          <form aria-label="Filter saved works">
-            <label htmlFor="city-filter">City</label>
-            <select id="city-filter" value={cityFilter} onChange={(e) => setCityFilter(e.target.value)}>
-              <option value="">Any</option>
-              {cities.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+          <form aria-label="Filter saved works" className="inline-filters">
+            <div>
+              <label htmlFor="city-filter">City</label>
+              <select id="city-filter" value={cityFilter} onChange={(e) => setCityFilter(e.target.value)}>
+                <option value="">Any</option>
+                {cities.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-            <label htmlFor="artist-filter">Artist</label>
-            <select id="artist-filter" value={artistFilter} onChange={(e) => setArtistFilter(e.target.value)}>
-              <option value="">Any</option>
-              {artists.map((a) => (
-                <option key={a} value={a}>
-                  {a}
-                </option>
-              ))}
-            </select>
+            <div>
+              <label htmlFor="artist-filter">Artist</label>
+              <select id="artist-filter" value={artistFilter} onChange={(e) => setArtistFilter(e.target.value)}>
+                <option value="">Any</option>
+                {artists.map((a) => (
+                  <option key={a} value={a}>
+                    {a}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-            <label htmlFor="style-filter">Style</label>
-            <select id="style-filter" value={styleFilter} onChange={(e) => setStyleFilter(e.target.value)}>
-              <option value="">Any</option>
-              {styles.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
+            <div>
+              <label htmlFor="style-filter">Style</label>
+              <select id="style-filter" value={styleFilter} onChange={(e) => setStyleFilter(e.target.value)}>
+                <option value="">Any</option>
+                {styles.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
           </form>
 
           {STATUS_ORDER.map((status) => {
@@ -105,26 +117,24 @@ export default function PassportPage() {
             return (
               <section key={status} aria-labelledby={`list-${status}`}>
                 <h2 id={`list-${status}`}>
-                  {STATUS_LABELS[status]} ({inList.length})
+                  {STATUS_LABELS[status]} <span className="count">{inList.length}</span>
                 </h2>
                 <ul className="card-grid">
                   {inList.map((entry) => (
                     <li key={entry.artworkSlug}>
                       <Link href={`/artwork/${entry.artworkSlug}`}>
-                        {entry.imageUrl && <img src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} width={100} loading="lazy" />}
-                        {entry.title}
+                        <ArtFrame src={entry.imageUrl} alt={entry.imageAlt ?? entry.title} />
+                        <p>{entry.title}</p>
                       </Link>
-                      {entry.artistName && <span> — {entry.artistName}</span>}
+                      {entry.artistName && <p>{entry.artistName}</p>}
                       {entry.institutionName && (
-                        <span>
-                          {" "}
-                          —{" "}
+                        <p>
                           {entry.institutionSlug ? (
                             <Link href={`/museum/${entry.institutionSlug}`}>{entry.institutionName}</Link>
                           ) : (
                             entry.institutionName
                           )}
-                        </span>
+                        </p>
                       )}
                       <div>
                         <label htmlFor={`note-${entry.artworkSlug}-${status}`}>Private note</label>
@@ -134,7 +144,7 @@ export default function PassportPage() {
                           onChange={(e) => handleNoteChange(entry.artworkSlug, e.target.value)}
                         />
                       </div>
-                      <button type="button" onClick={() => handleRemove(entry.artworkSlug)}>
+                      <button type="button" className="button-quiet" onClick={() => handleRemove(entry.artworkSlug)}>
                         Remove from Art Passport
                       </button>
                     </li>

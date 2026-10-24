@@ -4,9 +4,10 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getMovementBySlug } from "@/lib/queries/get-movement-by-slug";
 import { proxiedImageUrl } from "@/lib/images/proxied-image-url";
+import { ArtFrame } from "@/components/ArtImage";
 
 const KIND_EXPLANATION: Record<string, string> = {
-  period: "A period marks a span of time, not a shared visual approach — works from a period can look very different from one another.",
+  period: "A period marks a span of time, not a shared visual approach. Works from a period can look very different from one another.",
   movement: "A movement is a group of artists who shared a deliberate approach or philosophy, usually for a specific span of time and place.",
   technique: "A technique is a way of making a work (a material or method), independent of period or movement.",
   style: "A style is a recognizable visual approach that can recur across different periods, movements, or artists.",
@@ -33,10 +34,13 @@ export default async function MovementPage({ params }: { params: Promise<{ slug:
 
   return (
     <main>
-      <h1>{movement.name}</h1>
-      <p>
-        <strong>{movement.kind}</strong> — {KIND_EXPLANATION[movement.kind] ?? "Distinguished from period/movement/technique/style rather than conflated with them."}
-      </p>
+      <header className="page-head">
+        <p className="label">{movement.kind}</p>
+        <h1>{movement.name}</h1>
+        <p className="lede">
+          {KIND_EXPLANATION[movement.kind] ?? "Distinguished from period/movement/technique/style rather than conflated with them."}
+        </p>
+      </header>
 
       {context ? (
         <>
@@ -45,7 +49,7 @@ export default async function MovementPage({ params }: { params: Promise<{ slug:
           <p>{context.context}</p>
         </>
       ) : (
-        <p>No summary written yet for this {movement.kind}.</p>
+        <p className="muted">No summary written yet for this {movement.kind}.</p>
       )}
 
       {artists.length > 0 && (
@@ -62,17 +66,19 @@ export default async function MovementPage({ params }: { params: Promise<{ slug:
       )}
 
       <section aria-labelledby="works-heading">
-        <h2 id="works-heading">Representative works ({artworks.length})</h2>
+        <h2 id="works-heading">
+          Representative works <span className="count">{artworks.length}</span>
+        </h2>
         <ul className="card-grid">
           {artworks.map((artwork) => {
             const image = artwork.physicalObjects.flatMap((po) => po.images)[0];
             return (
               <li key={artwork.id}>
                 <Link href={`/artwork/${artwork.slug}`}>
-                  {image && <img src={proxiedImageUrl(image.sourceUrl)} alt={image.altText ?? artwork.title} width={120} loading="lazy" />}
-                  {artwork.title}
+                  <ArtFrame src={proxiedImageUrl(image?.sourceUrl)} alt={image?.altText ?? artwork.title} />
+                  <p>{artwork.title}</p>
                 </Link>
-                {artwork.artist && <> — {artwork.artist.name}</>}
+                {artwork.artist && <p>{artwork.artist.name}</p>}
               </li>
             );
           })}

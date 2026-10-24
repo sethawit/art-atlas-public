@@ -1,16 +1,12 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Fraunces, Newsreader } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import SiteNav from "@/components/SiteNav";
 import "./globals.css";
 
-const display = Fraunces({ subsets: ["latin"], variable: "--font-display", weight: ["500", "600", "700"] });
-const body = Newsreader({
-  subsets: ["latin"],
-  variable: "--font-body",
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
-});
+const sans = Geist({ subsets: ["latin"], variable: "--font-geist" });
+const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
 
 export const metadata: Metadata = {
   // Needed so relative URLs (e.g. the artwork page's og:image, which points at our own
@@ -22,38 +18,41 @@ export const metadata: Metadata = {
       ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
       : "http://localhost:3000"
   ),
-  title: { default: "Art Atlas", template: "%s — Art Atlas" },
+  title: { default: "Art Atlas", template: "%s · Art Atlas" },
   description: "Discover an artwork. Understand its connections. Find where to see it.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable}`}>
+    <html lang="en" className={`${sans.variable} ${mono.variable}`}>
       <body>
         <a href="#main" className="skip-link">
           Skip to content
         </a>
         <header className="site-header">
-          <span className="site-header__brand">
-            <Link href="/" className="site-header__wordmark">
-              Art Atlas
-            </Link>
-            <span className="site-header__tagline">a field guide to painted places</span>
-          </span>
-          <nav aria-label="Primary">
-            <Link href="/explore">Explore</Link>
-            <Link href="/timeline">Timeline</Link>
-            <Link href="/map">Map</Link>
-            <Link href="/passport">My Art Passport</Link>
-          </nav>
-          <form action="/explore" className="site-header__search" role="search">
-            <label htmlFor="site-search" className="visually-hidden">
-              Search by artwork or artist
-            </label>
-            <input id="site-search" name="q" type="search" placeholder="Search artwork or artist" />
-          </form>
+          <div className="site-header__inner">
+            <span className="site-header__brand">
+              <Link href="/" className="site-header__wordmark">
+                Art Atlas
+              </Link>
+              <span className="site-header__tagline">a field guide to painted places</span>
+            </span>
+            <SiteNav />
+            <form action="/explore" className="site-header__search" role="search">
+              <label htmlFor="site-search" className="visually-hidden">
+                Search by artwork or artist
+              </label>
+              <input id="site-search" name="q" type="search" placeholder="Search artwork or artist" />
+            </form>
+          </div>
         </header>
         <div id="main">{children}</div>
+        <footer className="site-footer">
+          <div className="site-footer__inner">
+            <p>Art Atlas. Open-access records from the Met, the Art Institute of Chicago, and the Cleveland Museum of Art.</p>
+            <p>Sources are listed on every artwork page.</p>
+          </div>
+        </footer>
       </body>
     </html>
   );

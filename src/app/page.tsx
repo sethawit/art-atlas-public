@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { proxiedImageUrl } from "@/lib/images/proxied-image-url";
+import { ArtFrame } from "@/components/ArtImage";
 
 // Homepage — ticket 06, updated in ticket 14 to stop showing "coming soon" for features
 // tickets 08/09 already shipped: real MovementStyle rows and 22 verified relationships
@@ -65,112 +66,125 @@ export default async function HomePage() {
     <main>
       <section className="hero">
         <div>
-          <p className="hero__eyebrow">Art Atlas</p>
           <h1>Discover an artwork. Understand its connections. Find where to see it.</h1>
-          <p>
+          <p className="lede">
             Every artwork has a story, a family, and a journey.{" "}
             <span className="hero__count">{totalArtworks} verified artworks</span> in our
-            catalogue so far, sourced from the Met and the Art Institute of Chicago.
+            catalogue so far, sourced from the Met, the Art Institute of Chicago, and the
+            Cleveland Museum of Art.
           </p>
-          <form action="/explore">
+          <form action="/explore" className="hero__search">
             <label htmlFor="q">Search by artwork, artist, or subject</label>
             <input id="q" name="q" type="search" placeholder="e.g. Van Gogh, Water Lilies" />
             <button type="submit">Search</button>
           </form>
         </div>
         {hero && (
-          <Link href={`/artwork/${hero.slug}`} aria-labelledby="featured-heading">
+          <Link href={`/artwork/${hero.slug}`} className="hero__plate" aria-labelledby="featured-heading">
             <figure className="plate">
-              {heroImage && <img src={proxiedImageUrl(heroImage.sourceUrl)} alt={heroImage.altText ?? hero.title} width={480} />}
+              <ArtFrame
+                src={proxiedImageUrl(heroImage?.sourceUrl)}
+                alt={heroImage?.altText ?? hero.title}
+                sizes="(min-width: 1024px) 55vw, 100vw"
+                preload
+                hiRes
+              />
               <figcaption>
                 <strong id="featured-heading">{hero.title}</strong>
-                {hero.artist && <> — {hero.artist.name}</>}
+                {hero.artist && <span>{hero.artist.name}</span>}
               </figcaption>
             </figure>
           </Link>
         )}
       </section>
 
-      <section aria-labelledby="related-heading">
-        <h2 id="related-heading">A related-piece story</h2>
+      <section aria-labelledby="related-heading" className="story">
         {featuredStory ? (
           <>
-            <Link href={`/artwork/${featuredStory.subjectArtwork.slug}`}>
-              <figure className="plate">
-                {storyImage && (
-                  <img
-                    src={proxiedImageUrl(storyImage.sourceUrl)}
-                    alt={storyImage.altText ?? featuredStory.subjectArtwork.title}
-                    width={320}
-                  />
-                )}
-                <figcaption>
-                  <strong>{featuredStory.subjectArtwork.title}</strong>
-                  {featuredStory.subjectArtwork.artist && <> — {featuredStory.subjectArtwork.artist.name}</>}
-                </figcaption>
-              </figure>
+            <Link href={`/artwork/${featuredStory.subjectArtwork.slug}`} className="story__frame" tabIndex={-1} aria-hidden="true">
+              <ArtFrame
+                src={proxiedImageUrl(storyImage?.sourceUrl)}
+                alt=""
+                sizes="(min-width: 1024px) 35vw, 100vw"
+              />
             </Link>
-            <p>{featuredStory.explanation}</p>
-            <p>
-              Related to{" "}
-              <Link href={`/artwork/${featuredStory.objectArtwork.slug}`}>{featuredStory.objectArtwork.title}</Link>
-              {" — "}
-              <a href={featuredStory.evidenceSource.url} target="_blank" rel="noopener noreferrer">
-                {featuredStory.evidenceSource.name}
-              </a>
-            </p>
+            <div>
+              <p className="label">A related-piece story</p>
+              <h2 id="related-heading" className="story__title">
+                <Link href={`/artwork/${featuredStory.subjectArtwork.slug}`}>
+                  {featuredStory.subjectArtwork.title}
+                </Link>
+                {featuredStory.subjectArtwork.artist && (
+                  <span className="muted">, {featuredStory.subjectArtwork.artist.name}</span>
+                )}
+              </h2>
+              <p>{featuredStory.explanation}</p>
+              <p className="muted">
+                Related to{" "}
+                <Link href={`/artwork/${featuredStory.objectArtwork.slug}`}>{featuredStory.objectArtwork.title}</Link>
+                <span className="sep" />
+                <a href={featuredStory.evidenceSource.url} target="_blank" rel="noopener noreferrer">
+                  {featuredStory.evidenceSource.name}
+                </a>
+              </p>
+            </div>
           </>
         ) : (
-          <p>
-            Coming soon — each related-piece story on Art Atlas is individually researched
-            and verified before publishing (never inferred from a matching title alone).
-            None have cleared that bar yet.
-          </p>
+          <div>
+            <h2 id="related-heading">A related-piece story</h2>
+            <p>
+              Coming soon. Each related-piece story on Art Atlas is individually researched
+              and verified before publishing (never inferred from a matching title alone).
+              None have cleared that bar yet.
+            </p>
+          </div>
         )}
       </section>
 
-      <section aria-labelledby="artists-heading">
-        <h2 id="artists-heading">Explore by artist</h2>
-        <ul className="tag-list">
-          {artists.map((artist) => (
-            <li key={artist.id}>
-              <Link href={`/artist/${artist.slug}`}>
-                {artist.name} ({artist._count.artworks})
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section aria-labelledby="museums-heading">
-        <h2 id="museums-heading">Explore by museum</h2>
-        <ul className="tag-list">
-          {museums.map((museum) => (
-            <li key={museum.id}>
-              <Link href={`/museum/${museum.slug}`}>
-                {museum.name} ({museum._count.physicalObjects})
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section aria-labelledby="styles-heading">
-        <h2 id="styles-heading">Explore by style</h2>
-        {styles.length === 0 ? (
-          <p>Coming soon — style and movement pages are still being built.</p>
-        ) : (
+      <div className="index-block">
+        <section aria-labelledby="artists-heading" className="index-row">
+          <h2 id="artists-heading">Explore by artist</h2>
           <ul className="tag-list">
-            {styles.map((style) => (
-              <li key={style.id}>
-                <Link href={`/movement/${style.slug}`}>
-                  {style.name} ({style._count.artworks})
+            {artists.map((artist) => (
+              <li key={artist.id}>
+                <Link href={`/artist/${artist.slug}`}>
+                  {artist.name} <span className="count">{artist._count.artworks}</span>
                 </Link>
               </li>
             ))}
           </ul>
-        )}
-      </section>
+        </section>
+
+        <section aria-labelledby="museums-heading" className="index-row">
+          <h2 id="museums-heading">Explore by museum</h2>
+          <ul className="tag-list">
+            {museums.map((museum) => (
+              <li key={museum.id}>
+                <Link href={`/museum/${museum.slug}`}>
+                  {museum.name} <span className="count">{museum._count.physicalObjects}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section aria-labelledby="styles-heading" className="index-row">
+          <h2 id="styles-heading">Explore by style</h2>
+          {styles.length === 0 ? (
+            <p>Coming soon. Style and movement pages are still being built.</p>
+          ) : (
+            <ul className="tag-list">
+              {styles.map((style) => (
+                <li key={style.id}>
+                  <Link href={`/movement/${style.slug}`}>
+                    {style.name} <span className="count">{style._count.artworks}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
     </main>
   );
 }

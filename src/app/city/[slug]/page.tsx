@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getCity } from "@/lib/queries/get-city";
 import CitySavedWorks from "@/components/CitySavedWorks";
 import { proxiedImageUrl } from "@/lib/images/proxied-image-url";
+import { ArtFrame } from "@/components/ArtImage";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -27,7 +28,10 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
 
   return (
     <main>
-      <h1>{cityName}</h1>
+      <header className="page-head">
+        <p className="label">City</p>
+        <h1>{cityName}</h1>
+      </header>
 
       <CitySavedWorks cityName={cityName} />
 
@@ -42,11 +46,11 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
               return (
                 <li key={po.id}>
                   <Link href={`/artwork/${po.artwork.slug}`}>
-                    {image && <img src={proxiedImageUrl(image.sourceUrl)} alt={image.altText ?? po.artwork.title} width={120} loading="lazy" />}
-                    {po.artwork.title}
-                    {po.artwork.artist && <> — {po.artwork.artist.name}</>}
+                    <ArtFrame src={proxiedImageUrl(image?.sourceUrl)} alt={image?.altText ?? po.artwork.title} />
+                    <p>{po.artwork.title}</p>
                   </Link>
-                  {po.galleryLocation && <> — {po.galleryLocation}</>}
+                  {po.artwork.artist && <p>{po.artwork.artist.name}</p>}
+                  {po.galleryLocation && <p>{po.galleryLocation}</p>}
                 </li>
               );
             })}
